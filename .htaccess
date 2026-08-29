@@ -1,0 +1,18 @@
+Options -Indexes
+RewriteEngine On
+
+# Keep the front controller public; protect code, templates, docs, archives, and legacy files.
+RewriteRule ^(templates|modules|config|controllers|models|includes|database|docs|storage|trash|pdf_templates|views)/ - [F,L]
+RewriteRule \.(md|sql|zip|bak|log)$ - [F,L]
+
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteCond %{REQUEST_FILENAME} !-d
+RewriteRule ^(.*)$ index.php?url=$1 [QSA,L]
+
+<IfModule mod_headers.c>
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set X-Content-Type-Options "nosniff"
+  Header set X-XSS-Protection "1; mode=block"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+  Header set Permissions-Policy "geolocation=(), microphone=(), camera=()"
+</IfModule>

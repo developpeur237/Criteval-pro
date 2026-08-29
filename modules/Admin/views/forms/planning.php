@@ -1,0 +1,9 @@
+<?php declare(strict_types=1); ?>
+<main class="stub-page admin-stub"><p><a href="<?= BASE_URL ?>/admin/forms">← Galerie</a></p><h1>Planification des formulaires</h1>
+<form id="schedule-form"><input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>"><p><label>Formulaire <select required name="form_id"><option value="">Choisir</option><?php foreach($forms as $form): ?><option value="<?= (int)$form['id'] ?>"><?= e($form['title']) ?></option><?php endforeach; ?></select></label>
+<label>Projet <select name="project_id"><option value="">Automatique</option><?php foreach($projects as $project): ?><option value="<?= (int)$project['id'] ?>"><?= e($project['title']) ?></option><?php endforeach; ?></select></label></p>
+<p><label>Accès <select name="access_type"><option value="public_link">Lien public</option><option value="email_list">Liste d’e-mails</option><option value="admin_only">Admins uniquement</option></select></label></p>
+<p><label>Début <input required type="datetime-local" name="start_datetime"></label> <label>Fin <input required type="datetime-local" name="end_datetime"></label></p>
+<p><label>E-mails autorisés <textarea name="allowed_emails"></textarea></label> <label>Pays autorisés (codes séparés par virgules) <input name="allowed_countries" placeholder="ML,BF,SN"></label></p><label><input type="checkbox" name="is_active" checked> Actif</label> <button class="btn btn-secondary">Enregistrer</button></form>
+<p id="schedule-status"></p><div id="form-calendar"></div></main>
+<script>document.getElementById('schedule-form').addEventListener('submit',async e=>{e.preventDefault();const r=await fetch('<?= BASE_URL ?>/admin/forms/schedules',{method:'POST',body:new FormData(e.target)});const d=await r.json();document.getElementById('schedule-status').textContent=d.success?'Planification enregistrée.':(d.message||'Erreur.');if(d.success)e.target.reset()});</script>

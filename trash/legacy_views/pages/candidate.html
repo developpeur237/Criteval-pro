@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Soumettre une candidature - CritEval Pro</title>
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  
+  <!-- Shared Styles -->
+  <link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body>
+
+<!-- Navigation -->
+<nav id="pubNav" class="navbar">
+  <div class="navbar-container">
+    <div class="navbar-brand">
+      <span class="navbar-logo"><i class="fas fa-chart-line"></i>CritEval Pro</span>
+    </div>
+    <ul class="navbar-menu">
+      <li><a href="index.html" class="nav-link">Accueil</a></li>
+      <li><a href="index.html#timeline" class="nav-link">Appels d'offres</a></li>
+      <li><a href="login.html" class="nav-link nav-link-btn"><i class="fas fa-sign-in-alt"></i> Admin</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- Candidate Form Page -->
+<div id="page-candidate" class="candidate-page">
+  <div class="container">
+    <div class="candidate-header">
+      <h1>Soumettre votre candidature</h1>
+      <p>Remplissez le formulaire ci-dessous pour postuler à l'un de nos appels d'offres</p>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="progress-bar">
+      <div class="progress-step active" data-step="1">
+        <div class="step-num">1</div>
+        <span class="step-label">Appel d'offres</span>
+      </div>
+      <div class="progress-line active"></div>
+      <div class="progress-step" data-step="2">
+        <div class="step-num">2</div>
+        <span class="step-label">Informations</span>
+      </div>
+      <div class="progress-line"></div>
+      <div class="progress-step" data-step="3">
+        <div class="step-num">3</div>
+        <span class="step-label">Projet</span>
+      </div>
+      <div class="progress-line"></div>
+      <div class="progress-step" data-step="4">
+        <div class="step-num">4</div>
+        <span class="step-label">Confirmation</span>
+      </div>
+    </div>
+
+    <!-- Candidate Form -->
+    <div class="candidate-form">
+      <form onsubmit="event.preventDefault(); submitCandidature();">
+        
+        <!-- Step 1: Call Selection -->
+        <div class="form-step active" id="step-1">
+          <h2>Sélectionner l'appel d'offres</h2>
+          <p class="step-desc">Choisissez l'appel auquel vous souhaitez postuler</p>
+          <div class="form-group" style="margin:24px 0;">
+            <label>Appel d'offres</label>
+            <select class="form-input form-input-lg" id="callSelect" required onchange="updateProgress()">
+              <option value="">-- Sélectionnez un appel --</option>
+              <option value="agri">AGRI-2025 : Innovation Agricole (Cameroun)</option>
+              <option value="innov">Innov-Tech 2025 : Solutions numériques (Afrique de l'Ouest)</option>
+              <option value="sante">Fonds Santé 2026 : Projets de santé (À venir)</option>
+            </select>
+          </div>
+          <div class="calls-preview">
+            <div class="call-card">
+              <h4>AGRI-2025 : Innovation Agricole</h4>
+              <p>Projets innovants en agriculture durable</p>
+              <p class="call-deadline"><i class="fas fa-calendar"></i> Clôture: 31 Déc 2025</p>
+              <p class="call-location"><i class="fas fa-map-marker"></i> Cameroun</p>
+            </div>
+            <div class="call-card">
+              <h4>Innov-Tech 2025 : Solutions numériques</h4>
+              <p>Startups en technologie et numérique</p>
+              <p class="call-deadline"><i class="fas fa-calendar"></i> Clôture: 20 Déc 2025</p>
+              <p class="call-location"><i class="fas fa-map-marker"></i> Afrique de l'Ouest</p>
+            </div>
+          </div>
+          <div class="form-buttons">
+            <button type="button" class="btn btn-primary" onclick="nextStep(2)" id="btn-step1">
+              Suivant <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 2: Personal Information -->
+        <div class="form-step" id="step-2">
+          <h2>Informations personnelles</h2>
+          <p class="step-desc">Fournissez vos coordonnées</p>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Nom complet</label>
+              <input type="text" class="form-input" placeholder="Jean Dupont" required>
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" class="form-input" placeholder="jean@example.com" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Téléphone</label>
+              <input type="tel" class="form-input" placeholder="+237 123 456 789" required>
+            </div>
+            <div class="form-group">
+              <label>Pays</label>
+              <select class="form-input" required>
+                <option value="">-- Sélectionnez --</option>
+                <option>Cameroun</option>
+                <option>Côte d'Ivoire</option>
+                <option>Sénégal</option>
+                <option>Mali</option>
+                <option>Autres</option>
+              </select>
+            </div>
+          </div>
+          <div class="form-buttons">
+            <button type="button" class="btn btn-ghost" onclick="prevStep(1)">
+              <i class="fas fa-arrow-left"></i> Précédent
+            </button>
+            <button type="button" class="btn btn-primary" onclick="nextStep(3)">
+              Suivant <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 3: Project Details -->
+        <div class="form-step" id="step-3">
+          <h2>Détails du projet</h2>
+          <p class="step-desc">Décrivez votre projet innovant</p>
+          <div class="form-group">
+            <label>Titre du projet</label>
+            <input type="text" class="form-input" placeholder="Ex: Plateforme IoT pour agriculteurs" required>
+          </div>
+          <div class="form-group">
+            <label>Description</label>
+            <textarea class="form-input" rows="5" placeholder="Décrivez votre projet en détail..." required></textarea>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label>Budget demandé (€)</label>
+              <input type="number" class="form-input" placeholder="50000" min="0" required>
+            </div>
+            <div class="form-group">
+              <label>Durée du projet (mois)</label>
+              <input type="number" class="form-input" placeholder="12" min="1" max="60" required>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Documents (CV, Pitch deck, etc.)</label>
+            <div class="file-upload">
+              <i class="fas fa-cloud-upload-alt"></i>
+              <p>Glissez-déposez vos fichiers ici</p>
+              <small>ou</small>
+              <input type="file" class="file-input" multiple accept=".pdf,.doc,.docx,.ppt,.pptx,.zip" style="display:none;">
+              <button type="button" class="btn btn-sm btn-secondary" onclick="document.querySelector('.file-input').click();">
+                Parcourir
+              </button>
+            </div>
+          </div>
+          <div class="form-buttons">
+            <button type="button" class="btn btn-ghost" onclick="prevStep(2)">
+              <i class="fas fa-arrow-left"></i> Précédent
+            </button>
+            <button type="button" class="btn btn-primary" onclick="nextStep(4)">
+              Suivant <i class="fas fa-arrow-right"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Step 4: Confirmation -->
+        <div class="form-step" id="step-4">
+          <h2>Confirmation</h2>
+          <p class="step-desc">Vérifiez vos informations avant de soumettre</p>
+          
+          <div class="confirmation-box">
+            <h3><i class="fas fa-clipboard-check"></i> Résumé de votre candidature</h3>
+            <div class="confirmation-row">
+              <span class="conf-label">Appel d'offres:</span>
+              <span class="conf-value" id="conf-call">À sélectionner</span>
+            </div>
+            <div class="confirmation-row">
+              <span class="conf-label">Nom:</span>
+              <span class="conf-value" id="conf-name">À remplir</span>
+            </div>
+            <div class="confirmation-row">
+              <span class="conf-label">Email:</span>
+              <span class="conf-value" id="conf-email">À remplir</span>
+            </div>
+            <div class="confirmation-row">
+              <span class="conf-label">Statut:</span>
+              <span class="conf-value"><span class="badge badge-info">Prêt à soumettre</span></span>
+            </div>
+          </div>
+
+          <div class="form-group checkbox" style="margin-top:24px;">
+            <input type="checkbox" id="terms" required>
+            <label for="terms" class="checkbox-label">
+              Je certifie avoir lu et accepté les <a href="#" onclick="event.preventDefault(); showToast('Conditions d\'utilisation', 'info');">conditions d'utilisation</a> et la <a href="#" onclick="event.preventDefault(); showToast('Politique de confidentialité', 'info');">politique de confidentialité</a>
+            </label>
+          </div>
+
+          <div class="form-buttons">
+            <button type="button" class="btn btn-ghost" onclick="prevStep(3)">
+              <i class="fas fa-arrow-left"></i> Précédent
+            </button>
+            <button type="submit" class="btn btn-primary btn-lg">
+              <i class="fas fa-check"></i> Soumettre la candidature
+            </button>
+          </div>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Success Modal -->
+<div id="successModal" class="modal-overlay" style="display:none;">
+  <div class="modal-box modal-success">
+    <div class="modal-icon">
+      <i class="fas fa-check-circle"></i>
+    </div>
+    <h2>Candidature soumise avec succès !</h2>
+    <p>Votre candidature a été reçue et sera évaluée par notre équipe.<br>Vous recevrez un email de confirmation à l'adresse fournie.</p>
+    <p class="conf-number">Numéro de suivi: <strong>#245</strong></p>
+    <div class="modal-footer">
+      <a href="index.html" class="btn btn-primary">Retour à l'accueil</a>
+      <a href="candidate.html" class="btn btn-ghost">Nouvelle candidature</a>
+    </div>
+  </div>
+</div>
+
+<!-- Footer -->
+<footer class="footer" style="margin-top:60px;">
+  <div class="footer-container">
+    <div class="footer-section">
+      <h4>CritEval Pro</h4>
+      <p>Plateforme de gestion d'appels d'offres et d'évaluation de projets innovants en Afrique.</p>
+    </div>
+    <div class="footer-section">
+      <h5>Liens rapides</h5>
+      <ul>
+        <li><a href="index.html">Accueil</a></li>
+        <li><a href="index.html#timeline">Appels d'offres</a></li>
+        <li><a href="login.html">Admin</a></li>
+      </ul>
+    </div>
+    <div class="footer-section">
+      <h5>Légal</h5>
+      <ul>
+        <li><a href="#">Conditions d'utilisation</a></li>
+        <li><a href="#">Politique de confidentialité</a></li>
+        <li><a href="#">Mentions légales</a></li>
+      </ul>
+    </div>
+    <div class="footer-section">
+      <h5>Nous contacter</h5>
+      <p><i class="fas fa-envelope"></i> contact@criteval.com</p>
+      <p><i class="fas fa-phone"></i> +237 123 456 789</p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>&copy; 2025 CritEval Pro. Tous droits réservés.</p>
+  </div>
+</footer>
+
+<!-- Shared App JS + Candidate-specific JS -->
+<script src="../../assets/js/app.js"></script>
+
+<script>
+let currentStep = 1;
+
+function nextStep(step) {
+  if (step === 2 && !document.getElementById('callSelect').value) {
+    showToast('Veuillez sélectionner un appel d\'offres', 'warning');
+    return;
+  }
+  document.getElementById('step-' + currentStep).classList.remove('active');
+  document.getElementById('step-' + step).classList.add('active');
+  document.querySelector(`[data-step="${step}"]`).classList.add('active');
+  for (let i = 1; i < step; i++) {
+    document.querySelector(`[data-step="${i}"]`).classList.add('active');
+    const line = document.querySelector(`[data-step="${i}"]`).nextElementSibling;
+    if (line && line.classList.contains('progress-line')) line.classList.add('active');
+  }
+  currentStep = step;
+  document.querySelector('.candidate-page').scrollIntoView({ behavior: 'smooth' });
+}
+
+function prevStep(step) {
+  document.getElementById('step-' + currentStep).classList.remove('active');
+  document.getElementById('step-' + step).classList.add('active');
+  currentStep = step;
+}
+
+function submitCandidature() {
+  showToast('Candidature en cours de soumission...', 'info');
+  setTimeout(() => {
+    document.querySelector('.candidate-form').style.display = 'none';
+    document.getElementById('successModal').style.display = 'flex';
+    document.getElementById('successModal').scrollIntoView({ behavior: 'smooth' });
+  }, 1500);
+}
+
+function updateProgress() {
+  const call = document.getElementById('callSelect').value;
+  const callMap = { agri: 'AGRI-2025', innov: 'Innov-Tech 2025', sante: 'Fonds Santé 2026' };
+  document.getElementById('conf-call').textContent = callMap[call] || 'À sélectionner';
+}
+
+$(document).on('change', 'input[type="text"], input[type="email"]', function() {
+  if ($(this).attr('placeholder').includes('Jean')) document.getElementById('conf-name').textContent = $(this).val() || 'À remplir';
+  if ($(this).attr('placeholder').includes('jean')) document.getElementById('conf-email').textContent = $(this).val() || 'À remplir';
+});
+</script>
+
+</body>
+</html>

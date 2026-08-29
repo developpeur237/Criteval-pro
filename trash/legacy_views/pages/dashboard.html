@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tableau de bord - CritEval Pro</title>
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Chart.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.min.js"></script>
+  
+  <!-- jQuery & jQuery UI -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.13.2/themes/base/jquery-ui.css">
+  <script src="https://code.jquery.com/ui/1.13.2/jquery-ui.min.js"></script>
+  
+  <!-- FullCalendar -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/moment.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.4/locale/fr.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/fullcalendar.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/fullcalendar/3.10.2/locale/fr.js"></script>
+  
+  <!-- Shared Styles -->
+  <link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body class="dashboard-page">
+
+<div id="page-dashboard" class="dashboard-layout">
+  
+  <!-- Sidebar -->
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-top">
+      <a href="dashboard.html" class="sidebar-logo">
+        <i class="fas fa-chart-line"></i>
+        <span>CritEval Pro</span>
+      </a>
+    </div>
+    <nav class="sidebar-nav">
+      <a href="#" onclick="switchModule('apercu'); return false;" class="sidebar-item active" data-module="apercu">
+        <i class="fas fa-th-large"></i>
+        <span>Aperçu</span>
+      </a>
+      <a href="#" onclick="switchModule('projets'); return false;" class="sidebar-item" data-module="projets">
+        <i class="fas fa-folder"></i>
+        <span>Projets</span>
+      </a>
+      <a href="#" onclick="switchModule('criteres'); return false;" class="sidebar-item" data-module="criteres">
+        <i class="fas fa-sliders-h"></i>
+        <span>Critères</span>
+      </a>
+      <a href="#" onclick="switchModule('formulaires'); return false;" class="sidebar-item" data-module="formulaires">
+        <i class="fas fa-wpforms"></i>
+        <span>Formulaires</span>
+      </a>
+      <a href="#" onclick="switchModule('evaluations'); return false;" class="sidebar-item" data-module="evaluations">
+        <i class="fas fa-file-alt"></i>
+        <span>Évaluations</span>
+      </a>
+      <a href="#" onclick="switchModule('classements'); return false;" class="sidebar-item" data-module="classements">
+        <i class="fas fa-trophy"></i>
+        <span>Classements</span>
+      </a>
+      <a href="#" onclick="switchModule('calendrier'); return false;" class="sidebar-item" data-module="calendrier">
+        <i class="fas fa-calendar-alt"></i>
+        <span>Planning</span>
+      </a>
+      <a href="#" onclick="switchModule('parametres'); return false;" class="sidebar-item" data-module="parametres">
+        <i class="fas fa-cog"></i>
+        <span>Paramètres</span>
+      </a>
+    </nav>
+    <div class="sidebar-bottom">
+      <div class="user-card">
+        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 200 200'%3E%3Ccircle cx='100' cy='60' r='40' fill='%232EAF7D'/%3E%3Ccircle cx='100' cy='160' r='80' fill='%232EAF7D'/%3E%3C/svg%3E" alt="User">
+        <div>
+          <p class="user-name">Admin User</p>
+          <small>Administrator</small>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Main Content -->
+  <div class="dashboard-main">
+    
+    <!-- Top Bar -->
+    <div id="topbar" class="topbar">
+      <button id="sidebarToggle" class="topbar-toggle">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="topbar-breadcrumb">
+        <span id="breadcrumbCurrent">Aperçu</span>
+      </div>
+      <div class="topbar-actions">
+        <button class="btn btn-sm btn-primary" data-toggle="modal" data-target="#modalNewProject" onclick="$('#modalNewProject').addClass('open');">
+          <i class="fas fa-plus"></i> Nouveau projet
+        </button>
+        <button class="topbar-profile" onclick="showToast('Profil utilisateur', 'info');">
+          <i class="fas fa-user-circle"></i>
+        </button>
+        <a href="index.html" class="btn btn-sm btn-ghost" title="Déconnexion">
+          <i class="fas fa-sign-out-alt"></i>
+        </a>
+      </div>
+    </div>
+
+    <!-- Module Content -->
+    <div id="mainContent" class="main-content">
+
+      <!-- Module: Overview -->
+      <div id="module-apercu" class="dash-module active">
+        <div class="module-header">
+          <h2>Aperçu des opérations</h2>
+        </div>
+
+        <!-- KPI Row -->
+        <div class="kpi-row">
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(46,175,125,0.1); color:#2EAF7D;">
+              <i class="fas fa-clipboard-list"></i>
+            </div>
+            <div class="kpi-content">
+              <p class="kpi-label">Appels actifs</p>
+              <p class="kpi-val" data-target="4">0</p>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(245,166,35,0.1); color:#F5A623;">
+              <i class="fas fa-file-download"></i>
+            </div>
+            <div class="kpi-content">
+              <p class="kpi-label">Candidatures</p>
+              <p class="kpi-val" data-target="247">0</p>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(52,152,219,0.1); color:#3498db;">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="kpi-content">
+              <p class="kpi-label">Évaluées</p>
+              <p class="kpi-val" data-target="189">0</p>
+            </div>
+          </div>
+          <div class="kpi-card">
+            <div class="kpi-icon" style="background:rgba(39,174,96,0.1); color:#27AE60;">
+              <i class="fas fa-trophy"></i>
+            </div>
+            <div class="kpi-content">
+              <p class="kpi-label">Sélectionnées</p>
+              <p class="kpi-val" data-target="28">0</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Charts Row -->
+        <div class="charts-row">
+          <div class="chart-box">
+            <div class="chart-header">
+              <h3>Soumissions par mois</h3>
+              <div class="chart-btns">
+                <button class="chart-btn active">M</button>
+                <button class="chart-btn">Q</button>
+                <button class="chart-btn">A</button>
+              </div>
+            </div>
+            <canvas id="chartSubmissions" height="80"></canvas>
+          </div>
+          <div class="chart-box">
+            <div class="chart-header">
+              <h3>Répartition par pays</h3>
+            </div>
+            <canvas id="chartCountries" height="80"></canvas>
+          </div>
+        </div>
+
+        <!-- Scores Chart -->
+        <div class="chart-box full-width">
+          <div class="chart-header">
+            <h3>Scores moyens par appel</h3>
+            <div class="chart-btns">
+              <button class="chart-btn active">Tous</button>
+              <button class="chart-btn">Actifs</button>
+              <button class="chart-btn">Clôturés</button>
+            </div>
+          </div>
+          <canvas id="chartScores" height="80"></canvas>
+        </div>
+      </div>
+
+      <!-- Module: Projects -->
+      <div id="module-projets" class="dash-module hidden">
+        <div class="module-header">
+          <h2>Gestion des projets/appels d'offres</h2>
+        </div>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Titre</th>
+                <th>Statut</th>
+                <th>Ouverture</th>
+                <th>Clôture</th>
+                <th>Candidatures</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>AGRI-2025 : Innovation Agricole</strong></td>
+                <td><span class="badge badge-success">Actif</span></td>
+                <td>01 Nov 2025</td>
+                <td>31 Déc 2025</td>
+                <td><strong>89</strong></td>
+                <td>
+                  <button class="btn btn-xs btn-primary" onclick="showToast('Édition', 'info');">Éditer</button>
+                  <button class="btn btn-xs btn-danger" onclick="confirmDelete();">Supprimer</button>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Innov-Tech 2025 : Solutions numériques</strong></td>
+                <td><span class="badge badge-success">Actif</span></td>
+                <td>15 Oct 2025</td>
+                <td>20 Déc 2025</td>
+                <td><strong>124</strong></td>
+                <td>
+                  <button class="btn btn-xs btn-primary" onclick="showToast('Édition', 'info');">Éditer</button>
+                  <button class="btn btn-xs btn-danger" onclick="confirmDelete();">Supprimer</button>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Fonds Santé 2026 : Projets de santé</strong></td>
+                <td><span class="badge badge-warning">Planifié</span></td>
+                <td>15 Jan 2026</td>
+                <td>01 Mar 2026</td>
+                <td><strong>0</strong></td>
+                <td>
+                  <button class="btn btn-xs btn-primary" onclick="showToast('Édition', 'info');">Éditer</button>
+                  <button class="btn btn-xs btn-danger" onclick="confirmDelete();">Supprimer</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Module: Criteria -->
+      <div id="module-criteres" class="dash-module hidden">
+        <div class="module-header">
+          <h2>Critères d'évaluation</h2>
+        </div>
+        <div class="criteria-section">
+          <h3>Critères pondérés (sur 20)</h3>
+          <div id="criteriaList" class="criteria-list">
+            <div class="criteria-item">
+              <span class="drag-handle"><i class="fas fa-grip-vertical"></i></span>
+              <span class="criteria-name">Pertinence</span>
+              <input type="number" class="criteria-weight" value="2.0" readonly>
+              <button class="btn btn-xs btn-ghost" onclick="$(this).closest('.criteria-item').remove();">Supprimer</button>
+            </div>
+            <div class="criteria-item">
+              <span class="drag-handle"><i class="fas fa-grip-vertical"></i></span>
+              <span class="criteria-name">Faisabilité</span>
+              <input type="number" class="criteria-weight" value="1.5" readonly>
+              <button class="btn btn-xs btn-ghost" onclick="$(this).closest('.criteria-item').remove();">Supprimer</button>
+            </div>
+            <div class="criteria-item">
+              <span class="drag-handle"><i class="fas fa-grip-vertical"></i></span>
+              <span class="criteria-name">Environnement & Développement durable</span>
+              <input type="number" class="criteria-weight" value="1.5" readonly>
+              <button class="btn btn-xs btn-ghost" onclick="$(this).closest('.criteria-item').remove();">Supprimer</button>
+            </div>
+            <div class="criteria-item">
+              <span class="drag-handle"><i class="fas fa-grip-vertical"></i></span>
+              <span class="criteria-name">Viabilité financière</span>
+              <input type="number" class="criteria-weight" value="1.0" readonly>
+              <button class="btn btn-xs btn-ghost" onclick="$(this).closest('.criteria-item').remove();">Supprimer</button>
+            </div>
+            <div class="criteria-item">
+              <span class="drag-handle"><i class="fas fa-grip-vertical"></i></span>
+              <span class="criteria-name">Impact social et communautaire</span>
+              <input type="number" class="criteria-weight" value="1.0" readonly>
+              <button class="btn btn-xs btn-ghost" onclick="$(this).closest('.criteria-item').remove();">Supprimer</button>
+            </div>
+            <div class="criteria-item">
+              <span class="drag-handle"><i class="fas fa-grip-vertical"></i></span>
+              <span class="criteria-name">Compétence de l'équipe</span>
+              <input type="number" class="criteria-weight" value="0.75" readonly>
+              <button class="btn btn-xs btn-ghost" onclick="$(this).closest('.criteria-item').remove();">Supprimer</button>
+            </div>
+          </div>
+          <button class="btn btn-primary btn-sm" onclick="showToast('Critère ajouté', 'success');" style="margin-top:12px;">
+            <i class="fas fa-plus"></i> Ajouter un critère
+          </button>
+        </div>
+        <div class="criteria-chart" style="margin-top:24px;">
+          <canvas id="chartCriteria" height="80"></canvas>
+        </div>
+      </div>
+
+      <!-- Module: Forms -->
+      <div id="module-formulaires" class="dash-module hidden">
+        <div class="module-header">
+          <h2>Gestion des formulaires</h2>
+        </div>
+        <div class="tabs">
+          <button class="tab-btn" style="background:var(--secondary); color:#fff;" onclick="switchFormTab('galerie', this);">
+            <i class="fas fa-th"></i> Galerie
+          </button>
+          <button class="tab-btn" onclick="switchFormTab('builder', this);">
+            <i class="fas fa-cube"></i> Builder
+          </button>
+          <button class="tab-btn" onclick="switchFormTab('planning', this);">
+            <i class="fas fa-calendar"></i> Planning
+          </button>
+        </div>
+        
+        <div id="formTab-galerie" class="tab-content">
+          <div class="forms-gallery">
+            <div class="form-card" onclick="showToast('Édition du formulaire AGRI-2025', 'info');">
+              <div class="form-card-header">
+                <h4>AGRI-2025</h4>
+                <span class="badge badge-success">Actif</span>
+              </div>
+              <p class="form-card-desc">Formulaire d'innovation agricole</p>
+              <div class="form-card-stats">
+                <span><i class="fas fa-file"></i> 8 champs</span>
+                <span><i class="fas fa-users"></i> 89 soumissions</span>
+              </div>
+            </div>
+            <div class="form-card" onclick="showToast('Édition du formulaire Innov-Tech', 'info');">
+              <div class="form-card-header">
+                <h4>Innov-Tech 2025</h4>
+                <span class="badge badge-success">Actif</span>
+              </div>
+              <p class="form-card-desc">Solutions numériques innovantes</p>
+              <div class="form-card-stats">
+                <span><i class="fas fa-file"></i> 10 champs</span>
+                <span><i class="fas fa-users"></i> 124 soumissions</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div id="formTab-builder" class="tab-content hidden">
+          <p style="padding:20px; text-align:center; color:rgba(255,255,255,0.5);">
+            <i class="fas fa-tools" style="font-size:32px; margin-bottom:12px; display:block;"></i>
+            Constructeur de formulaires (drag & drop) - Coming soon
+          </p>
+        </div>
+        
+        <div id="formTab-planning" class="tab-content hidden">
+          <div id="adminCalendar" style="margin-top:20px;"></div>
+        </div>
+      </div>
+
+      <!-- Module: Evaluations -->
+      <div id="module-evaluations" class="dash-module hidden">
+        <div class="module-header">
+          <h2>Évaluations des candidatures</h2>
+        </div>
+        <div class="eval-filters">
+          <select class="form-input" style="max-width:200px;">
+            <option>Tous les appels</option>
+            <option>AGRI-2025</option>
+            <option>Innov-Tech 2025</option>
+          </select>
+        </div>
+        <div class="eval-list">
+          <div class="eval-item" onclick="showEvalForm();">
+            <div class="eval-header">
+              <h4>Candidature #245 - TechFarm Solutions</h4>
+              <span class="badge badge-warning">En cours</span>
+            </div>
+            <p class="eval-meta"><i class="fas fa-calendar"></i> Soumis le 15 Nov 2025 | <i class="fas fa-map-marker"></i> Cameroun</p>
+            <div class="eval-score-preview">
+              <span class="score-chip">Pertinence: 18/20</span>
+              <span class="score-chip">Faisabilité: 16/20</span>
+              <span class="score-chip">Environnement: 17/20</span>
+            </div>
+          </div>
+          <div class="eval-item" onclick="showEvalForm();">
+            <div class="eval-header">
+              <h4>Candidature #244 - AgriTech Startup</h4>
+              <span class="badge badge-success">Évaluée</span>
+            </div>
+            <p class="eval-meta"><i class="fas fa-calendar"></i> Soumis le 14 Nov 2025 | <i class="fas fa-map-marker"></i> Côte d'Ivoire</p>
+            <div class="eval-score">
+              <span class="score-final">15.2/20</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Eval Form (hidden initially) -->
+        <div id="evalFormSection" class="eval-form-section hidden">
+          <h3>Formulaire d'évaluation - Candidature #245</h3>
+          <form class="eval-form">
+            <div class="eval-criterion">
+              <label>Pertinence (poids: 2.0) - /20</label>
+              <div class="score-input-group">
+                <input type="range" id="score1" min="0" max="20" value="18" class="score-slider" onchange="updateEvalScore()" oninput="updateEvalScore()">
+                <input type="number" min="0" max="20" value="18" class="score-number" readonly>
+              </div>
+              <div class="score-bar">
+                <div class="score-fill" id="fill-score1" style="width:90%;"></div>
+              </div>
+            </div>
+
+            <div class="eval-criterion">
+              <label>Faisabilité (poids: 1.5) - /20</label>
+              <div class="score-input-group">
+                <input type="range" id="score2" min="0" max="20" value="16" class="score-slider" onchange="updateEvalScore()" oninput="updateEvalScore()">
+                <input type="number" min="0" max="20" value="16" class="score-number" readonly>
+              </div>
+              <div class="score-bar">
+                <div class="score-fill" id="fill-score2" style="width:80%;"></div>
+              </div>
+            </div>
+
+            <div class="eval-criterion">
+              <label>Environnement & DD (poids: 1.5) - /20</label>
+              <div class="score-input-group">
+                <input type="range" id="score3" min="0" max="20" value="17" class="score-slider" onchange="updateEvalScore()" oninput="updateEvalScore()">
+                <input type="number" min="0" max="20" value="17" class="score-number" readonly>
+              </div>
+              <div class="score-bar">
+                <div class="score-fill" id="fill-score3" style="width:85%;"></div>
+              </div>
+            </div>
+
+            <div class="eval-criterion">
+              <label>Viabilité financière (poids: 1.0) - /20</label>
+              <div class="score-input-group">
+                <input type="range" id="score4" min="0" max="20" value="14" class="score-slider" onchange="updateEvalScore()" oninput="updateEvalScore()">
+                <input type="number" min="0" max="20" value="14" class="score-number" readonly>
+              </div>
+              <div class="score-bar">
+                <div class="score-fill" id="fill-score4" style="width:70%;"></div>
+              </div>
+            </div>
+
+            <div class="eval-result">
+              <svg width="120" height="120" style="margin:0 auto; display:block;">
+                <circle cx="60" cy="60" r="56" fill="none" stroke="rgba(255,255,255,0.1)" stroke-width="8"></circle>
+                <circle id="evalRingCircle" cx="60" cy="60" r="56" fill="none" stroke="#2EAF7D" stroke-width="8" stroke-dasharray="351.9" stroke-dashoffset="0" transform="rotate(-90 60 60)"></circle>
+                <text x="60" y="60" text-anchor="middle" dy="0.3em" style="font-size:24px; font-weight:bold; fill:#2EAF7D;" id="evalScoreText">0</text>
+              </svg>
+              <p style="text-align:center; margin-top:12px;">
+                <span id="evalLevelText" style="font-size:14px; color:rgba(255,255,255,0.7);">Évaluation</span>
+              </p>
+            </div>
+
+            <button type="button" class="btn btn-primary btn-block" onclick="showToast('Évaluation enregistrée', 'success');">
+              <i class="fas fa-save"></i> Enregistrer l'évaluation
+            </button>
+          </form>
+        </div>
+      </div>
+
+      <!-- Module: Rankings -->
+      <div id="module-classements" class="dash-module hidden">
+        <div class="module-header">
+          <h2>Classements des candidatures</h2>
+        </div>
+        <div class="ranking-table">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Candidature</th>
+                <th>Projet</th>
+                <th>Score</th>
+                <th>Statut</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="highlight-top">
+                <td><span class="badge badge-gold">1</span></td>
+                <td><strong>TechFarm Solutions</strong></td>
+                <td>AGRI-2025</td>
+                <td><strong>16.8/20</strong></td>
+                <td><span class="badge badge-success">Sélectionnée</span></td>
+                <td><button class="btn btn-xs btn-primary" onclick="showToast('Détails', 'info');">Détails</button></td>
+              </tr>
+              <tr class="highlight-top">
+                <td><span class="badge badge-silver">2</span></td>
+                <td><strong>AgriTech Startup</strong></td>
+                <td>AGRI-2025</td>
+                <td><strong>15.2/20</strong></td>
+                <td><span class="badge badge-success">Sélectionnée</span></td>
+                <td><button class="btn btn-xs btn-primary" onclick="showToast('Détails', 'info');">Détails</button></td>
+              </tr>
+              <tr class="highlight-top">
+                <td><span class="badge badge-bronze">3</span></td>
+                <td><strong>Green Future Ventures</strong></td>
+                <td>AGRI-2025</td>
+                <td><strong>14.9/20</strong></td>
+                <td><span class="badge badge-success">Sélectionnée</span></td>
+                <td><button class="btn btn-xs btn-primary" onclick="showToast('Détails', 'info');">Détails</button></td>
+              </tr>
+              <tr>
+                <td>4</td>
+                <td><strong>NextGen Innovation Lab</strong></td>
+                <td>Innov-Tech 2025</td>
+                <td><strong>15.6/20</strong></td>
+                <td><span class="badge badge-success">Sélectionnée</span></td>
+                <td><button class="btn btn-xs btn-primary" onclick="showToast('Détails', 'info');">Détails</button></td>
+              </tr>
+              <tr>
+                <td>5</td>
+                <td><strong>Digital Solutions Africa</strong></td>
+                <td>Innov-Tech 2025</td>
+                <td><strong>14.4/20</strong></td>
+                <td><span class="badge badge-warning">En attente</span></td>
+                <td><button class="btn btn-xs btn-primary" onclick="showToast('Détails', 'info');">Détails</button></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Module: Planning -->
+      <div id="module-calendrier" class="dash-module hidden">
+        <div class="module-header">
+          <h2>Planning et Calendrier</h2>
+        </div>
+        <div id="adminCalendar"></div>
+      </div>
+
+      <!-- Module: Settings -->
+      <div id="module-parametres" class="dash-module hidden">
+        <div class="module-header">
+          <h2>Paramètres</h2>
+        </div>
+        <div class="settings-sections">
+          <div class="settings-section">
+            <h3><i class="fas fa-user"></i> Profil utilisateur</h3>
+            <div class="form-group">
+              <label>Nom complet</label>
+              <input type="text" class="form-input" value="Admin User" readonly>
+            </div>
+            <div class="form-group">
+              <label>Email</label>
+              <input type="email" class="form-input" value="admin@example.com" readonly>
+            </div>
+            <div class="form-group">
+              <label>Rôle</label>
+              <input type="text" class="form-input" value="Administrateur" readonly>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3><i class="fas fa-cog"></i> Paramètres généraux</h3>
+            <div class="form-group">
+              <label>Langue</label>
+              <select class="form-input">
+                <option>Français</option>
+                <option>English</option>
+                <option>Español</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label>Fuseau horaire</label>
+              <select class="form-input">
+                <option>UTC+1 (Afrique centrale)</option>
+                <option>UTC+0 (Heure de Greenwich)</option>
+                <option>UTC+2 (Afrique de l'Est)</option>
+              </select>
+            </div>
+            <div class="form-group checkbox">
+              <input type="checkbox" id="notif" checked>
+              <label for="notif" class="checkbox-label">Notifications par email activées</label>
+            </div>
+          </div>
+
+          <div class="settings-section">
+            <h3><i class="fas fa-shield-alt"></i> Sécurité</h3>
+            <button class="btn btn-primary btn-sm" onclick="showToast('Changement de mot de passe', 'info');">
+              Changer le mot de passe
+            </button>
+            <button class="btn btn-secondary btn-sm" style="margin-top:8px;" onclick="showToast('Sessions actives', 'info');">
+              Gérer les sessions
+            </button>
+            <button class="btn btn-danger btn-sm" style="margin-top:8px;" onclick="showToast('Compte supprimé', 'success'); setTimeout(() => navigateTo('index.html'), 1000);">
+              Supprimer mon compte
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<!-- Modals -->
+<div id="modalNewProject" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Créer un nouveau projet</h3>
+      <button class="modal-close"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <form>
+        <div class="form-group">
+          <label>Titre du projet</label>
+          <input type="text" class="form-input" placeholder="ex. AGRI-2025 : Innovation Agricole">
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea class="form-input" rows="3" placeholder="Décrivez le projet..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date d'ouverture</label>
+            <input type="date" class="form-input">
+          </div>
+          <div class="form-group">
+            <label>Date de clôture</label>
+            <input type="date" class="form-input">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Budget estimé (€)</label>
+          <input type="number" class="form-input" placeholder="50000">
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-action="close">Annuler</button>
+      <button class="btn btn-primary" data-action="save">Créer le projet</button>
+    </div>
+  </div>
+</div>
+
+<div id="modalDelete" class="modal-overlay">
+  <div class="modal-box modal-small">
+    <div class="modal-header">
+      <h3>Confirmer la suppression</h3>
+      <button class="modal-close"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <p>Êtes-vous sûr de vouloir supprimer cet élément ? Cette action est irréversible.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-action="close">Annuler</button>
+      <button class="btn btn-danger" data-action="confirm">Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<div id="modalPlanning" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Ajouter un événement</h3>
+      <button class="modal-close"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <form>
+        <div class="form-group">
+          <label>Titre de l'événement</label>
+          <input type="text" class="form-input" placeholder="ex. Réunion d'évaluation">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" class="form-input">
+          </div>
+          <div class="form-group">
+            <label>Heure</label>
+            <input type="time" class="form-input">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea class="form-input" rows="3" placeholder="Détails..."></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-action="close">Annuler</button>
+      <button class="btn btn-primary" data-action="save">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- Shared App JS -->
+<script src="../../assets/js/app.js"></script>
+
+</body>
+</html>

@@ -1,0 +1,38 @@
+:root {
+  --primary: #1A3C5E;
+  --secondary: #2EAF7D;
+  --accent: #F5A623;
+  --danger: #E74C3C;
+  --neutral-dark: #1E1E2E;
+  --neutral-light: #F4F6FA;
+  --text-main: #2C3E50;
+  --text-muted: #7F8C8D;
+  --white: #FFFFFF;
+  --border: #DDE1E7;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, Arial, sans-serif;
+  color: var(--text-main);
+  background: var(--neutral-light);
+}
+
+.stub-page {
+  max-width: 960px;
+  margin: 48px auto;
+  padding: 32px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.stub-page h1 {
+  margin-top: 0;
+  font-family: Poppins, Arial, sans-serif;
+  color: var(--primary);
+}
+
+.admin-stub {
+  background: #fff;
+}

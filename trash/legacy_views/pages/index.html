@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CritEval Pro - Plateforme de Gestion d'Appels d'Offres</title>
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- Leaflet Maps -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  
+  <!-- Shared Styles -->
+  <link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body>
+
+<!-- Navigation -->
+<nav id="pubNav" class="navbar">
+  <div class="navbar-container">
+    <div class="navbar-brand">
+      <span class="navbar-logo"><i class="fas fa-chart-line"></i>CritEval Pro</span>
+    </div>
+    <ul class="navbar-menu">
+      <li><a href="index.html" class="nav-link">Accueil</a></li>
+      <li><a href="#avantages" class="nav-link">Avantages</a></li>
+      <li><a href="#timeline" class="nav-link">Appels d'offres</a></li>
+      <li><a href="login.html" class="nav-link nav-link-btn"><i class="fas fa-sign-in-alt"></i> Connexion</a></li>
+    </ul>
+  </div>
+</nav>
+
+<!-- Hero Section -->
+<section class="hero" id="page-landing">
+  <div class="container">
+    <div class="hero-content">
+      <h1 class="hero-title">Gérez vos appels d'offres en toute simplicité</h1>
+      <p class="hero-subtitle">CritEval Pro est la plateforme tout-en-un pour publier, évaluer et sélectionner les meilleures candidatures dans vos projets innovants.</p>
+      <div class="hero-buttons">
+        <a href="login.html" class="btn btn-primary btn-lg">Accéder au portail admin</a>
+        <button class="btn btn-ghost-dark btn-lg" onclick="document.getElementById('candidate').scrollIntoView({behavior:'smooth'})">Je suis candidat</button>
+      </div>
+    </div>
+    <div class="hero-stats">
+      <div class="stat">
+        <span class="stat-number" id="hstat1">0</span>
+        <span class="stat-label">Appels d'offres</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number" id="hstat2">0</span>
+        <span class="stat-label">Candidatures</span>
+      </div>
+      <div class="stat">
+        <span class="stat-number" id="hstat3">0</span>
+        <span class="stat-label">Pays couverts</span>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Advantages Section -->
+<section class="section-dark" id="avantages">
+  <div class="container">
+    <h2 class="section-title">Pourquoi CritEval Pro ?</h2>
+    <div class="advantages-grid">
+      <div class="advantage-card">
+        <div class="advantage-icon"><i class="fas fa-shield-alt"></i></div>
+        <h3>Sécurisé</h3>
+        <p>Authentification sécurisée et gestion des accès avec rôles différenciés.</p>
+      </div>
+      <div class="advantage-card">
+        <div class="advantage-icon"><i class="fas fa-tachometer-alt"></i></div>
+        <h3>Rapide</h3>
+        <p>Interface intuitive pour créer et gérer vos appels d'offres en quelques clics.</p>
+      </div>
+      <div class="advantage-card">
+        <div class="advantage-icon"><i class="fas fa-chart-bar"></i></div>
+        <h3>Analytique avancée</h3>
+        <p>Tableaux de bord en temps réel pour suivre vos campagnes et évaluations.</p>
+      </div>
+      <div class="advantage-card">
+        <div class="advantage-icon"><i class="fas fa-globe"></i></div>
+        <h3>Multi-régional</h3>
+        <p>Couvrez l'Afrique avec support multilingue et multi-devises.</p>
+      </div>
+      <div class="advantage-card">
+        <div class="advantage-icon"><i class="fas fa-cogs"></i></div>
+        <h3>Personnalisable</h3>
+        <p>Adaptez les critères d'évaluation selon vos besoins spécifiques.</p>
+      </div>
+      <div class="advantage-card">
+        <div class="advantage-icon"><i class="fas fa-users"></i></div>
+        <h3>Collaboratif</h3>
+        <p>Travaillez en équipe avec des outils de coordination intégrés.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Timeline / Calls Section -->
+<section class="section-light" id="timeline">
+  <div class="container">
+    <h2 class="section-title">Nos appels d'offres actifs</h2>
+    <div class="timeline">
+      <div class="timeline-item">
+        <div class="timeline-marker open"></div>
+        <div class="timeline-content">
+          <h3>AGRI-2025 : Innovation Agricole</h3>
+          <p class="timeline-subtitle">Projets innovants en agriculture durable</p>
+          <p class="timeline-date"><i class="fas fa-calendar-alt"></i> Du 01 Nov 2025 au 31 Déc 2025</p>
+          <p class="timeline-desc">Nous recherchons des projets innovants en agriculture durable pour la région Cameroun. Budget : €500,000</p>
+          <button class="btn btn-primary btn-sm" onclick="navigateTo('candidate.html')">Postuler maintenant</button>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-marker open"></div>
+        <div class="timeline-content">
+          <h3>Innov-Tech 2025 : Solutions numériques</h3>
+          <p class="timeline-subtitle">Startups en technologie et numérique</p>
+          <p class="timeline-date"><i class="fas fa-calendar-alt"></i> Du 15 Oct 2025 au 20 Déc 2025</p>
+          <p class="timeline-desc">Appel à projets pour startups en solutions numériques pour l'Afrique de l'Ouest. Budget : €300,000</p>
+          <button class="btn btn-primary btn-sm" onclick="navigateTo('candidate.html')">Postuler maintenant</button>
+        </div>
+      </div>
+      <div class="timeline-item">
+        <div class="timeline-marker upcoming"></div>
+        <div class="timeline-content">
+          <h3>Fonds Santé 2026 : Projets de santé</h3>
+          <p class="timeline-subtitle">Initiatives en santé publique et bien-être</p>
+          <p class="timeline-date"><i class="fas fa-calendar-alt"></i> Du 15 Jan 2026 au 01 Mar 2026</p>
+          <p class="timeline-desc">Programme de financement pour projets en santé publique et bien-être communautaire.</p>
+          <button class="btn btn-ghost btn-sm" disabled>À venir</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Map Section -->
+<section class="section-dark" id="coverage">
+  <div class="container">
+    <h2 class="section-title">Couverture géographique</h2>
+    <div id="africa-map" style="height:400px; border-radius:8px; overflow:hidden; box-shadow:0 20px 60px rgba(0,0,0,0.3);"></div>
+  </div>
+</section>
+
+<!-- Stats Section -->
+<section class="section-light" id="stats">
+  <div class="container">
+    <h2 class="section-title">En chiffres</h2>
+    <div class="stats-grid">
+      <div class="stat-box">
+        <h3 class="stat-big">
+          <span id="stat1">0</span>
+          <span class="stat-suffix">+</span>
+        </h3>
+        <p>Appels d'offres lancés</p>
+      </div>
+      <div class="stat-box">
+        <h3 class="stat-big">
+          <span id="stat2">0</span>
+          <span class="stat-suffix">+</span>
+        </h3>
+        <p>Candidatures reçues</p>
+      </div>
+      <div class="stat-box">
+        <h3 class="stat-big">
+          <span id="stat3">0</span>
+          <span class="stat-suffix">+</span>
+        </h3>
+        <p>Projets financés</p>
+      </div>
+      <div class="stat-box">
+        <h3 class="stat-big">
+          <span id="stat4">0</span>
+          <span class="stat-suffix">M€</span>
+        </h3>
+        <p>Budget distribué</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA Section -->
+<section class="section-cta">
+  <div class="container">
+    <h2>Prêt à commencer ?</h2>
+    <p>Rejoignez nos gestionnaires d'appels d'offres et trouvez les meilleurs projets</p>
+    <a href="login.html" class="btn btn-primary btn-lg">Connexion Admin</a>
+  </div>
+</section>
+
+<!-- Footer -->
+<footer class="footer">
+  <div class="footer-container">
+    <div class="footer-section">
+      <h4>CritEval Pro</h4>
+      <p>Plateforme de gestion d'appels d'offres et d'évaluation de projets innovants en Afrique.</p>
+    </div>
+    <div class="footer-section">
+      <h5>Liens rapides</h5>
+      <ul>
+        <li><a href="index.html">Accueil</a></li>
+        <li><a href="login.html">Connexion</a></li>
+        <li><a href="#contact">Contact</a></li>
+      </ul>
+    </div>
+    <div class="footer-section">
+      <h5>Légal</h5>
+      <ul>
+        <li><a href="#">Conditions d'utilisation</a></li>
+        <li><a href="#">Politique de confidentialité</a></li>
+        <li><a href="#">Mentions légales</a></li>
+      </ul>
+    </div>
+    <div class="footer-section">
+      <h5>Nous contacter</h5>
+      <p><i class="fas fa-envelope"></i> contact@criteval.com</p>
+      <p><i class="fas fa-phone"></i> +237 123 456 789</p>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>&copy; 2025 CritEval Pro. Tous droits réservés.</p>
+  </div>
+</footer>
+
+<!-- Shared App JS -->
+<script src="../../assets/js/app.js"></script>
+
+</body>
+</html>

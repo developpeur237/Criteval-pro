@@ -1,0 +1,11 @@
+Steps audit
+===========
+
+1. Reproduced the project database architecture from `docs/PROMPT_CRITEVAL_PRO.md` into `database/criteval_pro.sql`.
+2. Removed the extra `form_fields` table so the SQL schema matches the documented app scope.
+3. Added a guarded migration to ensure the `users.username` field exists and to seed the superadmin account.
+4. Updated the login flow to use MySQL authentication instead of a demo JavaScript shortcut.
+5. Set the real superadmin credentials to `username: admin` and `password: admin`.
+6. Protected the dashboard and admin routes with session-based server-side access checks.
+7. Updated the "Parametres systeme" module so each subparameter tab renders its matching information panel on click.
+8. Verified the PHP files with lint checks and validated the SQL schema with a temporary MySQL import.

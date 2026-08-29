@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Connexion - CritEval Pro</title>
+  
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&family=Poppins:wght@600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  
+  <!-- jQuery -->
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  
+  <!-- Shared Styles -->
+  <link rel="stylesheet" href="../../assets/css/styles.css">
+</head>
+<body class="auth-page">
+
+<div class="auth-container">
+  <div class="auth-card">
+    <div class="auth-header">
+      <div class="auth-logo">
+        <i class="fas fa-chart-line"></i>
+      </div>
+      <h1>CritEval Pro</h1>
+      <p>Portail d'administration</p>
+    </div>
+
+    <div class="auth-body">
+      <form class="login-form" onsubmit="event.preventDefault(); loginToDash();">
+        <div class="form-group">
+          <label for="email">Adresse e-mail</label>
+          <input 
+            type="email" 
+            id="email" 
+            class="form-input" 
+            placeholder="admin@example.com" 
+            required
+          >
+        </div>
+
+        <div class="form-group">
+          <label for="password">Mot de passe</label>
+          <input 
+            type="password" 
+            id="password" 
+            class="form-input" 
+            placeholder="••••••••" 
+            required
+          >
+        </div>
+
+        <div class="form-group checkbox">
+          <input type="checkbox" id="remember" name="remember">
+          <label for="remember" class="checkbox-label">Se souvenir de moi</label>
+        </div>
+
+        <button type="submit" class="btn btn-primary btn-block">
+          <i class="fas fa-sign-in-alt"></i> Se connecter
+        </button>
+      </form>
+
+      <div class="auth-divider">ou</div>
+
+      <a href="dashboard.html" class="btn btn-secondary btn-block">
+        <i class="fas fa-fast-forward"></i> Mode démo (sans login)
+      </a>
+    </div>
+
+    <div class="auth-footer">
+      <p>Pas encore inscrit ? <a href="#">Demander un accès</a></p>
+      <p><a href="#">Mot de passe oublié ?</a></p>
+      <p>Retourner à l'<a href="index.html">accueil</a></p>
+    </div>
+  </div>
+
+  <div class="auth-info">
+    <div class="info-box">
+      <h3><i class="fas fa-lock"></i> Sécurisé</h3>
+      <p>Vos données sont chiffrées et sécurisées</p>
+    </div>
+    <div class="info-box">
+      <h3><i class="fas fa-headset"></i> Support 24/7</h3>
+      <p>Notre équipe est toujours disponible</p>
+    </div>
+    <div class="info-box">
+      <h3><i class="fas fa-rocket"></i> Rapide</h3>
+      <p>Accès instantané à votre tableau de bord</p>
+    </div>
+  </div>
+</div>
+
+<!-- Shared App JS -->
+<script src="../../assets/js/app.js"></script>
+
+<script>
+// Demo login - navigate to dashboard
+function loginToDash() {
+  const email = $('#email').val();
+  showToast('Connexion en tant que ' + email, 'success');
+  setTimeout(() => navigateTo('dashboard.html'), 500);
+}
+</script>
+
+</body>
+</html>

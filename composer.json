@@ -1,0 +1,9 @@
+{
+  "name": "criteval/pro",
+  "description": "Criteval Pro native PHP application",
+  "type": "project",
+  "require": {
+    "php": ">=7.4",
+    "phpmailer/phpmailer": "^7.0"
+  }
+}

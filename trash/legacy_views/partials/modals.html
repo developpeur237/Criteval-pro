@@ -1,0 +1,105 @@
+<!-- Modals -->
+
+<!-- New Project Modal -->
+<div id="modalNewProject" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Créer un nouveau projet</h3>
+      <button class="modal-close"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <form>
+        <div class="form-group">
+          <label>Titre du projet</label>
+          <input type="text" class="form-input" placeholder="ex. AGRI-2025 : Innovation Agricole">
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea class="form-input" rows="3" placeholder="Décrivez le projet..."></textarea>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date d'ouverture</label>
+            <input type="date" class="form-input">
+          </div>
+          <div class="form-group">
+            <label>Date de clôture</label>
+            <input type="date" class="form-input">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Budget estimé (€)</label>
+          <input type="number" class="form-input" placeholder="50000">
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-action="close">Annuler</button>
+      <button class="btn btn-primary" data-action="save">Créer le projet</button>
+    </div>
+  </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="modalDelete" class="modal-overlay">
+  <div class="modal-box modal-small">
+    <div class="modal-header">
+      <h3>Confirmer la suppression</h3>
+      <button class="modal-close"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <p>Êtes-vous sûr de vouloir supprimer cet élément ? Cette action est irréversible.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-action="close">Annuler</button>
+      <button class="btn btn-danger" data-action="confirm">Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Planning Modal -->
+<div id="modalPlanning" class="modal-overlay">
+  <div class="modal-box">
+    <div class="modal-header">
+      <h3>Ajouter un événement</h3>
+      <button class="modal-close"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <form>
+        <div class="form-group">
+          <label>Titre de l'événement</label>
+          <input type="text" class="form-input" placeholder="ex. Réunion d'évaluation">
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>Date</label>
+            <input type="date" class="form-input">
+          </div>
+          <div class="form-group">
+            <label>Heure</label>
+            <input type="time" class="form-input">
+          </div>
+        </div>
+        <div class="form-group">
+          <label>Description</label>
+          <textarea class="form-input" rows="3" placeholder="Détails..."></textarea>
+        </div>
+      </form>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" data-action="close">Annuler</button>
+      <button class="btn btn-primary" data-action="save">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- Script to handle modals -->
+<script>
+$('[data-action="close"]').on('click', function() {
+  $(this).closest('.modal-overlay').removeClass('open');
+});
+$('[data-action="save"], [data-action="confirm"]').on('click', function() {
+  showToast('Action effectuée avec succès', 'success');
+  $(this).closest('.modal-overlay').removeClass('open');
+});
+</script>
