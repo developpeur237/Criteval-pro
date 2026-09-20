@@ -29,6 +29,7 @@
     <?php endif; ?>
 
     <form method="post" action="<?= BASE_URL ?>/login">
+      <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
       <div class="form-group">
         <label class="form-label">Nom d'utilisateur</label>
         <div class="form-input-group">
@@ -47,7 +48,7 @@
         <label style="display:flex;align-items:center;gap:8px;color:rgba(255,255,255,0.5);font-size:13px;cursor:pointer">
           <input type="checkbox" checked style="accent-color:var(--secondary)"> Se souvenir de moi
         </label>
-        <a href="#" style="color:var(--secondary);font-size:13px;text-decoration:none">Mot de passe oublie ?</a>
+        <a href="<?= BASE_URL ?>/forgot-password" style="color:var(--secondary);font-size:13px;text-decoration:none">Mot de passe oublie ?</a>
       </div>
       <button type="submit" class="btn btn-secondary" style="width:100%;justify-content:center;padding:14px">
         <i class="fas fa-sign-in-alt"></i> Se connecter
@@ -58,7 +59,7 @@
       <a href="<?= BASE_URL ?>/" style="color:rgba(255,255,255,0.35);font-size:13px;text-decoration:none"><i class="fas fa-arrow-left"></i> Retour au site</a>
     </div>
     <div style="margin-top:24px;padding:14px;background:rgba(46,175,125,0.1);border-radius:10px;border:1px solid rgba(46,175,125,0.2)">
-      <p style="color:rgba(255,255,255,0.5);font-size:12px;text-align:center"><i class="fas fa-info-circle" style="color:var(--secondary)"></i> Connexion superadmin : admin / admin</p>
+      <p style="color:rgba(255,255,255,0.5);font-size:12px;text-align:center"><i class="fas fa-info-circle" style="color:var(--secondary)"></i> Utilisez les identifiants fournis par votre administrateur.</p>
     </div>
   </div>
 </div>

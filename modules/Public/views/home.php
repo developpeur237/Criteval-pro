@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Criteval Pro - Evaluation de Financement de Projets</title>
+<title>Criteval Pro - Évaluation des organisations</title>
 
 <!-- Fonts -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -814,9 +814,9 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
           <i class="fas fa-globe-africa"></i> Conçu pour l'Afrique
         </div>
         <h1 class="hero-title">
-          L'évaluation de projets,<br><span class="accent">réinventée</span><br>pour l'Afrique
+          L'évaluation des organisations,<br><span class="accent">réinventée</span><br>pour l'Afrique
         </h1>
-        <p class="hero-sub">Criteval_pro centralise vos appels à projets, structure vos critères et publie vos classements en toute transparence.</p>
+        <p class="hero-sub">Criteval_pro centralise vos organisations, structure vos critères et publie vos classements en toute transparence.</p>
         <div class="hero-cta">
           <button class="btn btn-secondary btn-lg" onclick="showPage('login')">
             <i class="fas fa-rocket"></i> Demander une démo
@@ -828,7 +828,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
         <div class="hero-stats">
           <div>
             <div class="hero-stat-num" id="hstat1">0</div>
-            <div class="hero-stat-label">Projets évalués</div>
+            <div class="hero-stat-label">Organisations évaluées</div>
           </div>
           <div>
             <div class="hero-stat-num" id="hstat2">0</div>
@@ -852,7 +852,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
             <div style="color:#555;font-size:11px">criteval.pro/admin</div>
           </div>
           <div class="dp-kpis">
-            <div class="dp-kpi"><div class="dp-kpi-val" style="color:#2EAF7D">24</div><div class="dp-kpi-label">Projets actifs</div></div>
+            <div class="dp-kpi"><div class="dp-kpi-val" style="color:#2EAF7D">24</div><div class="dp-kpi-label">Organisations actives</div></div>
             <div class="dp-kpi"><div class="dp-kpi-val" style="color:#F5A623">187</div><div class="dp-kpi-label">Candidatures</div></div>
             <div class="dp-kpi"><div class="dp-kpi-val" style="color:#fff">92%</div><div class="dp-kpi-label">Évaluées</div></div>
           </div>
@@ -919,7 +919,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
         <div class="adv-card animate-fadeInUp anim-delay-4">
           <div class="adv-icon" style="background:var(--secondary-light);color:var(--secondary)"><i class="fas fa-globe-africa"></i></div>
           <h3 class="adv-title">Multi-pays africains</h3>
-          <p class="adv-text">Gérez des appels à projets couvrant tout ou partie du continent africain avec restriction géographique par pays.</p>
+          <p class="adv-text">Gérez des programmes d’accompagnement d’organisations couvrant tout ou partie du continent africain, avec restriction géographique par pays.</p>
         </div>
         <div class="adv-card animate-fadeInUp anim-delay-5">
           <div class="adv-icon" style="background:var(--primary-light);color:var(--primary)"><i class="fas fa-file-pdf"></i></div>
@@ -940,8 +940,8 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
       <div class="timeline-steps">
         <div class="timeline-step">
           <div class="step-num">1</div>
-          <h3 class="step-title">Créer le projet</h3>
-          <p class="step-desc">Définissez votre projet, ses objectifs et paramétrez les critères d'évaluation pondérés.</p>
+          <h3 class="step-title">Créer le programme d’organisation</h3>
+          <p class="step-desc">Définissez le cadre d’évaluation, son objectif et ses critères pondérés pour les organisations.</p>
         </div>
         <div class="timeline-step">
           <div class="step-num">2</div>
@@ -985,7 +985,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
     <div class="stats-inner">
       <div class="stat-item">
         <div class="stat-num" id="stat1">0</div>
-        <div class="stat-label">Projets créés</div>
+        <div class="stat-label">Organisations créées</div>
       </div>
       <div class="stat-item">
         <div class="stat-num" id="stat2">0</div>
@@ -1004,8 +1004,8 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
 
   <!-- CTA FINAL -->
   <section class="cta-final">
-    <h2>Prêt à lancer votre premier appel à projets ?</h2>
-    <p>Rejoignez les organisations africaines qui font confiance à Criteval_pro pour leurs processus de financement.</p>
+    <h2>Prêt à lancer votre premier programme d’évaluation ?</h2>
+    <p>Rejoignez les organisations africaines qui font confiance à Criteval Pro pour un processus d’évaluation transparent.</p>
     <button class="btn btn-lg" style="background:#fff;color:var(--secondary);font-weight:700" onclick="showPage('login')">
       <i class="fas fa-rocket"></i> Commencer maintenant — C'est gratuit
     </button>
@@ -1019,7 +1019,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
           <div style="width:32px;height:32px;background:var(--secondary);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px"><i class="fas fa-chart-line"></i></div>
           <span style="font-family:'Poppins',sans-serif;font-size:18px;font-weight:700;color:#fff">Criteval<em style="color:var(--secondary);font-style:normal">_pro</em></span>
         </div>
-        <p>Logiciel SaaS d'évaluation de demandes de financement de projets, conçu pour les organisations africaines.</p>
+        <p>Plateforme SaaS d’évaluation des organisations, de leurs réalisations et de leurs preuves, conçue pour les réseaux africains.</p>
         <div style="display:flex;gap:12px;margin-top:20px">
           <a href="#" style="width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);text-decoration:none;transition:all 0.2s" onmouseover="this.style.background='var(--secondary)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.color='rgba(255,255,255,0.5)'"><i class="fab fa-twitter"></i></a>
           <a href="#" style="width:34px;height:34px;border-radius:8px;background:rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.5);text-decoration:none" onmouseover="this.style.background='var(--secondary)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.08)';this.style.color='rgba(255,255,255,0.5)'"><i class="fab fa-linkedin"></i></a>
@@ -1082,7 +1082,7 @@ function loginToDash() {
 // ══════════════════════════════════════
 const moduleLabels = {
   apercu: 'Aperçu',
-  projets: 'Projets',
+  projets: 'Organisations',
   criteres: 'Critères d\'évaluation',
   formulaires: 'Formulaires',
   evaluations: 'Évaluations',

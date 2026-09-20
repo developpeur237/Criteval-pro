@@ -1,0 +1,8 @@
+Options -Indexes
+
+# Uploaded organisation logos are image assets only; never execute scripts
+# that might be accidentally placed in this directory by a future handler.
+<FilesMatch "\.(php|phtml|phar|pl|py|cgi|sh)$">
+  Require all denied
+</FilesMatch>
+AddType text/plain .php .phtml .phar

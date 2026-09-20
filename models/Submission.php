@@ -3,6 +3,32 @@ declare(strict_types=1);
 
 class Submission
 {
+    public static function forEvaluation(int $limit = 50): array
+    {
+        $stmt = db()->prepare(
+            'SELECT s.*, COALESCE(p.organization, p.title) AS organization, p.id AS project_id
+             FROM submissions s
+             JOIN forms f ON f.id = s.form_id
+             LEFT JOIN projects p ON p.id = f.project_id
+             WHERE s.status IN ("pending", "under_review")
+             ORDER BY s.submitted_at ASC, s.id ASC LIMIT :limit'
+        );
+        $stmt->bindValue(':limit', $limit, PDO::PARAM_INT);
+        $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public static function evidenceForSubmission(int $submissionId): array
+    {
+        $statement = db()->prepare(
+            'SELECT oe.id, oe.criteria_id, oe.original_name, oe.mime_type, oe.file_size, c.label
+             FROM organization_evidence oe JOIN criteria c ON c.id = oe.criteria_id
+             WHERE oe.submission_id = :submission_id ORDER BY c.order_index, oe.id'
+        );
+        $statement->execute(['submission_id' => $submissionId]);
+        return $statement->fetchAll();
+    }
+
     public static function create(array $data): int
     {
         $stmt = db()->prepare(
@@ -54,7 +80,7 @@ class Submission
         return $stmt->fetchAll();
     }
 
-    public static function monthlyCounts(int $months = 6): array
+    public static function monthlyCounts(int $months = 24): array
     {
         $stmt = db()->prepare(
             "SELECT strftime('%m/%Y', submitted_at) AS label, COUNT(*) AS total
@@ -63,8 +89,51 @@ class Submission
              GROUP BY strftime('%Y-%m', submitted_at)
              ORDER BY MIN(submitted_at) ASC"
         );
-        $stmt->bindValue(':interval', '-' . $months . ' months', PDO::PARAM_STR);
+        $stmt->bindValue(':interval', '-' . max(6, $months) . ' months', PDO::PARAM_STR);
         $stmt->execute();
+        return $stmt->fetchAll();
+    }
+
+    public static function chartCounts(?int $days = null): array
+    {
+        $where = '';
+        $params = [];
+        if ($days !== null) {
+            $where = "WHERE event_date >= datetime('now', :interval)";
+            $params[':interval'] = '-' . max(365, $days) . ' days';
+        }
+
+        $stmt = db()->prepare(
+            "WITH event_stream AS (
+                SELECT submitted_at AS event_date,
+                       CASE WHEN status IN ('evaluated', 'published') THEN 1 ELSE 0 END AS is_evaluated
+                FROM submissions
+                UNION ALL
+                SELECT start_datetime AS event_date, 0 AS is_evaluated
+                FROM form_schedules
+                WHERE start_datetime IS NOT NULL
+                UNION ALL
+                SELECT end_datetime AS event_date, 0 AS is_evaluated
+                FROM form_schedules
+                WHERE end_datetime IS NOT NULL
+                UNION ALL
+                SELECT session_date AS event_date, 0 AS is_evaluated
+                FROM training_sessions
+                WHERE session_date IS NOT NULL
+                UNION ALL
+                SELECT published_at AS event_date, 1 AS is_evaluated
+                FROM results
+                WHERE published_at IS NOT NULL
+            )
+            SELECT date(event_date) AS label,
+                   COUNT(*) AS total,
+                   SUM(is_evaluated) AS evaluated
+            FROM event_stream
+            {$where}
+            GROUP BY date(event_date)
+            ORDER BY label ASC"
+        );
+        $stmt->execute($params);
         return $stmt->fetchAll();
     }
 

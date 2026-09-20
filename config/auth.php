@@ -2,6 +2,16 @@
 declare(strict_types=1);
 
 if (session_status() !== PHP_SESSION_ACTIVE) {
+    $isSecure = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (int) ($_SERVER['SERVER_PORT'] ?? 0) === 443;
+    $cookieParams = session_get_cookie_params();
+    session_set_cookie_params([
+        'lifetime' => $cookieParams['lifetime'],
+        'path' => $cookieParams['path'] ?: '/',
+        'domain' => $cookieParams['domain'],
+        'secure' => $isSecure,
+        'httponly' => true,
+        'samesite' => 'Strict',
+    ]);
     session_start();
 }
 
@@ -30,7 +40,7 @@ function permission_module_labels(): array
 {
     return [
         'apercu' => 'Aperçu',
-        'projets' => 'Projets',
+        'projets' => 'Organisations',
         'criteres' => 'Critères',
         'formulaires' => 'Formulaires',
         'formation' => 'Formation',
@@ -187,7 +197,10 @@ function has_role(string $role): bool
 
 function is_admin(): bool
 {
-    return has_role('visitor') || has_role('user') || has_role('admin') || has_role('superadmin');
+    // Only administrative roles may access the server-side administration
+    // surface.  User/visitor permissions are intentionally read-only and are
+    // enforced by the public/candidate workflows instead of admin endpoints.
+    return has_role('admin') || has_role('superadmin');
 }
 
 function is_superadmin(): bool
@@ -195,12 +208,23 @@ function is_superadmin(): bool
     return has_role('superadmin');
 }
 
-function require_admin(): void
+function require_admin(?string $module = null, string $action = 'view'): void
 {
     if (!is_admin()) {
         header('Location: ' . BASE_URL . '/login');
         exit;
     }
+
+    if ($module !== null && !can_module_action($module, $action)) {
+        http_response_code(403);
+        exit('Accès refusé.');
+    }
+}
+
+/** Fail closed for API/state-changing routes when a permission is missing. */
+function require_permission(string $module, string $action = 'view'): void
+{
+    require_admin($module, $action);
 }
 
 function module_access_by_role(): array

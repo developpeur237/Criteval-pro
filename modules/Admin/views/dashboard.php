@@ -12,7 +12,7 @@ foreach ($availableRoles as $role) {
 }
 $modulePermissionLabels = [
     'apercu' => 'Aperçu',
-    'projets' => 'Projets',
+    'projets' => 'Organisations',
     'criteres' => 'Critères',
     'formulaires' => 'Formulaires',
     'evaluations' => 'Évaluations',
@@ -21,6 +21,11 @@ $modulePermissionLabels = [
     'parametres' => 'Paramètres',
     'utilisateurs' => 'Utilisateurs',
 ];
+$overview = $overview ?? [];
+$overviewKpis = $overview['kpis'] ?? [];
+$overviewLatest = $overview['latest'] ?? [];
+$overviewRanking = $overview['ranking'] ?? [];
+$overviewUpcoming = $overview['upcoming'] ?? [];
 $permissionActionLabels = function_exists('permission_action_labels') ? permission_action_labels() : ['view' => 'Voir', 'create' => 'Créer', 'update' => 'Modifier', 'delete' => 'Supprimer'];
 ?>
 <html lang="fr">
@@ -437,6 +442,48 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
 }
 .topbar-btn:hover { background: rgba(255,255,255,0.1); color: #fff; }
 .notif-dot { position: absolute; top: 6px; right: 6px; width: 8px; height: 8px; background: var(--danger); border-radius: 50%; border: 2px solid var(--neutral-dark2); }
+.notification-wrap { position: relative; }
+.notification-count { position: absolute; top: -5px; right: -5px; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 9px; background: var(--danger); color: #fff; font: 700 10px/17px 'Inter', sans-serif; text-align: center; }
+.notification-panel { position: absolute; top: 46px; right: 0; z-index: 1000; width: min(390px, calc(100vw - 32px)); max-height: 440px; overflow: hidden; background: #202031; border: 1px solid var(--border-dark); border-radius: 12px; box-shadow: 0 18px 50px rgba(0,0,0,.4); }
+.notification-panel[hidden] { display: none; }
+.notification-panel-header { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:14px 16px; border-bottom:1px solid var(--border-dark); color:#fff; font-weight:600; }
+.notification-panel-header small { color:rgba(255,255,255,.4); font-size:11px; font-weight:400; }
+.notification-mark-all { border:0; background:transparent; color:var(--secondary); cursor:pointer; font-size:11px; padding:0; }
+.notification-mark-all:hover { color:#fff; text-decoration:underline; }
+.notification-list { max-height:370px; overflow:auto; }
+.notification-item { display:flex; gap:11px; width:100%; padding:13px 16px; border:0; border-bottom:1px solid rgba(255,255,255,.06); background:transparent; color:#fff; text-align:left; cursor:pointer; }
+.notification-item:hover { background:rgba(255,255,255,.05); }
+.notification-item.is-unread { background:rgba(46,175,125,.075); }
+.notification-item.is-read { opacity:.62; }
+.notification-item.is-unread .notification-title::after { content:'Nouveau'; display:inline-block; margin-left:8px; padding:2px 5px; border-radius:4px; background:rgba(46,175,125,.18); color:#8de0bd; font-size:9px; font-weight:600; text-transform:uppercase; }
+.notification-status { display:inline-block; margin-left:7px; color:rgba(255,255,255,.35); font-size:9px; font-weight:500; }
+.notification-icon { flex:0 0 28px; width:28px; height:28px; border-radius:8px; display:grid; place-items:center; background:rgba(46,175,125,.14); color:var(--secondary); font-size:12px; }
+.notification-item[data-severity="urgent"] .notification-icon { background:rgba(245,166,35,.15); color:var(--accent); }
+.notification-item[data-severity="danger"] .notification-icon { background:rgba(231,76,60,.15); color:var(--danger); }
+.notification-content { min-width:0; flex:1; }
+.notification-title { font-size:12px; font-weight:700; margin-bottom:3px; }
+.notification-message { color:rgba(255,255,255,.58); font-size:12px; line-height:1.45; }
+.notification-date { color:rgba(255,255,255,.32); font-size:10px; margin-top:5px; }
+.notification-empty { padding:32px 20px; color:rgba(255,255,255,.45); text-align:center; font-size:13px; }
+.notification-create { border:0; background:transparent; color:var(--secondary); cursor:pointer; font-size:11px; padding:0; }
+.notification-create:hover { color:#fff; }
+.country-picker { position:relative; }
+.country-picker-trigger { align-items:center; background:rgba(255,255,255,.06); border:1px solid var(--border-dark); border-radius:8px; color:rgba(255,255,255,.75); cursor:pointer; display:flex; gap:8px; justify-content:space-between; min-height:42px; padding:8px 12px; text-align:left; width:100%; }
+.country-picker-trigger:hover,.country-picker.is-open .country-picker-trigger { border-color:var(--secondary); background:rgba(46,175,125,.08); }
+.country-picker-value { display:flex; flex-wrap:wrap; gap:5px; min-width:0; }
+.country-picker-placeholder { color:rgba(255,255,255,.42); }
+.country-chip { align-items:center; background:rgba(46,175,125,.17); border:1px solid rgba(46,175,125,.3); border-radius:5px; color:#b9f0d8; display:inline-flex; font-size:11px; gap:5px; padding:3px 6px; }
+.country-chip button { background:transparent; border:0; color:inherit; cursor:pointer; font-size:12px; line-height:1; padding:0; }
+.country-picker-menu { background:#202031; border:1px solid var(--border-dark); border-radius:8px; box-shadow:0 14px 35px rgba(0,0,0,.35); display:none; left:0; margin-top:6px; max-height:250px; overflow:auto; padding:8px; position:absolute; right:0; z-index:30; }
+.country-picker.is-open .country-picker-menu { display:block; }
+.country-picker-search { background:rgba(255,255,255,.06); border:1px solid var(--border-dark); border-radius:6px; color:#fff; margin-bottom:7px; outline:none; padding:8px 9px; width:100%; }
+.country-picker-option { align-items:center; border-radius:6px; color:rgba(255,255,255,.72); cursor:pointer; display:flex; font-size:12px; gap:8px; padding:8px; }
+.country-picker-option:hover { background:rgba(255,255,255,.06); color:#fff; }
+.country-picker-option.is-selected { background:rgba(46,175,125,.13); color:#b9f0d8; }
+.country-picker-option input { accent-color:var(--secondary); pointer-events:none; }
+.organisation-picker .country-picker-option { align-items:flex-start; }
+.organisation-picker .country-picker-option span { display:flex; flex-direction:column; gap:2px; }
+.organisation-picker .country-picker-option small { color:rgba(255,255,255,.38); font-size:10px; font-weight:400; }
 
 /* Main content */
 .main-content {
@@ -542,15 +589,16 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
   background-repeat: no-repeat; background-position: right 10px center;
 }
 
-.projects-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+.projects-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
 .project-card {
   background: var(--neutral-dark2); border: 1px solid var(--border-dark); border-radius: var(--radius);
-  overflow: hidden; transition: all 0.3s; cursor: pointer;
+  overflow: visible; position: relative; z-index: 1; transition: all 0.3s; cursor: default;
 }
-.project-card:hover { border-color: rgba(46,175,125,0.4); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+.project-card:hover { border-color: rgba(46,175,125,0.4); transform: translateY(-2px); z-index: 3; box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
 .project-card-img {
   height: 140px; position: relative; overflow: hidden;
   display: flex; align-items: center; justify-content: center;
+  border-radius: var(--radius) var(--radius) 0 0;
 }
 .project-card-img .proj-icon { font-size: 40px; opacity: 0.6; }
 .project-card-body { padding: 20px; }
@@ -558,10 +606,18 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
 .project-card-title { color: #fff; font-weight: 600; font-size: 15px; margin-bottom: 6px; font-family: 'Poppins', sans-serif; }
 .project-card-org { color: rgba(255,255,255,0.4); font-size: 13px; display: flex; align-items: center; gap: 6px; margin-bottom: 14px; }
 .project-card-footer { display: flex; align-items: center; justify-content: space-between; padding-top: 14px; border-top: 1px solid rgba(255,255,255,0.06); }
+.project-card .btn-preview-organisation { position: absolute; left: 50%; top: 140px; transform: translate(-50%, -50%); z-index: 10 !important; background: #fff; color: var(--neutral-dark); border: 2px solid var(--neutral-dark2); box-shadow: 0 4px 12px rgba(0,0,0,0.24); }
+.project-card .btn-preview-organisation:hover { background: var(--secondary); color: #fff; transform: translate(-50%, -50%) scale(1.06); }
+.project-card-body { padding-top: 28px; }
 .project-stat { text-align: center; }
 .project-stat-val { font-family: 'JetBrains Mono', monospace; font-size: 16px; font-weight: 600; color: #fff; }
 .project-stat-label { color: rgba(255,255,255,0.35); font-size: 11px; }
 .project-card-actions { display: flex; gap: 4px; }
+.organisation-filter-empty { align-items: center; background: var(--neutral-dark2); border: 1px dashed var(--border-dark); border-radius: var(--radius); color: rgba(255,255,255,0.55); display: flex; flex-direction: column; gap: 8px; justify-content: center; min-height: 180px; padding: 28px; text-align: center; }
+.organisation-filter-empty[hidden] { display: none; }
+.organisation-filter-empty i { color: var(--secondary); font-size: 24px; margin-bottom: 4px; }
+.organisation-filter-empty strong { color: #fff; font-size: 15px; }
+.organisation-filter-empty span { font-size: 12px; }
 
 /* ══════════════════════════════════════════
    MODULE: CRITÈRES
@@ -673,9 +729,14 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
 .settings-desc { color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 3px; }
 .form-input-dark {
   background: rgba(255,255,255,0.06); border: 1px solid var(--border-dark); border-radius: 8px;
-  color: rgba(255,255,255,0.8); font-size: 14px; padding: 9px 14px; outline: none; font-family: 'Inter', sans-serif;
+  color: rgba(255,255,255,0.8); color-scheme: dark; font-size: 14px; padding: 9px 14px; outline: none; font-family: 'Inter', sans-serif;
 }
 .form-input-dark:focus { border-color: var(--secondary); }
+.form-input-dark option,
+.filter-select option {
+  color: #f8fafc;
+  background-color: var(--neutral-dark2);
+}
 
 /* ══════════════════════════════════════════
    CANDIDATE FORM PAGE
@@ -805,7 +866,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
 </style>
 </head>
 <body>
-<div id="page-dashboard" class="page active">
+<div id="page-dashboard" class="page active" data-start-module="<?= e($startModule ?? 'apercu') ?>">
 
   <!-- SIDEBAR -->
   <aside class="sidebar" id="sidebar">
@@ -818,31 +879,13 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
     <nav class="sidebar-nav">
       <div class="nav-section-label">Navigation</div>
       <a class="sidebar-item active" onclick="switchModule('apercu')"><i class="fas fa-home"></i> Aperçu</a>
-      <a class="sidebar-item" onclick="switchModule('projets')"><i class="fas fa-folder-open"></i> Projets <span class="sidebar-badge">3</span></a>
+      <a class="sidebar-item" onclick="switchModule('projets')"><i class="fas fa-building"></i> Organisations <span class="sidebar-badge">3</span></a>
       <a class="sidebar-item" onclick="switchModule('criteres')"><i class="fas fa-check-square"></i> Critères</a>
       <a class="sidebar-item" onclick="switchModule('formulaires')"><i class="fas fa-file-alt"></i> Formulaires</a>
       <a class="sidebar-item" onclick="switchModule('formation')"><i class="fas fa-chalkboard-teacher"></i> Formation</a>
       <a class="sidebar-item" onclick="switchModule('evaluations')"><i class="fas fa-star"></i> Évaluations</a>
       <a class="sidebar-item" onclick="switchModule('classements')"><i class="fas fa-trophy"></i> Classements</a>
       <a class="sidebar-item" onclick="switchModule('calendrier')"><i class="fas fa-calendar-alt"></i> Planning</a>
-
-      <div class="nav-section-label" style="margin-top:8px">Modules</div>
-      <div class="sidebar-toggle-pill">
-        <span style="color:rgba(255,255,255,0.5);font-size:13px"><i class="fas fa-folder" style="width:16px;color:rgba(255,255,255,0.3)"></i> Projets</span>
-        <div class="toggle-switch on" onclick="$(this).toggleClass('on')"><div class="toggle-knob"></div></div>
-      </div>
-      <div class="sidebar-toggle-pill">
-        <span style="color:rgba(255,255,255,0.5);font-size:13px"><i class="fas fa-star" style="width:16px;color:rgba(255,255,255,0.3)"></i> Évaluations</span>
-        <div class="toggle-switch on" onclick="$(this).toggleClass('on')"><div class="toggle-knob"></div></div>
-      </div>
-      <div class="sidebar-toggle-pill">
-        <span style="color:rgba(255,255,255,0.5);font-size:13px"><i class="fas fa-file" style="width:16px;color:rgba(255,255,255,0.3)"></i> Formulaires</span>
-        <div class="toggle-switch on" onclick="$(this).toggleClass('on')"><div class="toggle-knob"></div></div>
-      </div>
-      <div class="sidebar-toggle-pill">
-        <span style="color:rgba(255,255,255,0.5);font-size:13px"><i class="fas fa-chalkboard-teacher" style="width:16px;color:rgba(255,255,255,0.3)"></i> Formation</span>
-        <div class="toggle-switch on" onclick="$(this).toggleClass('on')"><div class="toggle-knob"></div></div>
-      </div>
 
       <div class="nav-section-label" style="margin-top:8px">Configuration</div>
       <a class="sidebar-item" onclick="switchModule('parametres')"><i class="fas fa-cog"></i> Paramètres</a>
@@ -877,10 +920,17 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
     </div>
     <div class="topbar-actions">
       <button class="topbar-btn" title="Actualiser"><i class="fas fa-sync-alt"></i></button>
-      <button class="topbar-btn" title="Notifications">
+      <div class="notification-wrap">
+      <button class="topbar-btn" id="notificationButton" title="Notifications" aria-label="Notifications" aria-expanded="false" aria-controls="notificationPanel">
         <i class="fas fa-bell"></i>
-        <div class="notif-dot"></div>
+        <span class="notif-dot" id="notificationDot" hidden></span>
+        <span class="notification-count" id="notificationCount" hidden></span>
       </button>
+      <div class="notification-panel" id="notificationPanel" hidden>
+        <div class="notification-panel-header"><span>Notifications</span><span style="display:flex;align-items:center;gap:10px"><button type="button" class="notification-create" id="notificationCreate">Nouvelle</button><button type="button" class="notification-mark-all" id="notificationMarkAll">Tout marquer comme lu</button><small id="notificationUpdatedAt">Actualisation...</small></span></div>
+        <div class="notification-list" id="notificationList"><div class="notification-empty">Chargement des alertes...</div></div>
+      </div>
+      </div>
       <button class="topbar-btn" title="Aide"><i class="fas fa-question-circle"></i></button>
       <button class="btn btn-secondary btn-sm" onclick="showToast('Rapport PDF généré avec succès !', 'success')"><i class="fas fa-download"></i> Exporter</button>
     </div>
@@ -905,39 +955,39 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
 
       <!-- KPI Cards - sortable -->
       <div class="kpi-grid" id="kpiSortable">
-        <div class="kpi-card widget-handle">
+        <div class="kpi-card widget-handle" onclick="switchModule('projets')" role="button" tabindex="0" title="Ouvrir les organisations" style="cursor:pointer">
           <div class="kpi-card-top">
             <div class="kpi-icon" style="background:rgba(46,175,125,0.15);color:var(--secondary)"><i class="fas fa-folder-open"></i></div>
-            <div class="kpi-trend up"><i class="fas fa-arrow-up"></i> +12%</div>
+            <div class="kpi-trend up"><i class="fas fa-database"></i> réel</div>
           </div>
-          <div class="kpi-val" data-target="24">0</div>
-          <div class="kpi-label">Projets actifs</div>
+          <div class="kpi-val" data-target="<?= (int) ($overviewKpis['active_projects'] ?? 0) ?>"><?= (int) ($overviewKpis['active_projects'] ?? 0) ?></div>
+          <div class="kpi-label">Organisations actives</div>
           <div class="kpi-bar"><div class="kpi-bar-fill" style="width:70%;background:var(--secondary)"></div></div>
         </div>
         <div class="kpi-card widget-handle">
           <div class="kpi-card-top">
             <div class="kpi-icon" style="background:rgba(245,166,35,0.15);color:var(--accent)"><i class="fas fa-file-alt"></i></div>
-            <div class="kpi-trend up"><i class="fas fa-arrow-up"></i> +28%</div>
+            <div class="kpi-trend up"><i class="fas fa-database"></i> réel</div>
           </div>
-          <div class="kpi-val" data-target="187">0</div>
+          <div class="kpi-val" data-target="<?= (int) ($overviewKpis['submissions'] ?? 0) ?>"><?= (int) ($overviewKpis['submissions'] ?? 0) ?></div>
           <div class="kpi-label">Candidatures reçues</div>
           <div class="kpi-bar"><div class="kpi-bar-fill" style="width:85%;background:var(--accent)"></div></div>
         </div>
-        <div class="kpi-card widget-handle">
+        <div class="kpi-card widget-handle" onclick="switchModule('evaluations')" role="button" tabindex="0" title="Ouvrir les évaluations" style="cursor:pointer">
           <div class="kpi-card-top">
             <div class="kpi-icon" style="background:rgba(26,60,94,0.4);color:#7eb8e8"><i class="fas fa-star"></i></div>
-            <div class="kpi-trend up"><i class="fas fa-arrow-up"></i> +5%</div>
+            <div class="kpi-trend up"><i class="fas fa-database"></i> réel</div>
           </div>
-          <div class="kpi-val" data-target="143">0</div>
+          <div class="kpi-val" data-target="<?= (int) ($overviewKpis['evaluated'] ?? 0) ?>"><?= (int) ($overviewKpis['evaluated'] ?? 0) ?></div>
           <div class="kpi-label">Évaluations complètes</div>
           <div class="kpi-bar"><div class="kpi-bar-fill" style="width:76%;background:#7eb8e8"></div></div>
         </div>
         <div class="kpi-card widget-handle">
           <div class="kpi-card-top">
             <div class="kpi-icon" style="background:rgba(231,76,60,0.15);color:var(--danger)"><i class="fas fa-clock"></i></div>
-            <div class="kpi-trend down"><i class="fas fa-arrow-down"></i> -3%</div>
+            <div class="kpi-trend down"><i class="fas fa-database"></i> réel</div>
           </div>
-          <div class="kpi-val" data-target="44">0</div>
+          <div class="kpi-val" data-target="<?= (int) ($overviewKpis['pending'] ?? 0) ?>"><?= (int) ($overviewKpis['pending'] ?? 0) ?></div>
           <div class="kpi-label">En attente d'évaluation</div>
           <div class="kpi-bar"><div class="kpi-bar-fill" style="width:24%;background:var(--danger)"></div></div>
         </div>
@@ -952,9 +1002,12 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
               <div class="chart-sub">Évolution des candidatures sur l'année</div>
             </div>
             <div class="chart-actions">
-              <button class="chart-btn active">6M</button>
-              <button class="chart-btn">1A</button>
-              <button class="chart-btn">Tout</button>
+              <button class="chart-btn" data-period="1m" onclick="updateSubmissionsChart('1m')">1M</button>
+              <button class="chart-btn" data-period="3m" onclick="updateSubmissionsChart('3m')">3M</button>
+              <button class="chart-btn" data-period="6m" onclick="updateSubmissionsChart('6m')">6M</button>
+              <button class="chart-btn" data-period="1a" onclick="updateSubmissionsChart('1a')">1A</button>
+              <button class="chart-btn active" data-period="2a" onclick="updateSubmissionsChart('2a')">2A</button>
+              <button class="chart-btn" data-period="tout" onclick="updateSubmissionsChart('tout')">Tout</button>
             </div>
           </div>
           <canvas id="chartSubmissions" height="120"></canvas>
@@ -974,7 +1027,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
         <div class="chart-card">
           <div class="chart-card-header">
             <div>
-              <div class="chart-title">Scores moyens par projet</div>
+              <div class="chart-title">Scores moyens par organisation</div>
               <div class="chart-sub">Sur 20 points</div>
             </div>
           </div>
@@ -991,7 +1044,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
                 <stop offset="100%" stop-color="#5dd5a8"/>
               </linearGradient>
             </defs>
-            <text x="70" y="65" text-anchor="middle" fill="#fff" font-size="28" font-weight="700" font-family="Poppins">75</text>
+            <text x="70" y="65" text-anchor="middle" fill="#fff" font-size="28" font-weight="700" font-family="Poppins"><?= e((string) ($overviewKpis['weighted_average'] ?? 0)) ?></text>
             <text x="70" y="82" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="11">/100 pts</text>
           </svg>
           <div style="text-align:center"><span class="badge badge-success"><i class="fas fa-arrow-up"></i> Excellent</span></div>
@@ -999,10 +1052,8 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
         <div class="mini-cal-card">
           <div class="chart-title">Échéances à venir</div>
           <div class="mini-events">
-            <div class="mini-event" style="background:rgba(46,175,125,0.08)"><div class="mini-event-dot" style="background:var(--secondary)"></div><div class="mini-event-info"><div class="mini-event-title">Clôture — Projet AGRI-2025</div><div class="mini-event-date">15 déc. 2025 · 23h59</div></div></div>
-            <div class="mini-event" style="background:rgba(245,166,35,0.08)"><div class="mini-event-dot" style="background:var(--accent)"></div><div class="mini-event-info"><div class="mini-event-title">Résultats — Fonds Innovation</div><div class="mini-event-date">20 déc. 2025</div></div></div>
-            <div class="mini-event" style="background:rgba(231,76,60,0.08)"><div class="mini-event-dot" style="background:var(--danger)"></div><div class="mini-event-info"><div class="mini-event-title">Évaluations en retard (7)</div><div class="mini-event-date">Urgent</div></div></div>
-            <div class="mini-event" style="background:rgba(26,60,94,0.2)"><div class="mini-event-dot" style="background:#7eb8e8"></div><div class="mini-event-info"><div class="mini-event-title">Comité d'évaluation</div><div class="mini-event-date">5 jan. 2026</div></div></div>
+            <?php foreach ($overviewUpcoming as $event): ?><div class="mini-event" style="background:rgba(46,175,125,0.08)"><div class="mini-event-dot" style="background:var(--secondary)"></div><div class="mini-event-info"><div class="mini-event-title"><?= e($event['title']) ?></div><div class="mini-event-date"><?= e($event['organization']) ?> · <?= e((string) $event['date']) ?></div></div></div><?php endforeach; ?>
+            <?php if (!$overviewUpcoming): ?><div class="mini-event"><div class="mini-event-info"><div class="mini-event-title">Aucune échéance active</div><div class="mini-event-date">Les prochaines échéances apparaîtront ici.</div></div></div><?php endif; ?>
           </div>
         </div>
       </div>
@@ -1015,14 +1066,8 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
             <button class="btn btn-ghost-dark btn-sm" onclick="switchModule('evaluations')">Voir tout</button>
           </div>
           <table class="dash-table">
-            <thead><tr><th>Candidat</th><th>Projet</th><th>Pays</th><th>Statut</th><th>Score</th></tr></thead>
-            <tbody>
-              <tr><td><div class="candidate-name"><div class="candidate-av" style="background:var(--secondary)">AK</div> Amara Konaté</div></td><td>AGRI-2025</td><td>🇨🇮</td><td><span class="badge badge-warning">En révision</span></td><td class="font-mono">—</td></tr>
-              <tr><td><div class="candidate-name"><div class="candidate-av" style="background:var(--primary)">FD</div> Fatima Diallo</div></td><td>Innov-Tech</td><td>🇸🇳</td><td><span class="badge badge-success">Évalué</span></td><td class="font-mono">16.4</td></tr>
-              <tr><td><div class="candidate-name"><div class="candidate-av" style="background:var(--accent)">JN</div> Jean Ngoma</div></td><td>AGRI-2025</td><td>🇨🇲</td><td><span class="badge badge-info">Soumis</span></td><td class="font-mono">—</td></tr>
-              <tr><td><div class="candidate-name"><div class="candidate-av" style="background:#9b59b6">MS</div> Mariama Sy</div></td><td>Fonds Santé</td><td>🇲🇱</td><td><span class="badge badge-success">Publié</span></td><td class="font-mono">18.2</td></tr>
-              <tr><td><div class="candidate-name"><div class="candidate-av" style="background:#e67e22">OB</div> Omar Ba</div></td><td>Innov-Tech</td><td>🇬🇳</td><td><span class="badge badge-muted">En attente</span></td><td class="font-mono">—</td></tr>
-            </tbody>
+            <thead><tr><th>Organisation / candidat</th><th>Organisation</th><th>Pays</th><th>Statut</th><th>Score</th></tr></thead>
+            <tbody><?php foreach ($overviewLatest as $submission): ?><tr><td><?= e($submission['candidate_name'] ?: $submission['candidate_email']) ?></td><td><?= e($submission['project_title'] ?? '—') ?></td><td><?= e($submission['country_code'] ?? '—') ?></td><td><span class="badge <?= in_array($submission['status'], ['evaluated', 'published'], true) ? 'badge-success' : 'badge-warning' ?>"><?= e(ucfirst((string) $submission['status'])) ?></span></td><td class="font-mono"><?= $submission['score'] !== null ? e((string) round((float) $submission['score'], 1)) : '—' ?></td></tr><?php endforeach; ?><?php if (!$overviewLatest): ?><tr><td colspan="5">Aucune candidature enregistrée.</td></tr><?php endif; ?></tbody>
           </table>
         </div>
         <div class="table-card">
@@ -1031,13 +1076,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
           </div>
           <table class="dash-table">
             <thead><tr><th>Rang</th><th>Candidat</th><th>Score</th></tr></thead>
-            <tbody>
-              <tr><td><span class="rank-medal">🥇</span></td><td>Mariama Sy</td><td><span class="font-mono" style="color:var(--secondary)">18.2/20</span></td></tr>
-              <tr><td><span class="rank-medal">🥈</span></td><td>Fatima Diallo</td><td><span class="font-mono" style="color:var(--accent)">16.4/20</span></td></tr>
-              <tr><td><span class="rank-medal">🥉</span></td><td>K. Ouédraogo</td><td><span class="font-mono" style="color:#e67e22">15.8/20</span></td></tr>
-              <tr><td><span class="font-mono" style="color:rgba(255,255,255,0.3)">4</span></td><td>Ibrahim Touré</td><td><span class="font-mono">14.9/20</span></td></tr>
-              <tr><td><span class="font-mono" style="color:rgba(255,255,255,0.3)">5</span></td><td>A. Coulibaly</td><td><span class="font-mono">13.5/20</span></td></tr>
-            </tbody>
+            <tbody><?php foreach ($overviewRanking as $index => $rank): ?><tr><td><span class="font-mono" style="color:rgba(255,255,255,.5)"><?= (int) ($index + 1) ?></span></td><td><?= e($rank['candidate_name'] ?: 'Candidat') ?></td><td><span class="font-mono" style="color:var(--secondary)"><?= e((string) round((float) $rank['score'], 1)) ?>/20</span></td></tr><?php endforeach; ?><?php if (!$overviewRanking): ?><tr><td colspan="3">Aucun classement disponible.</td></tr><?php endif; ?></tbody>
           </table>
         </div>
       </div>
@@ -1046,19 +1085,86 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
     <!-- ╔══ MODULE: PROJETS ══╗ -->
     <div class="dash-module" id="module-projets">
       <div class="module-header">
-        <div><h1 class="module-title">Projets</h1><p class="module-sub">Gérez vos appels à projets et financements</p></div>
+        <div><h1 class="module-title">Organisations</h1><p class="module-sub">Gérez les organisations évaluées par CS4ME</p></div>
         <div class="module-actions">
-          <button class="btn btn-secondary" onclick="$('#modalNewProject').addClass('open')"><i class="fas fa-plus"></i> Nouveau projet</button>
+          <button type="button" class="btn btn-secondary" onclick="openNewOrganisationModal()"><i class="fas fa-plus"></i> Nouvelle organisation</button>
         </div>
       </div>
-      <div class="filter-bar">
-        <div class="filter-search"><i class="fas fa-search search-icon"></i><input type="text" placeholder="Rechercher un projet..."></div>
-        <select class="filter-select"><option>Tous les statuts</option><option>Actif</option><option>Brouillon</option><option>Clôturé</option><option>Archivé</option></select>
-        <select class="filter-select"><option>Toutes les organisations</option><option>FAO</option><option>PNUD</option><option>Union Africaine</option></select>
-        <select class="filter-select"><option>Trier par date</option><option>Trier par nom</option><option>Trier par candidatures</option></select>
+      <?php
+        $organisationProjects = $projects ?? [];
+        $organisationCountries = [];
+        foreach ($organisationProjects as $organisationProject) {
+            $country = strtoupper(trim((string) ($organisationProject['country_code'] ?? '')));
+            if ($country !== '') {
+                $organisationCountries[$country] = $country;
+            }
+        }
+        natcasesort($organisationCountries);
+      ?>
+      <div class="filter-bar organisation-filter-bar" data-organisation-filters>
+        <div class="filter-search"><i class="fas fa-search search-icon"></i><input type="search" data-organisation-search placeholder="Rechercher une organisation..." aria-label="Rechercher une organisation"></div>
+        <select class="filter-select" data-organisation-status aria-label="Filtrer par statut">
+          <option value="">Tous les statuts</option><option value="active">Actif</option><option value="draft">Brouillon</option><option value="closed">Clôturé</option><option value="archived">Archivé</option>
+        </select>
+        <select class="filter-select" data-organisation-country aria-label="Filtrer par pays">
+          <option value="">Tous les pays</option>
+          <?php foreach ($organisationCountries as $country): ?><option value="<?= e($country) ?>"><?= e($country) ?></option><?php endforeach; ?>
+        </select>
+        <select class="filter-select" data-organisation-sort aria-label="Trier les organisations">
+          <option value="date">Trier par date</option><option value="name">Trier par nom</option><option value="projects">Trier par nombre d’activités</option>
+        </select>
       </div>
-      <div class="projects-grid">
-        <div class="project-card" onclick="switchModule('criteres')">
+      <div class="table-card" style="display:none">
+        <table class="dash-table">
+          <thead><tr><th>Organisation</th><th>Pays</th><th>Domaines</th><th>Statut</th><th>Action</th></tr></thead>
+          <tbody>
+            <?php foreach (($projects ?? []) as $project): ?>
+              <tr>
+                <td><strong><?= e($project['organization'] ?: $project['title']) ?></strong><div style="color:rgba(255,255,255,0.4);font-size:12px"><?= e($project['title']) ?></div></td>
+                <td><?= e($project['country_code'] ?: '—') ?></td>
+                <td><?= e($project['domains'] ?: '—') ?></td>
+                <td><span class="badge <?= ($project['status'] ?? 'draft') === 'active' ? 'badge-success' : 'badge-muted' ?>"><?= e(ucfirst((string) ($project['status'] ?? 'draft'))) ?></span></td>
+                <td><button type="button" class="btn btn-ghost-dark btn-sm" onclick='openOrganisationModal(<?= json_encode($project, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>)'><i class="fas fa-edit"></i> Modifier</button></td>
+              </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+      <?php $statusLabels = ['draft' => 'Brouillon', 'active' => 'Actif', 'closed' => 'Clôturé', 'archived' => 'Archivé']; ?>
+      <div class="projects-grid organisation-cards-grid" data-organisation-grid>
+        <?php foreach ($organisationProjects as $project): ?>
+          <?php $projectStatus = (string) ($project['status'] ?? 'draft'); ?>
+          <?php $projectCountry = strtoupper(trim((string) ($project['country_code'] ?? ''))); ?>
+          <article class="project-card organisation-card" data-organisation-card data-name="<?= e(strtolower((string) ($project['organization'] ?: $project['title']))) ?>" data-title="<?= e(strtolower((string) $project['title'])) ?>" data-country="<?= e($projectCountry) ?>" data-status="<?= e($projectStatus) ?>" data-projects="<?= (int) ($project['project_count'] ?? 0) ?>" data-created="<?= e((string) ($project['created_at'] ?? '')) ?>">
+            <div class="project-card-img" style="background:linear-gradient(135deg,#1a4a2a,#2EAF7D20)">
+              <?php if (!empty($project['logo_path'])): ?><img src="<?= BASE_URL . '/' . e($project['logo_path']) ?>" alt="Logo <?= e($project['organization'] ?: $project['title']) ?>" style="width:100%;height:100%;object-fit:contain;padding:24px"><?php else: ?><i class="fas fa-building proj-icon" style="color:#2EAF7D"></i><?php endif; ?>
+            </div>
+            <button type="button" class="btn btn-icon btn-preview-organisation" title="Aperçu" aria-label="Aperçu de l’organisation" onclick='openOrganisationPreview(<?= json_encode($project, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>)'><i class="fas fa-eye"></i></button>
+            <div class="project-card-body">
+              <div class="project-card-meta"><span class="badge <?= $projectStatus === 'active' ? 'badge-success' : ($projectStatus === 'closed' ? 'badge-warning' : 'badge-muted') ?>"><i class="fas fa-circle" style="font-size:8px"></i> <?= e($statusLabels[$projectStatus] ?? ucfirst($projectStatus)) ?></span><span style="color:rgba(255,255,255,0.3);font-size:12px"><?= e(date('M Y', strtotime((string) ($project['created_at'] ?? 'now')))) ?></span></div>
+              <div class="project-card-title"><?= e($project['organization'] ?: $project['title']) ?></div>
+              <div class="project-card-org"><i class="fas fa-building"></i> <?= e($project['intervention_zone'] ?: ($project['country_code'] ?: 'Organisation')) ?></div>
+              <div class="project-card-footer">
+                <div class="project-stat"><div class="project-stat-val"><?= (int) ($project['project_count'] ?? 0) ?></div><div class="project-stat-label">Activités déclarées</div></div>
+                <div class="project-stat"><div class="project-stat-val"><?= e($project['country_code'] ?: '—') ?></div><div class="project-stat-label">Pays</div></div>
+                <div class="project-stat"><div class="project-stat-val"><?= e($project['legal_status'] === 'legal' ? 'Oui' : 'Non') ?></div><div class="project-stat-label">Légale</div></div>
+                <div class="project-card-actions">
+                  <button type="button" class="btn btn-icon btn-ghost-dark" title="Modifier" onclick='openOrganisationModal(<?= json_encode($project, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>)'><i class="fas fa-edit"></i></button>
+                  <button type="button" class="btn btn-icon" style="background:rgba(231,76,60,0.15);color:var(--danger)" title="Supprimer" onclick='confirmOrganisationDelete(<?= (int) $project['id'] ?>, <?= json_encode($project['organization'] ?: $project['title'], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>)'><i class="fas fa-trash"></i></button>
+                </div>
+              </div>
+            </div>
+          </article>
+        <?php endforeach; ?>
+        <button type="button" class="project-card organisation-create-card" data-organisation-create onclick="openNewOrganisationModal()" style="border:2px dashed rgba(46,175,125,0.3);display:flex;align-items:center;justify-content:center;min-height:280px;cursor:pointer;transition:all 0.3s;width:100%;color:inherit" onmouseover="this.style.background='rgba(46,175,125,0.05)'" onmouseout="this.style.background='var(--neutral-dark2)'">
+          <div style="text-align:center"><div style="width:52px;height:52px;border-radius:50%;background:rgba(46,175,125,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:22px;color:var(--secondary)"><i class="fas fa-plus"></i></div><div style="color:var(--secondary);font-weight:600;font-size:15px">Nouvelle organisation</div><div style="color:rgba(255,255,255,0.3);font-size:13px;margin-top:6px">Créer une fiche organisation</div></div>
+        </button>
+      </div>
+      <div class="organisation-filter-empty" data-organisation-empty hidden>
+        <i class="fas fa-filter-circle-xmark"></i><strong>Aucune organisation trouvée</strong><span>Modifiez les filtres ou créez une nouvelle organisation.</span>
+      </div>
+      <div class="projects-grid legacy-project-grid" style="display:none">
+        <div class="project-card">
           <div class="project-card-img" style="background:linear-gradient(135deg,#1a4a2a,#2EAF7D20)"><i class="fas fa-seedling proj-icon" style="color:#2EAF7D"></i></div>
           <div class="project-card-body">
             <div class="project-card-meta"><span class="badge badge-success"><i class="fas fa-circle" style="font-size:8px"></i> Actif</span><span style="color:rgba(255,255,255,0.3);font-size:12px">Nov 2025</span></div>
@@ -1128,25 +1234,25 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
             </div>
           </div>
         </div>
-        <div class="project-card" style="border:2px dashed rgba(46,175,125,0.3);display:flex;align-items:center;justify-content:center;min-height:280px;cursor:pointer;transition:all 0.3s" onclick="$('#modalNewProject').addClass('open')" onmouseover="this.style.background='rgba(46,175,125,0.05)'" onmouseout="this.style.background='var(--neutral-dark2)'">
+        <button type="button" class="project-card" onclick="openNewOrganisationModal()" style="border:2px dashed rgba(46,175,125,0.3);display:flex;align-items:center;justify-content:center;min-height:280px;cursor:pointer;transition:all 0.3s;width:100%;color:inherit" onmouseover="this.style.background='rgba(46,175,125,0.05)'" onmouseout="this.style.background='var(--neutral-dark2)'">
           <div style="text-align:center">
             <div style="width:52px;height:52px;border-radius:50%;background:rgba(46,175,125,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:22px;color:var(--secondary)"><i class="fas fa-plus"></i></div>
-            <div style="color:var(--secondary);font-weight:600;font-size:15px">Nouveau projet</div>
-            <div style="color:rgba(255,255,255,0.3);font-size:13px;margin-top:6px">Créer un appel à projets</div>
+            <div style="color:var(--secondary);font-weight:600;font-size:15px">Nouvelle organisation</div>
+            <div style="color:rgba(255,255,255,0.3);font-size:13px;margin-top:6px">Créer une fiche organisation</div>
           </div>
-        </div>
+        </button>
       </div>
     </div><!-- /projets -->
 
     <!-- ╔══ MODULE: CRITÈRES ══╗ -->
     <div class="dash-module" id="module-criteres">
       <div class="module-header">
-        <div><h1 class="module-title">Critères d'évaluation</h1><p class="module-sub">Gestion des critères par projet</p></div>
+        <div><h1 class="module-title">Critères d'évaluation</h1><p class="module-sub">Gestion des critères par organisation</p></div>
         <div class="module-actions">
           <select class="filter-select" id="criteriaProjectFilter" style="padding:10px 32px 10px 12px">
-            <option value="">Tous les projets</option>
+            <option value="">Toutes les organisations</option>
             <?php foreach ($projects as $project): ?>
-              <option value="<?= (int) ($project['id'] ?? 0) ?>"><?= e($project['title'] ?? 'Projet') ?></option>
+              <option value="<?= (int) ($project['id'] ?? 0) ?>"<?= !empty($projects) && (int) $project['id'] === (int) ($projects[0]['id'] ?? 0) ? ' selected' : '' ?>><?= e($project['organization'] ?? $project['title'] ?? 'Organisation') ?></option>
             <?php endforeach; ?>
           </select>
         </div>
@@ -1167,19 +1273,19 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
         <div>
           <form id="criteriaForm" class="criteria-panel" style="margin-bottom:16px">
             <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
-            <div class="panel-title"><i class="fas fa-plus" style="color:var(--secondary)"></i> Nouveau critère</div>
+            <div class="panel-title"><i id="criteriaFormIcon" class="fas fa-plus" style="color:var(--secondary)"></i> <span id="criteriaFormTitle">Nouveau critère</span></div>
             <div class="form-group" style="margin-bottom:16px">
-              <label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px">Projet *</label>
+              <label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px">Organisation *</label>
               <select name="project_id" class="form-input-dark" style="width:100%" required>
-                <option value="">Choisir un projet</option>
+                <option value="">Choisir une organisation</option>
                 <?php foreach ($projects as $project): ?>
-                  <option value="<?= (int) ($project['id'] ?? 0) ?>"><?= e($project['title'] ?? 'Projet') ?></option>
+                  <option value="<?= (int) ($project['id'] ?? 0) ?>"><?= e($project['organization'] ?? $project['title'] ?? 'Organisation') ?></option>
                 <?php endforeach; ?>
               </select>
             </div>
             <div class="form-group" style="margin-bottom:16px">
               <label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px">Libellé *</label>
-              <input type="text" name="label" class="form-input-dark" style="width:100%" placeholder="Ex: Pertinence du projet" required>
+              <input type="text" name="label" class="form-input-dark" style="width:100%" placeholder="Ex: Participation régulière aux activités CS4ME" required>
             </div>
             <div class="form-group" style="margin-bottom:16px">
               <label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px">Description</label>
@@ -1202,7 +1308,8 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
                 <span class="toggle-knob"></span>
               </label>
             </div>
-            <button type="submit" class="btn btn-secondary" style="width:100%;justify-content:center"><i class="fas fa-save"></i> Enregistrer</button>
+            <button id="criteriaFormSubmit" type="submit" class="btn btn-secondary" style="width:100%;justify-content:center"><i class="fas fa-save"></i> <span>Enregistrer</span></button>
+            <button id="criteriaFormCancel" type="button" class="btn btn-ghost-dark hidden" style="width:100%;justify-content:center;margin-top:8px"><i class="fas fa-times"></i> Annuler la modification</button>
           </form>
           <div class="chart-card">
             <div class="chart-title" style="margin-bottom:16px">Répartition des poids</div>
@@ -1230,7 +1337,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
       <div id="formTab-galerie">
         <div class="filter-bar" style="margin-bottom:20px">
           <div class="filter-search"><i class="fas fa-search search-icon"></i><input type="text" placeholder="Rechercher un formulaire..."></div>
-          <select class="filter-select"><option>Tous les projets</option><option>AGRI-2025</option><option>Innov-Tech</option></select>
+          <select class="filter-select"><option>Toutes les organisations</option><option>Organisation CS4ME</option><option>Organisation partenaire</option></select>
           <select class="filter-select"><option>Tous les statuts</option><option>Publié</option><option>Brouillon</option></select>
         </div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
@@ -1319,8 +1426,8 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
                 <div class="elem-controls"><button class="elem-btn" style="background:rgba(46,175,125,0.3);color:var(--secondary)"><i class="fas fa-edit"></i></button><button class="elem-btn" style="background:rgba(231,76,60,0.3);color:var(--danger)"><i class="fas fa-times"></i></button></div>
               </div>
               <div class="canvas-element" id="elem3">
-                <div class="elem-label">Description du projet *</div>
-                <div class="elem-input-mock" style="height:70px;align-items:flex-start;padding-top:8px">Décrivez votre projet en détail...</div>
+                <div class="elem-label">Description de l’organisation *</div>
+                <div class="elem-input-mock" style="height:70px;align-items:flex-start;padding-top:8px">Décrivez votre organisation, ses réalisations et son impact...</div>
                 <div class="elem-controls"><button class="elem-btn" style="background:rgba(46,175,125,0.3);color:var(--secondary)"><i class="fas fa-edit"></i></button><button class="elem-btn" style="background:rgba(231,76,60,0.3);color:var(--danger)"><i class="fas fa-times"></i></button></div>
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -1372,117 +1479,97 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
     </div><!-- /formulaires -->
 
     <!-- ╔══ MODULE: FORMATION ══╗ -->
-    <div class="dash-module" id="module-formation">
+    <?php
+      $trainingSessions = $trainingSessions ?? [];
+      $trainingDashboard = $trainingDashboard ?? ['session' => null, 'participants' => [], 'stats' => []];
+      $selectedTraining = $trainingDashboard['session'] ?? null;
+      $trainingStats = $trainingDashboard['stats'] ?? [];
+      $trainingParticipants = $trainingDashboard['participants'] ?? [];
+      $trainingFormatLabels = ['hybride' => 'Hybride', 'presentiel' => 'Présentiel', 'en_ligne' => 'En ligne'];
+      $trainingStatusLabel = !empty($selectedTraining['is_active']) ? 'Active' : 'Désactivée';
+    ?>
+    <div class="dash-module active" id="module-formation">
       <div class="module-header">
         <div><h1 class="module-title">Formation</h1><p class="module-sub">Sessions, présences, acquis et notes liées aux évaluations</p></div>
         <div class="module-actions">
-          <select class="filter-select"><option>Programme AGRI-2025</option><option>Fonds Innovation Technologique</option><option>Bourses d'Excellence 2026</option></select>
-          <button class="btn btn-ghost-dark btn-sm" onclick="showToast('Registre de formation exporté', 'success')"><i class="fas fa-file-csv"></i> Exporter</button>
+          <select class="filter-select" id="trainingSessionSelect" onchange="selectTrainingSession(this.value)">
+            <?php foreach ($trainingSessions as $training): ?><option value="<?= (int) $training['id'] ?>" <?= ((int) ($selectedTraining['id'] ?? 0) === (int) $training['id']) ? 'selected' : '' ?>><?= e($training['name']) ?><?= !empty($training['organization']) ? ' — ' . e($training['organization']) : '' ?></option><?php endforeach; ?>
+          </select>
+          <button class="btn btn-ghost-dark btn-sm" type="button" onclick="exportTrainingRegister()"><i class="fas fa-file-csv"></i> Exporter</button>
           <button class="btn btn-secondary" onclick="$('#modalTraining').addClass('open')"><i class="fas fa-plus"></i> Nouvelle formation</button>
         </div>
       </div>
 
       <div class="kpi-grid" style="margin-bottom:20px">
         <div class="kpi-card">
-          <div class="kpi-card-top"><div class="kpi-icon" style="background:rgba(46,175,125,0.15);color:var(--secondary)"><i class="fas fa-chalkboard-teacher"></i></div><span class="badge badge-success">Actif</span></div>
-          <div class="kpi-val" style="font-size:30px">6</div>
-          <div class="kpi-label">Formations planifiées</div>
-          <div class="kpi-bar"><div class="kpi-bar-fill" style="width:68%;background:var(--secondary)"></div></div>
+          <div class="kpi-card-top"><div class="kpi-icon" style="background:rgba(46,175,125,0.15);color:var(--secondary)"><i class="fas fa-chalkboard-teacher"></i></div><span class="badge <?= !empty($selectedTraining) && $selectedTraining['is_active'] ? 'badge-success' : 'badge-muted' ?>"><?= $trainingStatusLabel ?></span></div>
+          <div class="kpi-val" style="font-size:30px"><?= count($trainingSessions) ?></div><div class="kpi-label">Formations planifiées</div>
+          <div class="kpi-bar"><div class="kpi-bar-fill" style="width:<?= count($trainingSessions) ? 100 : 0 ?>%;background:var(--secondary)"></div></div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-card-top"><div class="kpi-icon" style="background:rgba(245,166,35,0.15);color:var(--accent)"><i class="fas fa-user-check"></i></div><div class="kpi-trend up"><i class="fas fa-arrow-up"></i> +9%</div></div>
-          <div class="kpi-val" style="font-size:30px">142</div>
-          <div class="kpi-label">Participants inscrits</div>
-          <div class="kpi-bar"><div class="kpi-bar-fill" style="width:76%;background:var(--accent)"></div></div>
+          <div class="kpi-card-top"><div class="kpi-icon" style="background:rgba(245,166,35,0.15);color:var(--accent)"><i class="fas fa-user-check"></i></div><span class="kpi-trend up"><?= (int) ($trainingStats['registered'] ?? 0) ?>/<?= (int) ($selectedTraining['capacity'] ?? 0) ?></span></div>
+          <div class="kpi-val" style="font-size:30px"><?= (int) ($trainingStats['registered'] ?? 0) ?></div><div class="kpi-label">Participants de l’organisation</div>
+          <div class="kpi-bar"><div class="kpi-bar-fill" style="width:<?= !empty($selectedTraining['capacity']) ? min(100, round(($trainingStats['registered'] / $selectedTraining['capacity']) * 100)) : 0 ?>%;background:var(--accent)"></div></div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-card-top"><div class="kpi-icon" style="background:rgba(52,152,219,0.15);color:#3498db"><i class="fas fa-clipboard-check"></i></div><span class="badge badge-info">Optionnel</span></div>
-          <div class="kpi-val" style="font-size:30px">4</div>
-          <div class="kpi-label">Notes liées à l'évaluation</div>
-          <div class="kpi-bar"><div class="kpi-bar-fill" style="width:50%;background:#3498db"></div></div>
+          <div class="kpi-card-top"><div class="kpi-icon" style="background:rgba(52,152,219,0.15);color:#3498db"><i class="fas fa-clipboard-check"></i></div><span class="badge badge-info">Présence</span></div>
+          <div class="kpi-val" style="font-size:30px"><?= (int) ($trainingStats['attendance_rate'] ?? 0) ?>%</div><div class="kpi-label">Taux de présence</div>
+          <div class="kpi-bar"><div class="kpi-bar-fill" style="width:<?= (int) ($trainingStats['attendance_rate'] ?? 0) ?>%;background:#3498db"></div></div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-card-top"><div class="kpi-icon" style="background:rgba(155,89,182,0.15);color:#9b59b6"><i class="fas fa-award"></i></div><div class="kpi-trend up"><i class="fas fa-arrow-up"></i> +1.8</div></div>
-          <div class="kpi-val" style="font-size:30px">15.4</div>
-          <div class="kpi-label">Moyenne des acquis /20</div>
-          <div class="kpi-bar"><div class="kpi-bar-fill" style="width:77%;background:#9b59b6"></div></div>
+          <div class="kpi-card-top"><div class="kpi-icon" style="background:rgba(155,89,182,0.15);color:#9b59b6"><i class="fas fa-award"></i></div><span class="kpi-trend up"><?= (int) ($trainingStats['graded'] ?? 0) ?> notées</span></div>
+          <div class="kpi-val" style="font-size:30px"><?= e((string) ($trainingStats['average'] ?? 0)) ?></div><div class="kpi-label">Moyenne des acquis /20</div>
+          <div class="kpi-bar"><div class="kpi-bar-fill" style="width:<?= min(100, (int) (($trainingStats['average'] ?? 0) * 5)) ?>%;background:#9b59b6"></div></div>
         </div>
       </div>
 
       <div style="display:grid;grid-template-columns:1.15fr 0.85fr;gap:20px;margin-bottom:20px">
         <div class="table-card">
           <div class="chart-card-header" style="margin-bottom:16px">
-            <div><div class="chart-title">Catalogue des formations</div><div class="chart-sub">Créer, activer, désactiver et suivre chaque session</div></div>
-            <div style="display:flex;gap:8px">
-              <select class="filter-select"><option>Tous les statuts</option><option>Active</option><option>Brouillon</option><option>Clôturée</option></select>
-            </div>
+            <div><div class="chart-title">Catalogue des formations</div><div class="chart-sub">Chaque session est rattachée à une organisation</div></div>
           </div>
           <table class="dash-table">
-            <thead><tr><th>Formation</th><th>Projet</th><th>Dates</th><th>Participants</th><th>Statut</th><th>Action</th></tr></thead>
-            <tbody>
-              <tr>
-                <td><div style="font-weight:600;color:#fff">Préparation au pitch financement</div><div style="color:rgba(255,255,255,0.35);font-size:12px">TRN-AGRI-01 · Hybride · 12h</div></td>
-                <td>AGRI-2025</td>
-                <td>18-20 déc. 2025</td>
-                <td>47 / 50</td>
-                <td><span class="badge badge-success">Active</span></td>
-                <td><button class="btn btn-ghost-dark btn-sm" onclick="openTrainingPanel('Préparation au pitch financement')"><i class="fas fa-eye"></i></button><button class="btn btn-ghost-dark btn-sm" onclick="toggleTrainingStatus(this)"><i class="fas fa-toggle-on"></i></button></td>
-              </tr>
-              <tr>
-                <td><div style="font-weight:600;color:#fff">Gestion financière simplifiée</div><div style="color:rgba(255,255,255,0.35);font-size:12px">TRN-AGRI-02 · Présentiel · 8h</div></td>
-                <td>AGRI-2025</td>
-                <td>05 jan. 2026</td>
-                <td>32 / 40</td>
-                <td><span class="badge badge-warning">Brouillon</span></td>
-                <td><button class="btn btn-ghost-dark btn-sm" onclick="openTrainingPanel('Gestion financière simplifiée')"><i class="fas fa-edit"></i></button><button class="btn btn-ghost-dark btn-sm" onclick="toggleTrainingStatus(this)"><i class="fas fa-toggle-off"></i></button></td>
-              </tr>
-              <tr>
-                <td><div style="font-weight:600;color:#fff">Mesure d'impact et indicateurs</div><div style="color:rgba(255,255,255,0.35);font-size:12px">TRN-TECH-01 · En ligne · 6h</div></td>
-                <td>Innov-Tech</td>
-                <td>02-03 déc. 2025</td>
-                <td>63 / 65</td>
-                <td><span class="badge badge-info">Clôturée</span></td>
-                <td><button class="btn btn-secondary btn-sm" onclick="showToast('Notes envoyées vers Évaluations', 'success')"><i class="fas fa-share"></i> Sync</button></td>
-              </tr>
-            </tbody>
+          <thead><tr><th>Formation</th><th>Organisation</th><th>Dates</th><th>Participants</th><th>Statut</th><th>Action</th></tr></thead>
+            <tbody><?php foreach ($trainingSessions as $training): ?><tr>
+              <td><div style="font-weight:600;color:#fff"><?= e($training['name']) ?></div><div style="color:rgba(255,255,255,.35);font-size:12px"><?= e($trainingFormatLabels[$training['format']] ?? $training['format']) ?> · <?= e($training['objective']) ?></div></td>
+              <td><?= e($training['organization'] ?? '—') ?></td><td><?= e($training['session_date']) ?></td><td><?= ((int) $training['id'] === (int) ($selectedTraining['id'] ?? 0)) ? (int) ($trainingStats['registered'] ?? 0) : '—' ?> / <?= (int) $training['capacity'] ?></td>
+              <td><span class="badge <?= !empty($training['is_active']) ? 'badge-success' : 'badge-muted' ?>"><?= !empty($training['is_active']) ? 'Active' : 'Désactivée' ?></span></td>
+              <td><button class="btn btn-ghost-dark btn-sm" type="button" onclick="selectTrainingSession(<?= (int) $training['id'] ?>)"><i class="fas fa-eye"></i></button></td>
+            </tr><?php endforeach; ?><?php if (!$trainingSessions): ?><tr><td colspan="6">Aucune formation enregistrée.</td></tr><?php endif; ?></tbody>
           </table>
         </div>
 
         <div class="chart-card" id="trainingDetailPanel">
           <div class="chart-card-header" style="margin-bottom:16px">
-            <div><div class="chart-title">Pilotage de la session</div><div class="chart-sub">Formation sélectionnée</div></div>
-            <span class="badge badge-success"><i class="fas fa-circle" style="font-size:8px"></i> Active</span>
+            <div><div class="chart-title">Pilotage de la session</div><div class="chart-sub"><?= e($selectedTraining['organization'] ?? 'Aucune organisation') ?></div></div>
+            <span class="badge <?= !empty($selectedTraining['is_active']) ? 'badge-success' : 'badge-muted' ?>"><i class="fas fa-circle" style="font-size:8px"></i> <?= $trainingStatusLabel ?></span>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-            <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border-dark);border-radius:10px;padding:12px"><div style="color:rgba(255,255,255,0.35);font-size:12px">Présence</div><div style="color:#fff;font-size:22px;font-weight:700">89%</div></div>
-            <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border-dark);border-radius:10px;padding:12px"><div style="color:rgba(255,255,255,0.35);font-size:12px">Poids optionnel</div><div style="color:#fff;font-size:22px;font-weight:700">10%</div></div>
-            <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border-dark);border-radius:10px;padding:12px"><div style="color:rgba(255,255,255,0.35);font-size:12px">Certifiés</div><div style="color:#fff;font-size:22px;font-weight:700">38</div></div>
-            <div style="background:rgba(255,255,255,0.04);border:1px solid var(--border-dark);border-radius:10px;padding:12px"><div style="color:rgba(255,255,255,0.35);font-size:12px">Moyenne</div><div style="color:#fff;font-size:22px;font-weight:700">16.2</div></div>
+            <div style="background:rgba(255,255,255,.04);border:1px solid var(--border-dark);border-radius:10px;padding:12px"><div style="color:rgba(255,255,255,.35);font-size:12px">Présence</div><div style="color:#fff;font-size:22px;font-weight:700"><?= (int) ($trainingStats['attendance_rate'] ?? 0) ?>%</div></div>
+            <div style="background:rgba(255,255,255,.04);border:1px solid var(--border-dark);border-radius:10px;padding:12px"><div style="color:rgba(255,255,255,.35);font-size:12px">Poids optionnel</div><div style="color:#fff;font-size:22px;font-weight:700"><?= e((string) ($selectedTraining['evaluation_weight'] ?? 0)) ?>%</div></div>
+            <div style="background:rgba(255,255,255,.04);border:1px solid var(--border-dark);border-radius:10px;padding:12px"><div style="color:rgba(255,255,255,.35);font-size:12px">Présents</div><div style="color:#fff;font-size:22px;font-weight:700"><?= (int) ($trainingStats['present'] ?? 0) ?></div></div>
+            <div style="background:rgba(255,255,255,.04);border:1px solid var(--border-dark);border-radius:10px;padding:12px"><div style="color:rgba(255,255,255,.35);font-size:12px">Moyenne</div><div style="color:#fff;font-size:22px;font-weight:700"><?= e((string) ($trainingStats['average'] ?? 0)) ?></div></div>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid var(--border-dark);border-bottom:1px solid var(--border-dark);margin-bottom:14px">
-            <div><div style="color:#fff;font-weight:600">Ajouter les notes aux évaluations</div><div style="color:rgba(255,255,255,0.38);font-size:12px">Les notes deviennent un critère optionnel traçable.</div></div>
-            <div class="toggle-switch on" onclick="$(this).toggleClass('on');showToast($(this).hasClass('on')?'Notes formation incluses':'Notes formation exclues', 'info')"><div class="toggle-knob"></div></div>
+            <div><div style="color:#fff;font-weight:600">Notes incluses dans les évaluations</div><div style="color:rgba(255,255,255,.38);font-size:12px">Configuration de la session sélectionnée.</div></div>
+            <span class="badge <?= (float) ($selectedTraining['evaluation_weight'] ?? 0) > 0 ? 'badge-success' : 'badge-muted' ?>"><?= (float) ($selectedTraining['evaluation_weight'] ?? 0) > 0 ? 'Oui' : 'Non' ?></span>
           </div>
           <div style="display:flex;gap:8px;flex-wrap:wrap">
-            <button class="btn btn-secondary btn-sm" onclick="showToast('Liste de présence mise à jour', 'success')"><i class="fas fa-user-check"></i> Valider présence</button>
-            <button class="btn btn-ghost-dark btn-sm" onclick="showToast('Grille de notes ouverte', 'success')"><i class="fas fa-pen"></i> Saisir notes</button>
-            <button class="btn btn-ghost-dark btn-sm" onclick="switchModule('evaluations')"><i class="fas fa-star"></i> Voir impact</button>
+            <button class="btn btn-secondary btn-sm" type="button" onclick="saveAllTrainingParticipants()"><i class="fas fa-save"></i> Enregistrer les changements</button>
+            <button class="btn btn-ghost-dark btn-sm" type="button" onclick="switchModule('evaluations')"><i class="fas fa-star"></i> Voir impact</button>
           </div>
         </div>
       </div>
 
       <div class="table-card">
         <div class="chart-card-header" style="margin-bottom:16px">
-          <div><div class="chart-title">Présences et notes des candidats</div><div class="chart-sub">Les notes peuvent rester informatives ou alimenter les évaluations</div></div>
-          <button class="btn btn-ghost-dark btn-sm" onclick="showToast('Modèle de notes importé', 'success')"><i class="fas fa-upload"></i> Importer notes</button>
+          <div><div class="chart-title">Présences et notes des candidats</div><div class="chart-sub">Candidatures de <?= e($selectedTraining['organization'] ?? 'l’organisation sélectionnée') ?></div></div>
         </div>
         <table class="dash-table">
-          <thead><tr><th>Candidat</th><th>Projet</th><th>Présence</th><th>Note /20</th><th>Appréciation</th><th>Inclure</th><th>Statut</th></tr></thead>
-          <tbody>
-            <tr><td><div class="candidate-name"><div class="candidate-av" style="background:var(--secondary)">AK</div> Amara Konaté</div></td><td>AGRI-2025</td><td>100%</td><td><input class="form-input-dark training-grade" value="17.5" style="width:70px"></td><td>Très bonne appropriation</td><td><div class="toggle-switch on" onclick="$(this).toggleClass('on')"><div class="toggle-knob"></div></div></td><td><span class="badge badge-success">Validé</span></td></tr>
-            <tr><td><div class="candidate-name"><div class="candidate-av" style="background:#e67e22">JN</div> Jean Ngoma</div></td><td>AGRI-2025</td><td>75%</td><td><input class="form-input-dark training-grade" value="14.0" style="width:70px"></td><td>À consolider</td><td><div class="toggle-switch on" onclick="$(this).toggleClass('on')"><div class="toggle-knob"></div></div></td><td><span class="badge badge-warning">À revoir</span></td></tr>
-            <tr><td><div class="candidate-name"><div class="candidate-av" style="background:#3498db">FS</div> Fatou Sarr</div></td><td>Innov-Tech</td><td>100%</td><td><input class="form-input-dark training-grade" value="18.0" style="width:70px"></td><td>Excellente restitution</td><td><div class="toggle-switch" onclick="$(this).toggleClass('on')"><div class="toggle-knob"></div></div></td><td><span class="badge badge-info">Informatif</span></td></tr>
-          </tbody>
+          <thead><tr><th>Organisation / candidat</th><th>Organisation</th><th>Présence</th><th>Note /20</th><th>Appréciation</th><th>Inclure</th><th>Statut</th></tr></thead>
+          <tbody><?php foreach ($trainingParticipants as $participant): ?><tr data-submission-id="<?= (int) $participant['submission_id'] ?>">
+            <td><?= e($participant['candidate_name'] ?: $participant['candidate_email']) ?></td><td><?= e($selectedTraining['organization'] ?? '—') ?></td><td><select class="filter-select training-attendance"><option value="registered" <?= $participant['attendance_status'] === 'registered' ? 'selected' : '' ?>>Inscrit</option><option value="present" <?= $participant['attendance_status'] === 'present' ? 'selected' : '' ?>>Présent</option><option value="absent" <?= $participant['attendance_status'] === 'absent' ? 'selected' : '' ?>>Absent</option><option value="certified" <?= $participant['attendance_status'] === 'certified' ? 'selected' : '' ?>>Certifié</option></select></td><td><input class="form-input-dark training-grade" value="<?= e((string) ($participant['grade'] ?? '')) ?>" type="number" min="0" max="20" step="0.5" style="width:70px"></td><td><input class="form-input-dark training-comment" value="<?= e((string) ($participant['comment'] ?? '')) ?>" placeholder="Commentaire" style="width:100%"></td><td><input type="checkbox" class="training-included" <?= !empty($participant['included_in_evaluation']) ? 'checked' : '' ?>></td><td><span class="badge <?= $participant['attendance_status'] === 'certified' ? 'badge-success' : 'badge-muted' ?>"><?= e(ucfirst($participant['attendance_status'])) ?></span></td>
+          </tr><?php endforeach; ?><?php if (!$trainingParticipants): ?><tr><td colspan="7">Aucune candidature liée à l’organisation de cette formation.</td></tr><?php endif; ?></tbody>
         </table>
       </div>
     </div><!-- /formation -->
@@ -1514,7 +1601,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
           </div>
         </div>
         <table class="dash-table">
-          <thead><tr><th>#Réf</th><th>Candidat</th><th>Pays</th><th>Projet</th><th>Soumis le</th><th>Statut</th><th>Action</th></tr></thead>
+          <thead><tr><th>#Réf</th><th>Candidat</th><th>Pays</th><th>Organisation</th><th>Soumis le</th><th>Statut</th><th>Action</th></tr></thead>
           <tbody>
             <tr style="cursor:pointer" onclick="showEvalForm()"><td class="font-mono" style="color:var(--secondary)">AGRI-047</td><td><div class="candidate-name"><div class="candidate-av" style="background:var(--secondary)">AK</div> Amara Konaté</div></td><td>🇨🇮 Côte d'Ivoire</td><td>AGRI-2025</td><td>12 nov. 2025</td><td><span class="badge badge-warning">En révision</span></td><td><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();showEvalForm()"><i class="fas fa-star"></i> Évaluer</button></td></tr>
             <tr><td class="font-mono" style="color:var(--secondary)">AGRI-046</td><td><div class="candidate-name"><div class="candidate-av" style="background:#e67e22">JN</div> Jean Ngoma</div></td><td>🇨🇲 Cameroun</td><td>AGRI-2025</td><td>11 nov. 2025</td><td><span class="badge badge-info">Soumis</span></td><td><button class="btn btn-ghost-dark btn-sm"><i class="fas fa-star"></i> Évaluer</button></td></tr>
@@ -1531,7 +1618,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
               <div class="candidate-av" style="width:48px;height:48px;font-size:18px;background:var(--secondary)">AK</div>
               <div><div style="color:#fff;font-weight:600;font-size:16px">Amara Konaté</div><div style="color:rgba(255,255,255,0.4);font-size:13px">amara.konate@email.ci — 🇨🇮 Côte d'Ivoire</div><div style="color:rgba(255,255,255,0.3);font-size:12px;margin-top:2px">Réf: AGRI-047 · Soumis le 12 nov. 2025</div></div>
             </div>
-            <div style="margin-bottom:20px"><div style="color:rgba(255,255,255,0.5);font-size:12px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Description du projet</div><div style="color:rgba(255,255,255,0.8);font-size:14px;line-height:1.7;background:rgba(255,255,255,0.03);padding:14px;border-radius:8px;border:1px solid var(--border-dark)">Notre projet vise à développer un système d'irrigation solaire pour les petits agriculteurs de la région de Korhogo. Nous prévoyons d'équiper 200 exploitations sur 24 mois, avec un impact estimé de 1500 familles bénéficiaires.</div></div>
+                <div style="margin-bottom:20px"><div style="color:rgba(255,255,255,0.5);font-size:12px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Description de l’organisation</div><div style="color:rgba(255,255,255,0.8);font-size:14px;line-height:1.7;background:rgba(255,255,255,0.03);padding:14px;border-radius:8px;border:1px solid var(--border-dark)">Présentation, réalisations documentées et résultats de l’organisation.</div></div>
             <div style="margin-bottom:20px"><div style="color:rgba(255,255,255,0.5);font-size:12px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Budget demandé</div><div style="color:var(--secondary);font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700">45 000 000 FCFA</div></div>
             <div><div style="color:rgba(255,255,255,0.5);font-size:12px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Pays d'implémentation</div><div style="color:rgba(255,255,255,0.8)">🇨🇮 Côte d'Ivoire — Région du Poro</div></div>
           </div>
@@ -1550,7 +1637,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
             </div>
             <div id="criteriaScoring">
               <div class="criteria-score-item">
-                <div class="criteria-score-label">Pertinence du projet <span class="criteria-score-max">×2.0 — /20</span></div>
+                <div class="criteria-score-label">Participation et réalisations de l’organisation <span class="criteria-score-max">×2.0 — /20</span></div>
                 <div class="slider-wrap">
                   <div class="score-slider-track" onclick="handleSliderClick(event, this, 'score1')"><div class="score-slider-fill" style="width:70%" id="fill-score1"></div><div class="score-slider-thumb" style="left:calc(70% - 9px)"></div></div>
                   <input type="number" class="score-input-mini" id="score1" value="14" min="0" max="20" step="0.5" oninput="updateEvalScore()">
@@ -1615,10 +1702,10 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
       <!-- Eval Levels -->
       <div style="margin-top:24px"><div class="module-title" style="font-size:18px;margin-bottom:16px">Niveaux d'évaluation définis</div></div>
       <div class="levels-grid">
-        <div class="level-card" style="border-left-color:var(--secondary)"><div class="level-range">17.0 — 20.0</div><div class="level-name" style="color:var(--secondary)">Excellent</div><div class="level-desc">Projet exemplaire. Réunit toutes les conditions de financement.</div></div>
-        <div class="level-card" style="border-left-color:#3498db"><div class="level-range">14.0 — 16.9</div><div class="level-name" style="color:#3498db">Très bien</div><div class="level-desc">Projet solide avec quelques points à renforcer.</div></div>
+        <div class="level-card" style="border-left-color:var(--secondary)"><div class="level-range">17.0 — 20.0</div><div class="level-name" style="color:var(--secondary)">Excellent</div><div class="level-desc">Organisation exemplaire. Réunit toutes les conditions d’éligibilité.</div></div>
+        <div class="level-card" style="border-left-color:#3498db"><div class="level-range">14.0 — 16.9</div><div class="level-name" style="color:#3498db">Très bien</div><div class="level-desc">Organisation solide avec quelques points à renforcer.</div></div>
         <div class="level-card" style="border-left-color:var(--accent)"><div class="level-range">11.0 — 13.9</div><div class="level-name" style="color:var(--accent)">Bien</div><div class="level-desc">Bonne proposition mais nécessite des améliorations ciblées.</div></div>
-        <div class="level-card" style="border-left-color:#e67e22"><div class="level-range">8.0 — 10.9</div><div class="level-name" style="color:#e67e22">Passable</div><div class="level-desc">Projet à potentiel, mais insuffisant en l'état actuel.</div></div>
+        <div class="level-card" style="border-left-color:#e67e22"><div class="level-range">8.0 — 10.9</div><div class="level-name" style="color:#e67e22">Passable</div><div class="level-desc">Organisation à potentiel, mais insuffisante en l’état actuel.</div></div>
         <div class="level-card" style="border-left-color:var(--danger)"><div class="level-range">0.0 — 7.9</div><div class="level-name" style="color:var(--danger)">Insuffisant</div><div class="level-desc">Ne répond pas aux critères minimaux du programme.</div></div>
         <div class="level-card" style="border:2px dashed rgba(46,175,125,0.3);cursor:pointer;display:flex;align-items:center;justify-content:center" onclick="showToast('Formulaire niveau ouvert', 'success')"><div style="text-align:center"><i class="fas fa-plus" style="font-size:24px;color:var(--secondary);display:block;margin-bottom:8px"></i><span style="color:var(--secondary);font-weight:600">Ajouter un niveau</span></div></div>
       </div>
@@ -1662,6 +1749,13 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
                 <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:6px;display:block">Email contact</label><input name="contact_email" class="form-input-dark" style="width:100%" value="<?= e($appSettings['contact_email'] ?? '') ?>"></div>
                 <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;margin-bottom:6px;display:block">Site web</label><input name="website" class="form-input-dark" style="width:100%" value="<?= e($appSettings['website'] ?? '') ?>"></div>
               </div>
+              <div class="settings-section-title"><i class="fas fa-bell" style="color:var(--accent)"></i> Alertes et notifications</div>
+              <?php $notificationSettings = $appSettings['notifications'] ?? []; ?>
+              <?php foreach ([['enabled', 'Notifications actives', 'Afficher les alertes dans la cloche du tableau de bord.'], ['schedule_alerts', 'Alertes des échéances', 'Surveiller les ouvertures et fins des formulaires planifiés.'], ['browser_alerts', 'Notifications navigateur', 'Afficher une alerte système lorsque de nouvelles échéances apparaissent.'], ['sound_alerts', 'Signal sonore', 'Jouer un signal discret pour les nouvelles alertes.']] as [$key, $label, $description]): ?>
+                <div class="settings-row"><div><div class="settings-label"><?= e($label) ?></div><div class="settings-desc"><?= e($description) ?></div></div><input type="hidden" name="notifications[<?= e($key) ?>]" value="0"><label class="toggle-switch <?= !empty($notificationSettings[$key]) ? 'on' : '' ?>"><input type="checkbox" name="notifications[<?= e($key) ?>]" value="1" <?= !empty($notificationSettings[$key]) ? 'checked' : '' ?> hidden><div class="toggle-knob"></div></label></div>
+              <?php endforeach; ?>
+              <div class="settings-row"><div><div class="settings-label">Anticipation des échéances</div><div class="settings-desc">Afficher les alertes de formulaires dans cette fenêtre.</div></div><div style="display:flex;align-items:center;gap:8px"><input type="number" name="notifications[lead_minutes]" class="form-input-dark" min="5" max="10080" value="<?= e((string) ($notificationSettings['lead_minutes'] ?? 1440)) ?>" style="width:88px"><span class="settings-desc">minutes</span></div></div>
+              <div class="settings-row"><div><div class="settings-label">Anticipation des formations</div><div class="settings-desc">Afficher les formations à venir dans cette fenêtre.</div></div><div style="display:flex;align-items:center;gap:8px"><input type="number" name="notifications[training_lead_days]" class="form-input-dark" min="1" max="30" value="<?= e((string) ($notificationSettings['training_lead_days'] ?? 7)) ?>" style="width:70px"><span class="settings-desc">jours</span></div></div>
             </div>
             <div class="settings-section settings-pane hidden" id="settings-modules">
               <div class="settings-section-title"><i class="fas fa-puzzle-piece" style="color:var(--accent)"></i> Modules actifs</div>
@@ -1724,6 +1818,21 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
 
   </main>
 </div><!-- /page-dashboard -->
+
+<div class="modal-overlay" id="modalNewNotification" onclick="if(event.target===this)this.classList.remove('open')">
+  <div class="modal" style="max-width:560px">
+    <div class="modal-header"><div class="modal-title"><i class="fas fa-bell" style="color:var(--secondary);margin-right:8px"></i> Nouvelle notification</div><button type="button" class="modal-close" onclick="document.getElementById('modalNewNotification').classList.remove('open')"><i class="fas fa-times"></i></button></div>
+    <form id="newNotificationForm">
+      <div class="modal-body">
+        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+        <div class="form-group" style="margin-bottom:14px"><label class="form-label">Titre</label><input required name="title" class="form-input-dark" style="width:100%" maxlength="100" placeholder="Ex: Réunion de coordination"></div>
+        <div class="form-group" style="margin-bottom:14px"><label class="form-label">Message</label><textarea required name="message" class="form-input-dark" style="width:100%;min-height:90px;resize:vertical" maxlength="500" placeholder="Décrivez l’information à afficher..."></textarea></div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><label class="form-label">Date et heure<input required type="datetime-local" name="due_at" class="form-input-dark" style="width:100%"></label><label class="form-label">Priorité<select name="severity" class="form-input-dark" style="width:100%"><option value="info">Information</option><option value="warning">Attention</option><option value="urgent">Urgente</option><option value="danger">Critique</option></select></label></div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-ghost-dark" onclick="document.getElementById('modalNewNotification').classList.remove('open')">Annuler</button><button class="btn btn-secondary" type="submit"><i class="fas fa-save"></i> Créer la notification</button></div>
+    </form>
+  </div>
+</div>
 
 
 <!-- ══════════════════════════════════════
@@ -1828,24 +1937,500 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
 <!-- ══════════════════════════════════════
      MODALS
 ══════════════════════════════════════ -->
-<div class="modal-overlay" id="modalNewProject" onclick="if(event.target===this)$(this).removeClass('open')">
-  <div class="modal">
+<div class="modal-overlay organisation-edit-overlay" id="modalNewProject" onclick="if(event.target===this)$(this).removeClass('open')">
+  <div class="modal organisation-edit-modal">
     <div class="modal-header">
-      <div class="modal-title"><i class="fas fa-folder-plus" style="color:var(--secondary);margin-right:8px"></i> Nouveau projet</div>
+      <div class="organisation-edit-heading"><div class="organisation-edit-icon"><i class="fas fa-building"></i></div><div><div class="organisation-edit-eyebrow">Référentiel</div><div class="modal-title" id="organisationModalTitle">Nouvelle organisation</div><div class="organisation-edit-subtitle">Créez une fiche claire et complète pour le suivi des évaluations.</div></div></div>
       <button class="modal-close" onclick="$('#modalNewProject').removeClass('open')"><i class="fas fa-times"></i></button>
     </div>
-    <div class="modal-body">
-      <div class="form-group" style="margin-bottom:16px"><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Titre du projet *</label><input class="form-input-dark" style="width:100%" placeholder="Ex: Programme AGRI-2026"></div>
-      <div class="form-group" style="margin-bottom:16px"><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Organisation *</label><input class="form-input-dark" style="width:100%" placeholder="Ex: FAO, PNUD, OMS..."></div>
-      <div class="form-group" style="margin-bottom:16px"><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Description</label><textarea class="form-input-dark" style="width:100%;height:80px;resize:none" placeholder="Décrivez les objectifs..."></textarea></div>
-      <div class="form-group"><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Statut initial</label><select class="form-input-dark" style="width:100%"><option>Brouillon</option><option>Actif</option></select></div>
+    <form method="post" action="<?= BASE_URL ?>/admin/projects" enctype="multipart/form-data">
+      <div class="modal-body organisation-modal-body">
+        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+        <input type="hidden" name="id" value="0">
+        <input type="hidden" name="criteria_configured" value="1">
+        <input type="hidden" name="criteria_selection_submitted" value="1">
+        <div class="organisation-form-groups">
+          <section class="organisation-form-group">
+            <div class="organisation-form-group-heading"><i class="fas fa-id-card"></i><span>Identité</span></div>
+            <div class="organisation-modal-grid organisation-modal-grid-identity">
+              <label>Nom de l’organisation *<input required name="organization" class="form-input-dark" placeholder="Nom de votre organisation"></label>
+              <label>Nom de la fiche *<input required name="title" class="form-input-dark" placeholder="Organisation CS4ME"></label>
+              <label>Statut juridique<select name="legal_status" class="form-input-dark"><option value="non_legal">Non légale</option><option value="legal">Légale</option></select></label>
+              <label>Pays *<input required name="country_code" class="form-input-dark" maxlength="20" placeholder="Mali"></label>
+            </div>
+          </section>
+          <section class="organisation-form-group">
+            <div class="organisation-form-group-heading"><i class="fas fa-address-book"></i><span>Contact</span></div>
+            <div class="organisation-modal-grid organisation-modal-grid-contact">
+              <label>Responsable<input name="contact_name" class="form-input-dark"></label>
+              <label>Téléphone<input type="tel" name="contact_phone" class="form-input-dark"></label>
+              <label>E-mail<input type="email" name="contact_email" class="form-input-dark"></label>
+              <label>Site web<input type="url" name="website" class="form-input-dark" placeholder="https://..."></label>
+            </div>
+          </section>
+          <section class="organisation-form-group">
+            <div class="organisation-form-group-heading"><i class="fas fa-bullseye"></i><span>Périmètre d’intervention</span></div>
+            <div class="organisation-modal-grid organisation-modal-grid-reach">
+              <label>Domaines thématiques<input name="domains" class="form-input-dark" placeholder="Femmes, jeunesse, santé"></label>
+              <label>Publics cibles<input name="target_audiences" class="form-input-dark" placeholder="Femmes, hommes, enfants"></label>
+              <label class="field-span-2">Zone d’intervention<input name="intervention_zone" class="form-input-dark"></label>
+            </div>
+          </section>
+          <section class="organisation-form-group">
+            <div class="organisation-form-group-heading"><i class="fas fa-chart-line"></i><span>Suivi</span></div>
+            <div class="organisation-modal-grid organisation-modal-grid-tracking">
+              <label>Projets<input type="number" min="0" name="project_count" class="form-input-dark"></label>
+              <label>Durée (mois)<input type="number" min="1" name="duration_months" class="form-input-dark"></label>
+              <label>Budget demandé (FCFA)<input type="number" min="0" step="0.01" name="budget_requested" class="form-input-dark"></label>
+              <label>Statut<select name="status" class="form-input-dark"><option value="draft">Brouillon</option><option value="active">Active</option><option value="closed">Clôturée</option><option value="archived">Archivée</option></select></label>
+              <label class="logo-field field-span-4">Logo<input type="file" name="logo" class="form-input-dark" accept="image/jpeg,image/png,image/webp,image/gif"><small>JPG, PNG, WEBP ou GIF, 2 Mo max.</small></label>
+            </div>
+          </section>
+          <section class="organisation-form-group organisation-form-group-wide">
+            <div class="organisation-form-group-heading"><i class="fas fa-list-check"></i><span>Critères d’évaluation de cette organisation</span><span class="organisation-criteria-hint">Les 10 critères standards sont proposés par défaut</span></div>
+            <div class="organisation-template-grid" id="organisationTemplateCriteria">
+              <?php foreach (($criteriaTemplates ?? []) as $template): ?>
+                <label class="organisation-template-option"><input type="checkbox" name="criteria_template_ids[]" value="<?= (int) $template['id'] ?>"><span><?= e($template['label']) ?></span></label>
+              <?php endforeach; ?>
+            </div>
+            <div class="organisation-custom-heading"><span>Critères personnalisés</span><button type="button" class="btn btn-ghost-dark btn-sm" id="addOrganisationCustomCriterion"><i class="fas fa-plus"></i> Ajouter</button></div>
+            <div class="organisation-custom-list" id="organisationCustomCriteria"></div>
+          </section>
+        </div>
+        <label class="organisation-description-field">Présentation / description<textarea name="description" class="form-input-dark" rows="2" placeholder="Activités, réalisations et résultats de votre organisation."></textarea></label>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-ghost-dark" onclick="$('#modalNewProject').removeClass('open')">Annuler</button>
+        <button class="btn btn-secondary" id="organisationModalSubmit" type="submit"><i class="fas fa-check"></i> Enregistrer l’organisation</button>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="modal-overlay organisation-preview-overlay" id="modalOrganisationPreview" role="dialog" aria-modal="true" aria-labelledby="organisationPreviewTitle" aria-hidden="true" onclick="if(event.target===this)closeOrganisationPreview()">
+  <div class="organisation-preview-modal">
+    <div class="organisation-preview-header">
+      <div class="organisation-preview-heading">
+        <div class="organisation-preview-logo" id="organisationPreviewLogo"><i class="fas fa-building"></i></div>
+        <div>
+          <div class="organisation-preview-kicker">Fiche organisation</div>
+          <h2 id="organisationPreviewTitle">Aperçu de l’organisation</h2>
+          <p id="organisationPreviewSubtitle"></p>
+        </div>
+      </div>
+      <button class="modal-close" type="button" aria-label="Fermer l’aperçu" onclick="closeOrganisationPreview()"><i class="fas fa-times"></i></button>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost-dark" onclick="$('#modalNewProject').removeClass('open')">Annuler</button>
-      <button class="btn btn-secondary" onclick="$('#modalNewProject').removeClass('open');showToast('Projet créé avec succès !', 'success')"><i class="fas fa-check"></i> Créer le projet</button>
+    <div class="organisation-preview-body">
+      <div class="organisation-preview-status" id="organisationPreviewStatus"></div>
+      <div class="organisation-preview-grid">
+        <section class="organisation-preview-section organisation-preview-section-wide">
+          <div class="organisation-preview-section-title"><i class="fas fa-chart-pie"></i><span>En bref</span></div>
+          <div class="organisation-preview-facts" id="organisationPreviewFacts"></div>
+        </section>
+        <section class="organisation-preview-section">
+          <div class="organisation-preview-section-title"><i class="fas fa-address-card"></i><span>Contact</span></div>
+          <div class="organisation-preview-list" id="organisationPreviewContact"></div>
+        </section>
+        <section class="organisation-preview-section">
+          <div class="organisation-preview-section-title"><i class="fas fa-bullseye"></i><span>Rayonnement</span></div>
+          <div class="organisation-preview-list" id="organisationPreviewReach"></div>
+        </section>
+        <section class="organisation-preview-section organisation-preview-section-wide">
+          <div class="organisation-preview-section-title"><i class="fas fa-align-left"></i><span>Présentation</span></div>
+          <p class="organisation-preview-description" id="organisationPreviewDescription"></p>
+        </section>
+      </div>
+    </div>
+    <div class="organisation-preview-footer">
+      <span class="organisation-preview-created" id="organisationPreviewCreated"></span>
+      <div class="organisation-preview-actions">
+        <button type="button" class="btn btn-ghost-dark" onclick="closeOrganisationPreview()">Fermer</button>
+        <button type="button" class="btn btn-secondary" id="organisationPreviewEdit"><i class="fas fa-edit"></i> Modifier</button>
+      </div>
     </div>
   </div>
 </div>
+<style>
+.organisation-preview-overlay{align-items:center;backdrop-filter:blur(7px);background:rgba(5,12,18,.78);display:none;justify-content:center;padding:5vh 5vw;z-index:1200}.organisation-preview-overlay.open{display:flex}
+.organisation-preview-modal{background:#18232b;border:1px solid rgba(255,255,255,.12);border-radius:18px;box-shadow:0 28px 90px rgba(0,0,0,.45);color:#fff;display:flex;flex-direction:column;height:80vh;max-height:80vh;max-width:1100px;overflow:hidden;width:80vw}
+.organisation-preview-header{align-items:flex-start;border-bottom:1px solid rgba(255,255,255,.09);display:flex;gap:24px;justify-content:space-between;padding:30px 34px 24px}
+.organisation-preview-heading{align-items:center;display:flex;gap:18px;min-width:0}
+.organisation-preview-logo{align-items:center;background:rgba(46,175,125,.12);border:1px solid rgba(46,175,125,.26);border-radius:14px;color:var(--secondary);display:flex;flex:0 0 78px;font-size:28px;height:78px;justify-content:center;overflow:hidden;width:78px}
+.organisation-preview-logo img{height:100%;object-fit:contain;padding:10px;width:100%}
+.organisation-preview-kicker{color:var(--secondary);font-size:11px;font-weight:700;letter-spacing:.14em;text-transform:uppercase}
+.organisation-preview-header h2{font-size:26px;line-height:1.2;margin:5px 0 4px;overflow-wrap:anywhere}
+.organisation-preview-header p{color:rgba(255,255,255,.5);font-size:13px;margin:0}
+.organisation-preview-body{overflow:auto;padding:26px 34px}
+.organisation-preview-status{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:22px}
+.organisation-preview-status .badge{font-size:11px}
+.organisation-preview-grid{display:grid;gap:18px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.organisation-preview-section{background:rgba(255,255,255,.035);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:20px}
+.organisation-preview-section-wide{grid-column:1/-1}
+.organisation-preview-section-title{align-items:center;color:rgba(255,255,255,.78);display:flex;font-size:13px;font-weight:700;gap:9px;margin-bottom:16px;text-transform:uppercase;letter-spacing:.06em}
+.organisation-preview-section-title i{color:var(--secondary);font-size:14px}
+.organisation-preview-facts{display:grid;gap:18px;grid-template-columns:repeat(4,minmax(0,1fr))}
+.organisation-preview-fact-label,.organisation-preview-item-label{color:rgba(255,255,255,.42);font-size:11px;margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em}
+.organisation-preview-fact-value,.organisation-preview-item-value{color:#fff;font-size:14px;overflow-wrap:anywhere}
+.organisation-preview-list{display:grid;gap:13px}
+.organisation-preview-item-value a{color:#8de0bd;text-decoration:none}
+.organisation-preview-item-value a:hover{text-decoration:underline}
+.organisation-preview-description{color:rgba(255,255,255,.7);font-size:14px;line-height:1.75;margin:0;white-space:pre-line;overflow-wrap:anywhere}
+.organisation-preview-footer{align-items:center;border-top:1px solid rgba(255,255,255,.09);display:flex;gap:18px;justify-content:space-between;padding:18px 34px}
+.organisation-preview-created{color:rgba(255,255,255,.38);font-size:12px}
+.organisation-preview-actions{display:flex;gap:10px}
+@media(max-width:760px){.organisation-preview-overlay{padding:0}.organisation-preview-modal{border-radius:0;height:100vh;max-height:100vh;width:100vw}.organisation-preview-header,.organisation-preview-body{padding-left:20px;padding-right:20px}.organisation-preview-header h2{font-size:21px}.organisation-preview-logo{flex-basis:60px;height:60px;width:60px}.organisation-preview-grid{grid-template-columns:1fr}.organisation-preview-section-wide{grid-column:auto}.organisation-preview-facts{grid-template-columns:repeat(2,minmax(0,1fr))}.organisation-preview-footer{align-items:stretch;flex-direction:column;padding:16px 20px}.organisation-preview-actions{justify-content:flex-end}}
+</style>
+<style>
+.organisation-edit-overlay{padding:24px}
+.organisation-edit-modal{width:min(920px,96vw);max-width:920px;max-height:min(900px,94vh);display:flex;flex-direction:column;overflow:hidden;background:#202031;border-color:rgba(255,255,255,.13);box-shadow:0 24px 80px rgba(0,0,0,.45)}
+.organisation-edit-modal .modal-header{align-items:flex-start;border-bottom:1px solid rgba(255,255,255,.08);padding:24px 28px 20px}
+.organisation-edit-heading{align-items:center;display:flex;gap:14px;min-width:0}
+.organisation-edit-icon{align-items:center;background:rgba(46,175,125,.13);border:1px solid rgba(46,175,125,.25);border-radius:12px;color:var(--secondary);display:flex;flex:0 0 42px;font-size:17px;height:42px;justify-content:center;width:42px}
+.organisation-edit-eyebrow{color:var(--secondary);font-size:10px;font-weight:700;letter-spacing:.14em;margin-bottom:3px;text-transform:uppercase}
+.organisation-edit-modal .modal-title{font-size:20px;line-height:1.2}
+.organisation-edit-subtitle{color:rgba(255,255,255,.42);font-size:12px;margin-top:5px}
+.organisation-edit-modal form{display:flex;flex:1 1 auto;flex-direction:column;min-height:0}
+.organisation-edit-modal .modal-body{flex:1 1 auto;max-height:none;min-height:0;overflow-y:auto;padding:18px 28px 14px}
+.organisation-form-groups{display:grid;gap:10px;grid-template-columns:1fr 1fr}
+.organisation-form-group{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);border-radius:10px;padding:12px 14px}
+.organisation-form-group-wide{grid-column:1/-1}
+.organisation-form-group-heading{align-items:center;color:rgba(255,255,255,.72);display:flex;font-size:10px;font-weight:700;gap:7px;letter-spacing:.1em;margin-bottom:10px;text-transform:uppercase}
+.organisation-form-group-heading i{color:var(--secondary);font-size:12px}
+.organisation-criteria-hint{color:rgba(255,255,255,.35);font-size:10px;font-weight:400;letter-spacing:0;margin-left:auto;text-transform:none}
+.organisation-template-grid{display:grid;gap:6px 14px;grid-template-columns:repeat(2,minmax(0,1fr));max-height:118px;overflow:auto}
+.organisation-template-option{align-items:flex-start!important;color:rgba(255,255,255,.68)!important;cursor:pointer;display:flex!important;flex-direction:row!important;font-size:11px!important;font-weight:500!important;gap:8px!important;line-height:1.25;min-width:0}
+.organisation-template-option input{accent-color:var(--secondary);flex:0 0 auto;margin:1px 0 0}
+.organisation-template-option span{overflow-wrap:anywhere}
+.organisation-custom-heading{align-items:center;border-top:1px solid rgba(255,255,255,.07);display:flex;justify-content:space-between;margin-top:11px;padding-top:9px}
+.organisation-custom-heading span{color:rgba(255,255,255,.55);font-size:11px;font-weight:600}
+.organisation-custom-list{display:grid;gap:7px;margin-top:8px}
+.organisation-custom-row{align-items:center;display:grid;gap:7px;grid-template-columns:1.8fr 1.8fr .55fr .65fr 24px}
+.organisation-custom-row .form-input-dark{font-size:11px!important;min-height:32px!important;padding:6px 8px!important}
+.organisation-custom-row .custom-required{accent-color:var(--secondary);justify-self:center}
+.organisation-custom-remove{align-items:center;background:rgba(231,76,60,.12);border:0;border-radius:6px;color:var(--danger);cursor:pointer;display:flex;height:28px;justify-content:center;width:24px}
+.organisation-custom-empty{color:rgba(255,255,255,.3);font-size:10px}
+.organisation-edit-modal .organisation-modal-grid{display:grid!important;gap:9px 12px!important;grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.organisation-edit-modal .organisation-modal-grid-identity{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+.organisation-edit-modal .organisation-modal-grid-tracking{grid-template-columns:.8fr .9fr 1.35fr 1fr!important}
+.organisation-edit-modal .field-span-2{grid-column:1/-1}
+.organisation-edit-modal .field-span-4{grid-column:1/-1}
+.organisation-edit-modal .organisation-modal-body label{align-items:stretch;color:rgba(255,255,255,.64);display:flex;flex-direction:column;font-size:12px;font-weight:600;gap:7px;margin:0;min-width:0}
+.organisation-edit-modal .organisation-modal-body label > .form-input-dark{box-sizing:border-box;width:100%}
+.organisation-edit-modal .form-input-dark{background:#2b2b3d;border:1px solid rgba(255,255,255,.1);border-radius:9px;color:#f5f7fa;font-size:13px;min-height:40px;padding:10px 12px;transition:border-color .2s,box-shadow .2s,background .2s}
+.organisation-edit-modal .form-input-dark:hover{background:#303044}
+.organisation-edit-modal .form-input-dark:focus{background:#303044;border-color:var(--secondary);box-shadow:0 0 0 3px rgba(46,175,125,.12);outline:none}
+.organisation-edit-modal textarea.form-input-dark{line-height:1.4;margin-top:6px;min-height:58px;resize:vertical}
+.organisation-edit-modal input[type=file].form-input-dark{color:rgba(255,255,255,.62);font-size:12px;padding:7px}
+.organisation-edit-modal input[type=file]::file-selector-button{background:rgba(46,175,125,.16);border:1px solid rgba(46,175,125,.25);border-radius:6px;color:#a8e8ce;cursor:pointer;margin-right:10px;padding:6px 9px}
+.organisation-edit-modal .organisation-modal-body small{color:rgba(255,255,255,.38);font-size:10px;font-weight:400;line-height:1.2}
+.organisation-description-field{color:rgba(255,255,255,.64);display:flex;flex-direction:column;font-size:12px;font-weight:600;gap:0;margin-top:12px}
+.organisation-edit-modal .modal-footer{align-items:center;background:rgba(0,0,0,.12);border-top:1px solid rgba(255,255,255,.08);flex:0 0 auto;padding:16px 28px 18px}
+.organisation-edit-modal .modal-footer .btn{min-height:40px}
+@media(max-width:700px){.organisation-edit-overlay{padding:0}.organisation-edit-modal{border-radius:0;height:100vh;max-height:100vh;width:100vw}.organisation-edit-modal .modal-header,.organisation-edit-modal .modal-body{padding-left:20px;padding-right:20px}.organisation-form-groups{grid-template-columns:1fr}.organisation-form-group-wide{grid-column:auto}.organisation-criteria-hint{display:none}.organisation-template-grid{grid-template-columns:1fr;max-height:150px}.organisation-custom-row{grid-template-columns:1fr 1fr 52px 58px 24px}.organisation-custom-row .custom-description{grid-column:1/-1}.organisation-edit-modal .organisation-modal-grid,.organisation-edit-modal .organisation-modal-grid-identity,.organisation-edit-modal .organisation-modal-grid-tracking{grid-template-columns:1fr 1fr!important}.organisation-edit-modal .modal-footer{padding-left:20px;padding-right:20px}.organisation-edit-subtitle{max-width:230px}}
+</style>
+<script>
+let organisationPreviewLastFocus = null;
+
+function selectTrainingSession(sessionId) {
+  if (!sessionId) return;
+  const url = new URL(window.location.href);
+  url.searchParams.set('training_id', sessionId);
+  window.location.href = url.toString();
+}
+
+function exportTrainingRegister() {
+  const rows = Array.from(document.querySelectorAll('#module-formation tbody tr[data-submission-id]'));
+  const values = [['Participant', 'Presence', 'Note', 'Commentaire', 'Inclus dans evaluation']];
+  rows.forEach(function (row) {
+    values.push([
+      row.cells[0]?.textContent.trim() || '',
+      row.querySelector('.training-attendance')?.value || '',
+      row.querySelector('.training-grade')?.value || '',
+      row.querySelector('.training-comment')?.value || '',
+      row.querySelector('.training-included')?.checked ? 'Oui' : 'Non'
+    ]);
+  });
+  const csv = values.map(function (line) { return line.map(function (value) { return '"' + String(value).replaceAll('"', '""') + '"'; }).join(';'); }).join('\n');
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(new Blob(['\ufeff' + csv], { type: 'text/csv;charset=utf-8' }));
+  link.download = 'registre-formation.csv';
+  link.click();
+  URL.revokeObjectURL(link.href);
+}
+
+async function saveTrainingParticipant(row) {
+  const data = new FormData();
+  data.append('csrf_token', document.querySelector('#modalNewProject input[name="csrf_token"]')?.value || '');
+  data.append('session_id', '<?= (int) ($selectedTraining['id'] ?? 0) ?>');
+  data.append('submission_id', row.dataset.submissionId);
+  data.append('attendance_status', row.querySelector('.training-attendance').value);
+  data.append('grade', row.querySelector('.training-grade').value);
+  data.append('comment', row.querySelector('.training-comment').value);
+  if (row.querySelector('.training-included').checked) data.append('included', '1');
+  const response = await fetch('<?= BASE_URL ?>/admin/sessions/participant', { method: 'POST', body: data });
+  const result = await response.json();
+  if (!response.ok || !result.success) throw new Error(result.message || 'Impossible d’enregistrer le participant.');
+}
+
+async function saveAllTrainingParticipants() {
+  const rows = Array.from(document.querySelectorAll('#module-formation tbody tr[data-submission-id]'));
+  try {
+    await Promise.all(rows.map(saveTrainingParticipant));
+    showToast('Présences et notes enregistrées.', 'success');
+    window.location.reload();
+  } catch (error) {
+    showToast(error.message, 'error');
+  }
+}
+
+function organisationPreviewValue(value, fallback) {
+  return value === null || value === undefined || String(value).trim() === '' ? (fallback || 'Non renseigné') : String(value);
+}
+
+function organisationPreviewItem(label, value, link) {
+  const item = document.createElement('div');
+  item.className = 'organisation-preview-item';
+  const itemLabel = document.createElement('div');
+  itemLabel.className = 'organisation-preview-item-label';
+  itemLabel.textContent = label;
+  const itemValue = document.createElement('div');
+  itemValue.className = 'organisation-preview-item-value';
+  if (link && value) {
+    const anchor = document.createElement('a');
+    anchor.href = link;
+    anchor.textContent = value;
+    if (link.indexOf('http') === 0) {
+      anchor.target = '_blank';
+      anchor.rel = 'noopener noreferrer';
+    }
+    itemValue.appendChild(anchor);
+  } else {
+    itemValue.textContent = organisationPreviewValue(value);
+  }
+  item.append(itemLabel, itemValue);
+  return item;
+}
+
+function openOrganisationPreview(project) {
+  const modal = document.getElementById('modalOrganisationPreview');
+  const title = organisationPreviewValue(project.organization || project.title, 'Organisation');
+  const website = String(project.website || '').trim();
+  const websiteUrl = /^https?:\/\//i.test(website) ? website : (website && !/^[a-z][a-z0-9+.-]*:/i.test(website) ? 'https://' + website : '');
+  const budget = project.budget_requested === null || project.budget_requested === undefined || project.budget_requested === ''
+    ? 'Non renseigné'
+    : new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 }).format(Number(project.budget_requested)) + ' FCFA';
+  const statusLabels = { draft: 'Brouillon', active: 'Active', closed: 'Clôturée', archived: 'Archivée' };
+  const statusClass = project.status === 'active' ? 'badge-success' : (project.status === 'closed' ? 'badge-warning' : 'badge-muted');
+  const logo = document.getElementById('organisationPreviewLogo');
+  const facts = document.getElementById('organisationPreviewFacts');
+  const contact = document.getElementById('organisationPreviewContact');
+  const reach = document.getElementById('organisationPreviewReach');
+  organisationPreviewLastFocus = document.activeElement;
+
+  document.getElementById('organisationPreviewTitle').textContent = title;
+  document.getElementById('organisationPreviewSubtitle').textContent = organisationPreviewValue(project.title, 'Fiche organisation');
+  document.getElementById('organisationPreviewDescription').textContent = organisationPreviewValue(project.description, 'Aucune présentation renseignée.');
+  document.getElementById('organisationPreviewCreated').textContent = project.created_at ? 'Créée le ' + new Intl.DateTimeFormat('fr-FR', { dateStyle: 'long' }).format(new Date(project.created_at.replace(' ', 'T'))) : '';
+
+  logo.replaceChildren();
+  if (project.logo_path) {
+    const image = document.createElement('img');
+    image.src = '<?= BASE_URL ?>/' + String(project.logo_path).replace(/^\/+/, '');
+    image.alt = 'Logo ' + title;
+    image.onerror = function () { logo.replaceChildren(); logo.innerHTML = '<i class="fas fa-building"></i>'; };
+    logo.appendChild(image);
+  } else {
+    logo.innerHTML = '<i class="fas fa-building"></i>';
+  }
+
+  const status = document.getElementById('organisationPreviewStatus');
+  status.replaceChildren();
+  const statusBadge = document.createElement('span');
+  statusBadge.className = 'badge ' + statusClass;
+  statusBadge.textContent = statusLabels[project.status] || organisationPreviewValue(project.status, 'Brouillon');
+  const legalBadge = document.createElement('span');
+  legalBadge.className = 'badge badge-muted';
+  legalBadge.textContent = project.legal_status === 'legal' ? 'Organisation légale' : 'Organisation non légale';
+  status.append(statusBadge, legalBadge);
+
+  facts.replaceChildren(
+    organisationPreviewItem('Pays', project.country_code),
+    organisationPreviewItem('Zone d’intervention', project.intervention_zone),
+    organisationPreviewItem('Projets', project.project_count === null || project.project_count === undefined || project.project_count === '' ? null : project.project_count),
+    organisationPreviewItem('Budget demandé', budget),
+    organisationPreviewItem('Durée', project.duration_months ? project.duration_months + ' mois' : null)
+  );
+  contact.replaceChildren(
+    organisationPreviewItem('Responsable', project.contact_name),
+    organisationPreviewItem('Téléphone', project.contact_phone, project.contact_phone ? 'tel:' + project.contact_phone : ''),
+    organisationPreviewItem('E-mail', project.contact_email, project.contact_email ? 'mailto:' + project.contact_email : ''),
+    organisationPreviewItem('Site web', website, websiteUrl)
+  );
+  reach.replaceChildren(
+    organisationPreviewItem('Domaines thématiques', project.domains),
+    organisationPreviewItem('Publics cibles', project.target_audiences)
+  );
+
+  document.getElementById('organisationPreviewEdit').onclick = function () {
+    closeOrganisationPreview();
+    openOrganisationModal(project);
+  };
+  modal.classList.add('open');
+  modal.setAttribute('aria-hidden', 'false');
+  modal.querySelector('.modal-close').focus();
+}
+
+function closeOrganisationPreview() {
+  const modal = document.getElementById('modalOrganisationPreview');
+  if (!modal) return;
+  modal.classList.remove('open');
+  modal.setAttribute('aria-hidden', 'true');
+  if (organisationPreviewLastFocus && typeof organisationPreviewLastFocus.focus === 'function') organisationPreviewLastFocus.focus();
+}
+
+document.addEventListener('keydown', function (event) {
+  if (event.key === 'Escape' && document.getElementById('modalOrganisationPreview')?.classList.contains('open')) closeOrganisationPreview();
+});
+
+function openOrganisationModal(project) {
+  const form = document.querySelector('#modalNewProject form');
+  const fields = ['organization', 'title', 'contact_name', 'contact_phone', 'contact_email', 'website', 'domains', 'target_audiences', 'country_code', 'project_count', 'intervention_zone', 'budget_requested', 'duration_months', 'description', 'status', 'legal_status'];
+  fields.forEach(function (name) {
+    const field = form.querySelector('[name="' + name + '"]');
+    if (field) field.value = project[name] ?? '';
+  });
+  populateOrganisationCriteria(form, project);
+  form.querySelector('[name="id"]').value = project.id || 0;
+  document.getElementById('organisationModalTitle').innerHTML = '<i class="fas fa-edit" style="color:var(--secondary);margin-right:8px"></i> Modifier l’organisation';
+  document.getElementById('organisationModalSubmit').innerHTML = '<i class="fas fa-save"></i> Enregistrer les modifications';
+  $('#modalNewProject').addClass('open');
+}
+
+function openNewOrganisationModal() {
+  const form = document.querySelector('#modalNewProject form');
+  openOrganisationModal({ id: 0, criteria_configuration: [] });
+  form.querySelector('[name="id"]').value = '0';
+  document.getElementById('organisationModalTitle').textContent = 'Nouvelle organisation';
+  document.getElementById('organisationModalSubmit').innerHTML = '<i class="fas fa-check"></i> Enregistrer l’organisation';
+}
+
+function createOrganisationCustomRow(criteria) {
+  const list = document.getElementById('organisationCustomCriteria');
+  const index = Number(list.dataset.nextIndex || 0);
+  list.dataset.nextIndex = String(index + 1);
+  const row = document.createElement('div');
+  row.className = 'organisation-custom-row';
+  const values = criteria || {};
+  const fields = [
+    ['label', 'Libellé du critère', values.label || ''],
+    ['description', 'Description courte', values.description || ''],
+    ['weight', 'Poids', values.weight ?? 1],
+    ['max_score', 'Note max.', values.max_score ?? 20]
+  ];
+  if (values.id) {
+    const hidden = document.createElement('input');
+    hidden.type = 'hidden';
+    hidden.name = 'custom_criteria[' + index + '][id]';
+    hidden.value = values.id;
+    row.appendChild(hidden);
+  }
+  fields.forEach(function (field) {
+    const input = document.createElement('input');
+    input.className = 'form-input-dark custom-' + field[0];
+    input.name = 'custom_criteria[' + index + '][' + field[0] + ']';
+    input.placeholder = field[1];
+    input.value = field[2];
+    if (field[0] === 'weight' || field[0] === 'max_score') {
+      input.type = 'number';
+      input.min = '0.01';
+      input.step = '0.01';
+    } else {
+      input.type = 'text';
+    }
+    row.appendChild(input);
+  });
+  const required = document.createElement('input');
+  required.type = 'checkbox';
+  required.className = 'custom-required';
+  required.name = 'custom_criteria[' + index + '][is_required]';
+  required.checked = values.is_required === undefined ? true : Boolean(Number(values.is_required));
+  required.title = 'Critère obligatoire';
+  row.appendChild(required);
+  const remove = document.createElement('button');
+  remove.type = 'button';
+  remove.className = 'organisation-custom-remove';
+  remove.title = 'Retirer ce critère';
+  remove.innerHTML = '<i class="fas fa-times"></i>';
+  remove.addEventListener('click', function () { row.remove(); });
+  row.appendChild(remove);
+  list.appendChild(row);
+}
+
+function populateOrganisationCriteria(form, project) {
+  const checkboxes = form.querySelectorAll('input[name="criteria_template_ids[]"]');
+  const configuration = Array.isArray(project.criteria_configuration) ? project.criteria_configuration : [];
+  const selectedTemplateIds = new Set(configuration.filter(function (item) { return item.source_template_id; }).map(function (item) { return String(item.source_template_id); }));
+  checkboxes.forEach(function (checkbox) {
+    checkbox.checked = !project.id || selectedTemplateIds.has(String(checkbox.value));
+  });
+  const customList = document.getElementById('organisationCustomCriteria');
+  customList.replaceChildren();
+  customList.dataset.nextIndex = '0';
+  configuration.filter(function (item) { return !item.source_template_id; }).forEach(createOrganisationCustomRow);
+}
+
+document.getElementById('addOrganisationCustomCriterion')?.addEventListener('click', function () {
+  createOrganisationCustomRow({});
+});
+
+function confirmOrganisationDelete(id, name) {
+  document.getElementById('organisationDeleteId').value = id;
+  document.getElementById('organisationDeleteName').textContent = name;
+  $('#modalDelete').addClass('open');
+}
+
+function initOrganisationFilters() {
+  const filterBar = document.querySelector('[data-organisation-filters]');
+  const grid = document.querySelector('[data-organisation-grid]');
+  if (!filterBar || !grid) return;
+
+  const cards = Array.from(grid.querySelectorAll('[data-organisation-card]'));
+  const createCard = grid.querySelector('[data-organisation-create]');
+  const emptyState = document.querySelector('[data-organisation-empty]');
+  const search = filterBar.querySelector('[data-organisation-search]');
+  const status = filterBar.querySelector('[data-organisation-status]');
+  const country = filterBar.querySelector('[data-organisation-country]');
+  const sort = filterBar.querySelector('[data-organisation-sort]');
+
+  function applyFilters() {
+    const query = (search.value || '').trim().toLowerCase();
+    const selectedStatus = status.value;
+    const selectedCountry = country.value;
+    const visibleCards = cards.filter(function (card) {
+      const searchableText = (card.dataset.name + ' ' + card.dataset.title + ' ' + card.dataset.country).toLowerCase();
+      const matchesQuery = !query || searchableText.includes(query);
+      const matchesStatus = !selectedStatus || card.dataset.status === selectedStatus;
+      const matchesCountry = !selectedCountry || card.dataset.country === selectedCountry;
+      return matchesQuery && matchesStatus && matchesCountry;
+    });
+
+    visibleCards.sort(function (first, second) {
+      if (sort.value === 'name') return first.dataset.name.localeCompare(second.dataset.name, 'fr', { sensitivity: 'base' });
+      if (sort.value === 'projects') return Number(second.dataset.projects) - Number(first.dataset.projects) || first.dataset.name.localeCompare(second.dataset.name, 'fr', { sensitivity: 'base' });
+      return (Date.parse(second.dataset.created) || 0) - (Date.parse(first.dataset.created) || 0);
+    });
+    visibleCards.forEach(function (card) { grid.appendChild(card); });
+    if (createCard) grid.appendChild(createCard);
+    cards.forEach(function (card) { card.hidden = !visibleCards.includes(card); });
+    if (emptyState) emptyState.hidden = visibleCards.length > 0;
+  }
+
+  [search, status, country, sort].forEach(function (control) { control?.addEventListener('input', applyFilters); control?.addEventListener('change', applyFilters); });
+  applyFilters();
+}
+
+if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', initOrganisationFilters);
+else initOrganisationFilters();
+</script>
 
 <div class="modal-overlay" id="modalTraining" onclick="if(event.target===this)$(this).removeClass('open')">
   <div class="modal" style="max-width:720px">
@@ -1853,37 +2438,40 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
       <div class="modal-title"><i class="fas fa-chalkboard-teacher" style="color:var(--secondary);margin-right:8px"></i> Nouvelle formation</div>
       <button class="modal-close" onclick="$('#modalTraining').removeClass('open')"><i class="fas fa-times"></i></button>
     </div>
+    <form method="post" action="<?= BASE_URL ?>/admin/sessions" id="trainingCreateForm">
     <div class="modal-body">
+      <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
       <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:16px;margin-bottom:16px">
-        <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Titre de la formation *</label><input class="form-input-dark" id="trainingTitle" style="width:100%" placeholder="Ex: Préparation au pitch financement"></div>
-        <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Projet lié *</label><select class="form-input-dark" style="width:100%"><option>AGRI-2025</option><option>Fonds Innovation Technologique</option><option>Bourses d'Excellence 2026</option></select></div>
+        <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Titre de la formation *</label><input name="name" required class="form-input-dark" id="trainingTitle" style="width:100%" placeholder="Ex: Préparation au pitch financement"></div>
+        <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Organisation liée *</label><select name="project_id" class="form-input-dark" style="width:100%" required><option value="">Choisir une organisation</option><?php foreach (($projects ?? []) as $project): ?><option value="<?= (int) $project['id'] ?>"><?= e($project['organization'] ?: $project['title']) ?></option><?php endforeach; ?></select></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px">
-        <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Date début</label><input type="date" class="form-input-dark" style="width:100%"></div>
+        <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Date</label><input type="date" name="session_date" required class="form-input-dark" style="width:100%"></div>
         <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Date fin</label><input type="date" class="form-input-dark" style="width:100%"></div>
-        <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Capacité</label><input type="number" class="form-input-dark" style="width:100%" value="50"></div>
+        <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Capacité</label><input type="number" name="capacity" class="form-input-dark" style="width:100%" value="50" min="1"></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
-        <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Format</label><select class="form-input-dark" style="width:100%"><option>Hybride</option><option>Présentiel</option><option>En ligne</option></select></div>
+        <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Format</label><select name="format" class="form-input-dark" style="width:100%"><option value="hybride">Hybride</option><option value="presentiel">Présentiel</option><option value="en_ligne">En ligne</option></select></div>
         <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Formateur / organisme</label><input class="form-input-dark" style="width:100%" placeholder="Ex: Cabinet Impact Afrique"></div>
       </div>
-      <div style="margin-bottom:16px"><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Objectifs pédagogiques</label><textarea class="form-input-dark" style="width:100%;height:84px;resize:none" placeholder="Compétences attendues, livrables, critères de validation..."></textarea></div>
+      <div style="margin-bottom:16px"><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Objectifs pédagogiques</label><textarea name="objective" required class="form-input-dark" style="width:100%;height:84px;resize:none" placeholder="Compétences attendues, livrables, critères de validation..."></textarea></div>
       <div style="background:rgba(46,175,125,0.08);border:1px solid rgba(46,175,125,0.2);border-radius:10px;padding:12px">
         <div style="display:flex;align-items:center;justify-content:space-between;gap:16px">
           <div><div style="color:#fff;font-weight:600">Rendre la note exploitable dans les évaluations</div><div style="color:rgba(255,255,255,0.45);font-size:12px;margin-top:3px">La formation apparaîtra comme un critère optionnel, traçable et désactivable.</div></div>
           <div class="toggle-switch on" onclick="$(this).toggleClass('on')"><div class="toggle-knob"></div></div>
         </div>
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:12px">
-          <div><label class="form-label" style="color:rgba(255,255,255,0.55);font-size:12px;display:block;margin-bottom:6px">Poids maximum dans l'évaluation</label><input type="number" class="form-input-dark" style="width:100%" value="10"></div>
+          <div><label class="form-label" style="color:rgba(255,255,255,0.55);font-size:12px;display:block;margin-bottom:6px">Poids maximum dans l'évaluation</label><input type="number" name="evaluation_weight" class="form-input-dark" style="width:100%" value="0" min="0" max="100"></div>
           <div><label class="form-label" style="color:rgba(255,255,255,0.55);font-size:12px;display:block;margin-bottom:6px">Note minimale de validation</label><input type="number" class="form-input-dark" style="width:100%" value="12"></div>
         </div>
       </div>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost-dark" onclick="$('#modalTraining').removeClass('open')">Annuler</button>
-      <button class="btn btn-ghost-dark" onclick="saveTraining(false)"><i class="fas fa-save"></i> Brouillon</button>
-      <button class="btn btn-secondary" onclick="saveTraining(true)"><i class="fas fa-check"></i> Créer et activer</button>
+      <button class="btn btn-ghost-dark" type="submit" name="is_active" value="0"><i class="fas fa-save"></i> Brouillon</button>
+      <button class="btn btn-secondary" type="submit" name="is_active" value="1"><i class="fas fa-check"></i> Créer et activer</button>
     </div>
+    </form>
   </div>
 </div>
 
@@ -1894,37 +2482,47 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
       <button class="modal-close" onclick="$('#modalDelete').removeClass('open')"><i class="fas fa-times"></i></button>
     </div>
     <div class="modal-body">
-      <p style="color:rgba(255,255,255,0.7);font-size:14px;line-height:1.6">Êtes-vous sûr de vouloir supprimer ce projet ? Cette action est <strong style="color:var(--danger)">irréversible</strong> et supprimera également tous les critères et formulaires associés.</p>
+      <p style="color:rgba(255,255,255,0.7);font-size:14px;line-height:1.6">Êtes-vous sûr de vouloir supprimer <strong id="organisationDeleteName" style="color:#fff"></strong> ? Cette action est <strong style="color:var(--danger)">irréversible</strong>.</p>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost-dark" onclick="$('#modalDelete').removeClass('open')">Annuler</button>
-      <button class="btn btn-danger" onclick="$('#modalDelete').removeClass('open');showToast('Projet supprimé', 'error')"><i class="fas fa-trash"></i> Supprimer définitivement</button>
+      <form method="post" action="<?= BASE_URL ?>/admin/projects/delete" id="organisationDeleteForm">
+        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+        <input type="hidden" name="id" id="organisationDeleteId" value="">
+        <button class="btn btn-danger" type="submit"><i class="fas fa-trash"></i> Supprimer définitivement</button>
+      </form>
     </div>
   </div>
 </div>
 
 <div class="modal-overlay" id="modalPlanning" onclick="if(event.target===this)$(this).removeClass('open')">
   <div class="modal" style="max-width:520px">
-    <div class="modal-header">
-      <div class="modal-title"><i class="fas fa-calendar-plus" style="color:var(--secondary);margin-right:8px"></i> Planifier un formulaire</div>
-      <button class="modal-close" onclick="$('#modalPlanning').removeClass('open')"><i class="fas fa-times"></i></button>
-    </div>
-    <div class="modal-body">
-      <div style="display:grid;gap:14px">
-        <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Formulaire *</label><select class="form-input-dark" style="width:100%"><option>Dossier AGRI-2025</option><option>Formulaire Innovation</option></select></div>
-        <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Accès</label><div style="display:flex;gap:8px;flex-wrap:wrap"><label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:rgba(255,255,255,0.6);font-size:13px"><input type="radio" name="access" checked style="accent-color:var(--secondary)"> Lien public</label><label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:rgba(255,255,255,0.6);font-size:13px"><input type="radio" name="access" style="accent-color:var(--secondary)"> Emails présélectionnés</label><label style="display:flex;align-items:center;gap:6px;cursor:pointer;color:rgba(255,255,255,0.6);font-size:13px"><input type="radio" name="access" style="accent-color:var(--secondary)"> Admins seulement</label></div></div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
-          <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Date d'ouverture *</label><input type="date" class="form-input-dark" style="width:100%" value="2025-12-01"></div>
-          <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Date de clôture *</label><input type="date" class="form-input-dark" style="width:100%" value="2025-12-31"></div>
+    <div class="modal-header"><div class="modal-title"><i class="fas fa-calendar-plus" style="color:var(--secondary);margin-right:8px"></i> Planifier un formulaire</div><button class="modal-close" type="button" onclick="$('#modalPlanning').removeClass('open')"><i class="fas fa-times"></i></button></div>
+    <?php $planningCountries = []; foreach (($projects ?? []) as $planningProject) { $country = strtoupper(trim((string) ($planningProject['country_code'] ?? ''))); if ($country !== '') $planningCountries[$country] = true; } ksort($planningCountries, SORT_NATURAL | SORT_FLAG_CASE); ?>
+    <form id="planningForm">
+      <div class="modal-body"><input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>"><div style="display:grid;gap:14px">
+        <label class="form-label">Formulaire *<select required name="form_id" class="form-input-dark" style="width:100%"><option value="">Choisir un formulaire publié</option><?php foreach (($forms ?? []) as $planningForm): ?><option value="<?= (int) $planningForm['id'] ?>" <?= ($planningForm['status'] ?? '') !== 'published' ? 'disabled' : '' ?>><?= e($planningForm['title']) ?><?= ($planningForm['status'] ?? '') !== 'published' ? ' (non publié)' : '' ?></option><?php endforeach; ?></select></label>
+        <div class="form-label">Organisation liée
+          <div class="country-picker organisation-picker" id="planningOrganisationPicker">
+            <button type="button" class="country-picker-trigger" aria-haspopup="listbox" aria-expanded="false"><span class="country-picker-value"><span class="country-picker-placeholder">Organisation du formulaire</span></span><i class="fas fa-chevron-down"></i></button>
+            <div class="country-picker-menu" role="listbox" aria-label="Organisation liée"><input type="search" class="country-picker-search" placeholder="Rechercher une organisation..." aria-label="Rechercher une organisation"><?php foreach (($projects ?? []) as $planningProject): ?><label class="country-picker-option" data-organisation-option data-organisation="<?= e(strtolower((string) ($planningProject['organization'] ?: $planningProject['title']))) ?>"><input type="radio" name="project_id" value="<?= (int) $planningProject['id'] ?>"><span><?= e($planningProject['organization'] ?: $planningProject['title']) ?><small><?= e(strtoupper(trim((string) ($planningProject['country_code'] ?? ''))) ?: 'Pays non renseigné') ?></small></span></label><?php endforeach; ?><div class="country-picker-empty" hidden>Aucune organisation trouvée.</div></div>
+          </div>
+          <small class="settings-desc">Cliquez sur une organisation pour la sélectionner, puis recliquez pour la désélectionner.</small>
         </div>
-        <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Pays éligibles</label><select class="form-input-dark" style="width:100%" multiple style="height:80px"><option selected>Côte d'Ivoire</option><option selected>Cameroun</option><option selected>Sénégal</option><option>Mali</option><option>Guinée</option></select></div>
-        <div style="display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-top:1px solid var(--border-dark)"><span style="color:rgba(255,255,255,0.7)">Activer immédiatement</span><div class="toggle-switch on" onclick="$(this).toggleClass('on')"><div class="toggle-knob"></div></div></div>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-ghost-dark" onclick="$('#modalPlanning').removeClass('open')">Annuler</button>
-      <button class="btn btn-secondary" onclick="$('#modalPlanning').removeClass('open');showToast('Planification enregistrée !', 'success')"><i class="fas fa-save"></i> Enregistrer</button>
-    </div>
+        <div><span class="form-label">Accès</span><div style="display:flex;gap:8px;flex-wrap:wrap"><label><input type="radio" name="access_type" value="public_link" checked> Lien public</label><label><input type="radio" name="access_type" value="email_list"> Emails présélectionnés</label><label><input type="radio" name="access_type" value="admin_only"> Admins seulement</label></div></div>
+        <label class="form-label" id="planningEmailsWrap" hidden>Emails autorisés<textarea name="allowed_emails" class="form-input-dark" style="width:100%;min-height:55px" placeholder="un@email.com, autre@email.com"></textarea></label>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px"><label class="form-label">Date d'ouverture *<input required type="datetime-local" name="start_datetime" class="form-input-dark" style="width:100%"></label><label class="form-label">Date de clôture *<input required type="datetime-local" name="end_datetime" class="form-input-dark" style="width:100%"></label></div>
+        <div class="form-label">Pays éligibles
+          <div class="country-picker" id="planningCountryPicker">
+            <button type="button" class="country-picker-trigger" aria-haspopup="listbox" aria-expanded="false"><span class="country-picker-value"><span class="country-picker-placeholder">Tous les pays</span></span><i class="fas fa-chevron-down"></i></button>
+            <div class="country-picker-menu" role="listbox" aria-multiselectable="true"><input type="search" class="country-picker-search" placeholder="Rechercher un pays..." aria-label="Rechercher un pays"><?php foreach ($planningCountries as $country => $_): ?><label class="country-picker-option" data-country-option data-country="<?= e(strtolower($country)) ?>"><input type="checkbox" name="allowed_countries[]" value="<?= e($country) ?>"><span><?= e($country) ?></span></label><?php endforeach; ?><div class="country-picker-empty" hidden>Aucun pays trouvé.</div></div>
+          </div>
+          <small class="settings-desc">Cliquez pour sélectionner ou désélectionner. Aucun pays sélectionné = tous les pays autorisés.</small>
+        </div>
+        <label style="display:flex;align-items:center;gap:9px;padding:10px 0;border-top:1px solid var(--border-dark);color:rgba(255,255,255,.7)"><input type="checkbox" name="is_active" value="1" checked> Activation planifiée automatique selon les dates</label>
+      </div></div>
+      <div class="modal-footer"><button type="button" class="btn btn-ghost-dark" onclick="$('#modalPlanning').removeClass('open')">Annuler</button><button class="btn btn-secondary" type="submit"><i class="fas fa-save"></i> Enregistrer</button></div>
+    </form>
   </div>
 </div>
 
@@ -2012,7 +2610,7 @@ function loginToDash() {
 // ══════════════════════════════════════
 const moduleLabels = {
   apercu: 'Aperçu',
-  projets: 'Projets',
+  projets: 'Organisations',
   criteres: 'Critères d\'évaluation',
   formulaires: 'Formulaires',
   formation: 'Formation',
@@ -2024,6 +2622,7 @@ const moduleLabels = {
 const DASHBOARD_MODULE_STORAGE_KEY = 'criteval.activeModule';
 const sidebarModuleCounts = <?= json_encode($moduleCounts, JSON_UNESCAPED_SLASHES) ?>;
 const dashboardRoleDefaults = <?= json_encode($rolePermissionDefaults, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
+const overviewData = <?= json_encode($overview, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
 
 function renderSidebarCounts() {
   document.querySelectorAll('.sidebar-item').forEach(item => {
@@ -2298,7 +2897,7 @@ function storeModule(name) {
   } catch(e) {}
 }
 
-function switchModule(name, trigger = null) {
+function switchModule(name, trigger = null, updateHistory = true) {
   if (!document.getElementById('module-' + name)) name = 'apercu';
   document.querySelectorAll('.dash-module').forEach(m => m.classList.remove('active'));
   document.getElementById('module-' + name).classList.add('active');
@@ -2311,6 +2910,11 @@ function switchModule(name, trigger = null) {
     if (sidebarItem) sidebarItem.classList.add('active');
   }
   document.getElementById('breadcrumbCurrent').textContent = moduleLabels[name] || name;
+  const moduleRoutes = { apercu: 'dashboard', projets: 'organisations', criteres: 'criteres', formulaires: 'formulaires', formation: 'formation', evaluations: 'evaluations', classements: 'classements', calendrier: 'planning', parametres: 'parametres' };
+  const targetUrl = (window.CRITEVAL_BASE_URL || '') + '/' + (moduleRoutes[name] || 'dashboard');
+  if (updateHistory && window.location.pathname !== targetUrl) {
+    window.history.pushState({ module: name }, '', targetUrl);
+  }
   if (name === 'calendrier') setTimeout(initCalendar, 100);
   if (name === 'apercu') { initCharts(); animateKPIs(); }
   if (name === 'criteres') setTimeout(initCriteriaChart, 100);
@@ -2321,6 +2925,22 @@ function switchModule(name, trigger = null) {
 // ══════════════════════════════════════
 let chartsInit = false;
 let chartInstances = {};
+const submissionChartPeriods = ['1m', '3m', '6m', '1a', '18m', '2a', 'tout'];
+
+function updateSubmissionsChart(period) {
+  const chart = chartInstances.submissions;
+  const range = overviewData.chart_ranges?.[period];
+  if (!chart || !range || !submissionChartPeriods.includes(period)) return;
+
+  chart.data.labels = range.labels;
+  chart.data.datasets[0].data = range.totals;
+  chart.data.datasets[1].data = range.evaluated;
+  chart.update();
+
+  document.querySelectorAll('#module-apercu .chart-actions .chart-btn').forEach(button => {
+    button.classList.toggle('active', button.dataset.period === period);
+  });
+}
 
 function initCharts() {
   if (chartsInit) return;
@@ -2334,10 +2954,10 @@ function initCharts() {
     chartInstances.submissions = new Chart(ctx1, {
       type: 'line',
       data: {
-        labels: ['Juil', 'Août', 'Sept', 'Oct', 'Nov', 'Déc'],
+        labels: overviewData.chart_ranges?.['2a']?.labels || overviewData.chart_ranges?.['1a']?.labels || [],
         datasets: [{
           label: 'Soumissions',
-          data: [12, 19, 28, 45, 67, 92],
+          data: overviewData.chart_ranges?.['2a']?.totals || overviewData.chart_ranges?.['1a']?.totals || [],
           borderColor: '#2EAF7D',
           backgroundColor: 'rgba(46,175,125,0.08)',
           fill: true,
@@ -2347,7 +2967,7 @@ function initCharts() {
           pointHoverRadius: 7
         }, {
           label: 'Évaluées',
-          data: [10, 15, 22, 38, 54, 80],
+          data: overviewData.chart_ranges?.['2a']?.evaluated || overviewData.chart_ranges?.['1a']?.evaluated || [],
           borderColor: '#F5A623',
           backgroundColor: 'rgba(245,166,35,0.05)',
           fill: true,
@@ -2374,9 +2994,9 @@ function initCharts() {
     chartInstances.countries = new Chart(ctx2, {
       type: 'doughnut',
       data: {
-        labels: ['Cameroun', 'Côte d\'Ivoire', 'Sénégal', 'Mali', 'Autres'],
+        labels: (overviewData.countries || []).map(item => item.label),
         datasets: [{
-          data: [34, 28, 21, 18, 16],
+          data: (overviewData.countries || []).map(item => item.total),
           backgroundColor: ['#2EAF7D', '#F5A623', '#3498db', '#9b59b6', '#e67e22'],
           borderWidth: 2,
           borderColor: '#1E1E2E'
@@ -2398,10 +3018,10 @@ function initCharts() {
     chartInstances.scores = new Chart(ctx3, {
       type: 'bar',
       data: {
-        labels: ['AGRI-25', 'Innov-Tech', 'Santé', 'Bourses'],
+        labels: (overviewData.scores || []).map(item => item.label),
         datasets: [{
           label: 'Score moyen /20',
-          data: [14.8, 15.6, 13.2, 0],
+          data: (overviewData.scores || []).map(item => item.score),
           backgroundColor: ['rgba(46,175,125,0.8)', 'rgba(245,166,35,0.8)', 'rgba(52,152,219,0.8)', 'rgba(255,255,255,0.1)'],
           borderRadius: 6,
           borderSkipped: false
@@ -2439,7 +3059,11 @@ function initCriteriaChart() {
 function animateKPIs() {
   document.querySelectorAll('.kpi-val[data-target]').forEach(el => {
     const target = parseInt(el.getAttribute('data-target'));
-    let current = 0;
+    let current = parseInt(el.textContent, 10) || 0;
+    if (current >= target) {
+      el.textContent = target;
+      return;
+    }
     const duration = 1200;
     const step = target / (duration / 16);
     const interval = setInterval(() => {
@@ -2539,6 +3163,137 @@ function switchFormTab(tab, btn) {
   if (tab === 'planning') setTimeout(initCalendar, 100);
 }
 
+document.querySelectorAll('#planningForm input[name="access_type"]').forEach(function (radio) {
+  radio.addEventListener('change', function () {
+    const emailBox = document.getElementById('planningEmailsWrap');
+    if (emailBox) emailBox.hidden = this.value !== 'email_list';
+  });
+});
+
+function initPlanningCountryPicker() {
+  const picker = document.getElementById('planningCountryPicker');
+  if (!picker || picker.dataset.ready === '1') return;
+  picker.dataset.ready = '1';
+  const trigger = picker.querySelector('.country-picker-trigger');
+  const value = picker.querySelector('.country-picker-value');
+  const search = picker.querySelector('.country-picker-search');
+  const options = Array.from(picker.querySelectorAll('[data-country-option]'));
+  const empty = picker.querySelector('.country-picker-empty');
+
+  function render() {
+    value.replaceChildren();
+    const selected = options.filter(option => option.querySelector('input').checked);
+    if (!selected.length) {
+      const placeholder = document.createElement('span');
+      placeholder.className = 'country-picker-placeholder';
+      placeholder.textContent = 'Tous les pays';
+      value.appendChild(placeholder);
+    } else {
+      selected.forEach(function (option) {
+        const chip = document.createElement('span');
+        chip.className = 'country-chip';
+        chip.append(document.createTextNode(option.querySelector('span').textContent));
+        const remove = document.createElement('span');
+        remove.setAttribute('role', 'button');
+        remove.setAttribute('tabindex', '0');
+        remove.setAttribute('aria-label', 'Retirer ' + option.querySelector('span').textContent);
+        remove.innerHTML = '&times;';
+        const removeCountry = function (event) { event.stopPropagation(); option.querySelector('input').checked = false; option.classList.remove('is-selected'); render(); };
+        remove.addEventListener('click', removeCountry);
+        remove.addEventListener('keydown', function (event) { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); removeCountry(event); } });
+        chip.appendChild(remove);
+        value.appendChild(chip);
+      });
+    }
+    options.forEach(option => option.classList.toggle('is-selected', option.querySelector('input').checked));
+  }
+
+  trigger.addEventListener('click', function () {
+    picker.classList.toggle('is-open');
+    trigger.setAttribute('aria-expanded', picker.classList.contains('is-open') ? 'true' : 'false');
+    if (picker.classList.contains('is-open')) search.focus();
+  });
+  options.forEach(function (option) {
+    option.addEventListener('click', function (event) {
+      event.preventDefault();
+      option.querySelector('input').checked = !option.querySelector('input').checked;
+      render();
+    });
+  });
+  search.addEventListener('input', function () {
+    const query = search.value.trim().toLowerCase();
+    let visible = 0;
+    options.forEach(function (option) { const show = !query || option.dataset.country.includes(query); option.hidden = !show; if (show) visible++; });
+    if (empty) empty.hidden = visible > 0;
+  });
+  document.getElementById('planningForm')?.addEventListener('reset', function () { window.setTimeout(render, 0); });
+  document.addEventListener('click', function (event) { if (!picker.contains(event.target)) { picker.classList.remove('is-open'); trigger.setAttribute('aria-expanded', 'false'); } });
+  render();
+}
+initPlanningCountryPicker();
+
+function initPlanningOrganisationPicker() {
+  const picker = document.getElementById('planningOrganisationPicker');
+  if (!picker || picker.dataset.ready === '1') return;
+  picker.dataset.ready = '1';
+  const trigger = picker.querySelector('.country-picker-trigger');
+  const value = picker.querySelector('.country-picker-value');
+  const search = picker.querySelector('.country-picker-search');
+  const options = Array.from(picker.querySelectorAll('[data-organisation-option]'));
+  const empty = picker.querySelector('.country-picker-empty');
+
+  function render() {
+    value.replaceChildren();
+    const selected = options.find(option => option.querySelector('input').checked);
+    if (!selected) {
+      const placeholder = document.createElement('span');
+      placeholder.className = 'country-picker-placeholder';
+      placeholder.textContent = 'Organisation du formulaire';
+      value.appendChild(placeholder);
+    } else {
+      const chip = document.createElement('span');
+      chip.className = 'country-chip';
+      chip.append(document.createTextNode(selected.querySelector('span').firstChild.textContent.trim()));
+      const remove = document.createElement('span');
+      remove.setAttribute('role', 'button');
+      remove.setAttribute('tabindex', '0');
+      remove.setAttribute('aria-label', 'Retirer l’organisation sélectionnée');
+      remove.innerHTML = '&times;';
+      const clear = function (event) { event.stopPropagation(); selected.querySelector('input').checked = false; render(); };
+      remove.addEventListener('click', clear);
+      remove.addEventListener('keydown', function (event) { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); clear(event); } });
+      chip.appendChild(remove);
+      value.appendChild(chip);
+    }
+    options.forEach(option => option.classList.toggle('is-selected', option.querySelector('input').checked));
+  }
+
+  trigger.addEventListener('click', function () { picker.classList.toggle('is-open'); trigger.setAttribute('aria-expanded', picker.classList.contains('is-open') ? 'true' : 'false'); if (picker.classList.contains('is-open')) search.focus(); });
+  options.forEach(function (option) { option.addEventListener('click', function (event) { event.preventDefault(); const input = option.querySelector('input'); options.forEach(item => { if (item !== option) item.querySelector('input').checked = false; }); input.checked = !input.checked; render(); }); });
+  search.addEventListener('input', function () { const query = search.value.trim().toLowerCase(); let visible = 0; options.forEach(function (option) { const show = !query || option.dataset.organisation.includes(query); option.hidden = !show; if (show) visible++; }); if (empty) empty.hidden = visible > 0; });
+  document.getElementById('planningForm')?.addEventListener('reset', function () { window.setTimeout(render, 0); });
+  document.addEventListener('click', function (event) { if (!picker.contains(event.target)) { picker.classList.remove('is-open'); trigger.setAttribute('aria-expanded', 'false'); } });
+  render();
+}
+initPlanningOrganisationPicker();
+document.getElementById('planningForm')?.addEventListener('submit', async function (event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const submit = form.querySelector('button[type="submit"]');
+  submit.disabled = true;
+  try {
+    const response = await fetch((window.CRITEVAL_BASE_URL || '') + '/admin/forms/schedules', { method: 'POST', body: new FormData(form) });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.success) throw new Error(result.message || 'Planification impossible.');
+    $('#modalPlanning').removeClass('open');
+    form.reset();
+    showToast('Planification enregistrée et activation automatique configurée.', 'success');
+    if (calInit) { $('#adminCalendar').fullCalendar('refetchEvents'); }
+  } catch (error) {
+    showToast(error.message || 'Planification impossible.', 'error');
+  } finally { submit.disabled = false; }
+});
+
 // ══════════════════════════════════════
 // CALENDAR
 // ══════════════════════════════════════
@@ -2550,14 +3305,19 @@ function initCalendar() {
   $(calEl).fullCalendar({
     locale: 'fr',
     header: { left: 'prev,next today', center: 'title', right: 'month,agendaWeek,listMonth' },
-    events: [
-      { title: 'AGRI-2025 — Ouverture', start: '2025-11-01', end: '2025-11-30', color: '#2EAF7D' },
-      { title: 'AGRI-2025 — Clôture', start: '2025-12-15', color: '#E74C3C' },
-      { title: 'Innov-Tech — Actif', start: '2025-10-15', end: '2025-12-20', color: '#F5A623' },
-      { title: 'Bourses 2026 — Planifié', start: '2026-01-15', end: '2026-03-01', color: '#3498db' },
-      { title: 'Fonds Santé — Clôturé', start: '2025-09-01', end: '2025-10-31', color: '#9b59b6' },
-      { title: 'Comité d\'évaluation', start: '2026-01-05', color: '#e67e22' }
-    ],
+    events: async function (start, end, timezone, callback) {
+      try {
+        const response = await fetch((window.CRITEVAL_BASE_URL || '') + '/admin/forms/schedules');
+        const schedules = await response.json();
+        callback((Array.isArray(schedules) ? schedules : []).flatMap(function (schedule) {
+          const title = (schedule.form_title || 'Formulaire') + (schedule.project_title ? ' — ' + schedule.project_title : '');
+          return [
+            { title: title + ' — Ouverture', start: schedule.start_datetime, color: '#2EAF7D' },
+            { title: title + ' — Clôture', start: schedule.end_datetime, color: '#E74C3C' }
+          ];
+        }));
+      } catch (error) { callback([]); }
+    },
     eventClick: function(event) { showToast('Formulaire : ' + event.title, 'success'); },
     dayClick: function(date) { $('#modalPlanning').addClass('open'); }
   });
@@ -2633,6 +3393,7 @@ $(document).on('click', '.chart-btn', function() {
 // CRITERIA DRAG & DROP
 // ══════════════════════════════════════
 function initSortable() {
+  if (!window.jQuery || typeof $.fn.sortable !== 'function') return;
   if ($('#criteriaList').length && !$('#criteriaList').hasClass('ui-sortable')) {
     $('#criteriaList').sortable({ handle: '.drag-handle', axis: 'y', animation: 150 });
   }
@@ -2703,6 +3464,203 @@ function initAfricaMap() {
   } catch(e) { console.log('Map init error:', e); }
 }
 
+let notificationKnownStates = null;
+let notificationPollTimer = null;
+let notificationAudioContext = null;
+let notificationSoundQueued = false;
+const notificationChannel = 'BroadcastChannel' in window ? new BroadcastChannel('criteval-notifications') : null;
+
+function notificationReadIds() {
+  try { return new Set(JSON.parse(localStorage.getItem('criteval_read_notifications') || '[]')); } catch (error) { return new Set(); }
+}
+
+function saveNotificationReadIds(ids) {
+  try { localStorage.setItem('criteval_read_notifications', JSON.stringify(Array.from(ids).slice(-100))); } catch (error) {}
+}
+
+function playNotificationSound() {
+  try {
+    const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+    if (!AudioContextClass) return;
+    notificationAudioContext ||= new AudioContextClass();
+    const context = notificationAudioContext;
+    if (context.state === 'suspended') {
+      notificationSoundQueued = true;
+      context.resume().catch(function () {});
+      return;
+    }
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.frequency.value = 740;
+    gain.gain.setValueAtTime(0.035, context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.22);
+    oscillator.connect(gain).connect(context.destination);
+    oscillator.start();
+    oscillator.stop(context.currentTime + 0.22);
+    notificationSoundQueued = false;
+  } catch (error) {}
+}
+
+function unlockNotificationSound() {
+  if (!notificationAudioContext) return;
+  notificationAudioContext.resume().then(function () {
+    if (notificationSoundQueued) playNotificationSound();
+  }).catch(function () {});
+}
+
+function renderNotificationList(items) {
+  const list = document.getElementById('notificationList');
+  const count = document.getElementById('notificationCount');
+  const dot = document.getElementById('notificationDot');
+  if (!list || !count || !dot) return;
+  const readIds = notificationReadIds();
+  const unreadItems = items.filter(item => !readIds.has(item.id));
+  count.textContent = unreadItems.length > 99 ? '99+' : String(unreadItems.length);
+  count.hidden = unreadItems.length === 0;
+  dot.hidden = unreadItems.length === 0;
+  count.title = unreadItems.length + ' notification(s) non lue(s) sur ' + items.length + ' disponible(s)';
+  list.replaceChildren();
+  if (!items.length) {
+    const empty = document.createElement('div');
+    empty.className = 'notification-empty';
+    empty.textContent = 'Aucune échéance ou alerte active.';
+    list.appendChild(empty);
+    return;
+  }
+  const icons = { schedule: 'fa-calendar-alt', training: 'fa-chalkboard-teacher' };
+  items.forEach(item => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    const isRead = readIds.has(item.id);
+    button.className = 'notification-item ' + (isRead ? 'is-read' : 'is-unread');
+    button.dataset.severity = item.severity || 'info';
+    button.dataset.read = isRead ? 'true' : 'false';
+    button.setAttribute('aria-label', (isRead ? 'Notification lue : ' : 'Notification non lue : ') + item.title);
+    const icon = document.createElement('span');
+    icon.className = 'notification-icon';
+    icon.innerHTML = '<i class="fas ' + (icons[item.type] || 'fa-bell') + '"></i>';
+    const content = document.createElement('span');
+    content.className = 'notification-content';
+    const title = document.createElement('span');
+    title.className = 'notification-title';
+    title.textContent = item.title;
+    const state = document.createElement('span');
+    state.className = 'notification-status';
+    state.textContent = item.state === 'delivered' ? 'Disponible' : 'En attente';
+    title.appendChild(state);
+    const message = document.createElement('span');
+    message.className = 'notification-message';
+    message.textContent = item.message;
+    const date = document.createElement('span');
+    date.className = 'notification-date';
+    date.textContent = item.display_date;
+    content.append(title, message, date);
+    button.append(icon, content);
+    button.addEventListener('click', function () {
+      const currentReadIds = notificationReadIds();
+      currentReadIds.add(item.id);
+      saveNotificationReadIds(currentReadIds);
+      notificationChannel?.postMessage({ type: 'notifications-read' });
+      window.currentNotificationItems = items;
+      renderNotificationList(items);
+      document.getElementById('notificationPanel').hidden = true;
+      document.getElementById('notificationButton').setAttribute('aria-expanded', 'false');
+      switchModule(item.module);
+    });
+    list.appendChild(button);
+  });
+}
+
+async function refreshNotifications() {
+  try {
+    const response = await fetch((window.CRITEVAL_BASE_URL || '') + '/admin/notifications', { headers: { Accept: 'application/json' } });
+    const payload = await response.json();
+    if (!response.ok || !payload.success) return;
+    const items = Array.isArray(payload.items) ? payload.items : [];
+    const states = new Map(items.map(item => [item.id, item.state || 'pending']));
+    const changedItems = notificationKnownStates
+      ? items.filter(item => notificationKnownStates.get(item.id) !== (item.state || 'pending'))
+      : [];
+    if (changedItems.length > 0) {
+      if (payload.sound_alerts) playNotificationSound();
+      if (payload.browser_alerts && 'Notification' in window && Notification.permission === 'granted') {
+        const changedItem = changedItems[0];
+        if (changedItem) new Notification('Criteval Pro', { body: changedItem.message });
+      }
+    }
+    notificationKnownStates = states;
+    window.currentNotificationItems = items;
+    renderNotificationList(items);
+    const updated = document.getElementById('notificationUpdatedAt');
+    if (updated) updated.textContent = 'Mis à jour à ' + new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  } catch (error) {
+    const list = document.getElementById('notificationList');
+    if (list && !notificationKnownStates) list.innerHTML = '<div class="notification-empty">Alertes temporairement indisponibles.</div>';
+  }
+}
+
+function initNotificationCenter() {
+  const button = document.getElementById('notificationButton');
+  const panel = document.getElementById('notificationPanel');
+  if (!button || !panel || button.dataset.ready === '1') return;
+  button.dataset.ready = '1';
+  document.addEventListener('pointerdown', unlockNotificationSound, { once: true, passive: true });
+  document.getElementById('notificationCreate')?.addEventListener('click', function (event) {
+    event.stopPropagation();
+    panel.hidden = true;
+    document.getElementById('modalNewNotification')?.classList.add('open');
+  });
+  document.getElementById('notificationMarkAll')?.addEventListener('click', function (event) {
+    event.stopPropagation();
+    const items = window.currentNotificationItems || [];
+    const readIds = notificationReadIds();
+    items.forEach(item => readIds.add(item.id));
+    saveNotificationReadIds(readIds);
+    notificationChannel?.postMessage({ type: 'notifications-read' });
+    renderNotificationList(items);
+  });
+  button.addEventListener('click', function (event) {
+    event.stopPropagation();
+    panel.hidden = !panel.hidden;
+    button.setAttribute('aria-expanded', panel.hidden ? 'false' : 'true');
+    if (!panel.hidden) refreshNotifications();
+  });
+  document.addEventListener('click', function (event) {
+    if (!panel.hidden && !panel.contains(event.target) && !button.contains(event.target)) {
+      panel.hidden = true;
+      button.setAttribute('aria-expanded', 'false');
+    }
+  });
+  refreshNotifications();
+  notificationChannel?.addEventListener('message', function (event) {
+    if (event.data?.type === 'notifications-read') renderNotificationList(window.currentNotificationItems || []);
+  });
+  notificationPollTimer = window.setInterval(function () {
+    if (!document.hidden) refreshNotifications();
+  }, 10000);
+  document.addEventListener('visibilitychange', function () { if (!document.hidden) refreshNotifications(); });
+}
+
+document.getElementById('newNotificationForm')?.addEventListener('submit', async function (event) {
+  event.preventDefault();
+  const form = event.currentTarget;
+  const submit = form.querySelector('button[type="submit"]');
+  submit.disabled = true;
+  try {
+    const response = await fetch((window.CRITEVAL_BASE_URL || '') + '/admin/notifications/create', { method: 'POST', body: new FormData(form) });
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok || !result.success) throw new Error(result.message || 'Création impossible.');
+    form.reset();
+    document.getElementById('modalNewNotification').classList.remove('open');
+    showToast(result.message, 'success');
+    refreshNotifications();
+  } catch (error) {
+    showToast(error.message || 'Création impossible.', 'error');
+  } finally {
+    submit.disabled = false;
+  }
+});
+
 // ══════════════════════════════════════
 // DASHBOARD INIT
 // ══════════════════════════════════════
@@ -2710,12 +3668,16 @@ function initDashboard() {
   renderSidebarCounts();
   initSettingsPanel();
   initDashboardUserForm();
-  const storedModule = getStoredModule();
-  if (storedModule && document.getElementById('module-' + storedModule)) {
-    switchModule(storedModule);
-  } else {
-    switchModule('apercu');
-  }
+  initNotificationCenter();
+  const page = document.getElementById('page-dashboard');
+  const requestedModule = page?.dataset.startModule || 'apercu';
+  switchModule(requestedModule, null, false);
+  window.addEventListener('popstate', () => {
+    const currentRoute = window.location.pathname.split('/').filter(Boolean).pop()?.toLowerCase() || 'dashboard';
+    const routeModules = { dashboard: 'apercu', organisations: 'projets', criteres: 'criteres', formulaires: 'formulaires', formation: 'formation', evaluations: 'evaluations', classements: 'classements', planning: 'calendrier', parametres: 'parametres' };
+    const module = routeModules[currentRoute] || 'apercu';
+    switchModule(module, null, false);
+  });
   setTimeout(() => {
     initCharts();
     animateKPIs();
@@ -2743,20 +3705,6 @@ $(function() {
   initDashboard();
 });
 
-// ══════════════════════════════════════
-// CHART PERIOD UPDATES
-// ══════════════════════════════════════
-$('.chart-btn').on('click', function() {
-  const datasets6M = [12, 19, 28, 45, 67, 92];
-  const datasets1A = [5, 8, 12, 19, 28, 45, 32, 67, 55, 78, 92, 110];
-  if (chartInstances.submissions) {
-    const data = $(this).text() === '6M' ? datasets6M : datasets1A;
-    const labels = $(this).text() === '6M' ? ['Juil','Août','Sept','Oct','Nov','Déc'] : ['Jan','Fév','Mar','Avr','Mai','Jun','Jul','Aoû','Sep','Oct','Nov','Déc'];
-    chartInstances.submissions.data.datasets[0].data = data;
-    chartInstances.submissions.data.labels = labels;
-    chartInstances.submissions.update();
-  }
-});
 </script>
 <script src="<?= BASE_URL ?>/assets/js/app.js"></script>
 <script src="<?= BASE_URL ?>/assets/js/builder.js"></script>
@@ -2810,12 +3758,12 @@ $('.chart-btn').on('click', function() {
                     <span class="score-pill">/${Number(item.max_score || 20).toFixed(0)}</span>
                   </div>
                   <div class="project-card-actions">
-                    <button type="button" class="btn btn-icon btn-ghost-dark" onclick="showToast('Modification à venir', 'info')"><i class="fas fa-edit"></i></button>
-                    <button type="button" class="btn btn-icon" style="background:rgba(231,76,60,0.1);color:var(--danger)" onclick="showToast('Suppression à venir', 'warning')"><i class="fas fa-trash"></i></button>
+                    <button type="button" class="btn btn-icon btn-ghost-dark" title="Modifier" onclick='editCriterion(${JSON.stringify(item).replace(/'/g, "&#39;")})'><i class="fas fa-edit"></i></button>
+                    <button type="button" class="btn btn-icon" title="Supprimer" style="background:rgba(231,76,60,0.1);color:var(--danger)" onclick="deleteCriterion(${Number(item.id)})"><i class="fas fa-trash"></i></button>
                   </div>
                 </div>
               `).join('')
-            : '<div class="criteria-item"><div class="criteria-info"><div class="criteria-label">Aucun critère pour ce projet.</div><div class="criteria-desc">Ajoutez un nouveau critère sur la droite.</div></div></div>';
+            : '<div class="criteria-item"><div class="criteria-info"><div class="criteria-label">Aucun critère pour cette organisation.</div><div class="criteria-desc">Ajoutez un nouveau critère sur la droite.</div></div></div>';
 
           const total = items.reduce((sum, item) => sum + Number(item.weight || 0), 0);
           if (totalWeightEl) totalWeightEl.textContent = total.toFixed(2);
@@ -2826,11 +3774,63 @@ $('.chart-btn').on('click', function() {
       }
 
       const criteriaForm = document.getElementById('criteriaForm');
+      window.deleteCriterion = async function (criteriaId) {
+        if (!window.confirm('Supprimer définitivement ce critère ?')) return;
+        const formData = new FormData();
+        formData.append('id', String(criteriaId));
+        formData.append('csrf_token', criteriaForm.querySelector('input[name="csrf_token"]').value);
+        try {
+          const response = await fetch(window.CRITEVAL_BASE_URL + '/admin/criteria/delete', { method: 'POST', body: formData });
+          const payload = await response.json();
+          if (!response.ok || !payload.success) throw new Error(payload.message || 'Suppression impossible.');
+          showToast(payload.message, 'success');
+          loadCriteriaList();
+        } catch (error) {
+          showToast(error.message || 'Suppression impossible.', 'error');
+        }
+      };
+
+      let editingCriterionId = 0;
+      const criteriaFormTitle = document.getElementById('criteriaFormTitle');
+      const criteriaFormIcon = document.getElementById('criteriaFormIcon');
+      const criteriaFormSubmit = document.getElementById('criteriaFormSubmit');
+      const criteriaFormCancel = document.getElementById('criteriaFormCancel');
+
+      function resetCriteriaForm() {
+        editingCriterionId = 0;
+        criteriaForm.reset();
+        criteriaForm.querySelector('input[name="is_required"]').checked = true;
+        criteriaFormTitle.textContent = 'Nouveau critère';
+        criteriaFormIcon.className = 'fas fa-plus';
+        criteriaFormSubmit.querySelector('span').textContent = 'Enregistrer';
+        criteriaFormCancel.classList.add('hidden');
+      }
+
+      window.editCriterion = function (criterion) {
+        editingCriterionId = Number(criterion.id);
+        criteriaForm.elements.project_id.value = String(criterion.project_id || '');
+        criteriaForm.elements.label.value = criterion.label || '';
+        criteriaForm.elements.description.value = criterion.description || '';
+        criteriaForm.elements.weight.value = criterion.weight || 1;
+        criteriaForm.elements.max_score.value = criterion.max_score || 20;
+        criteriaForm.elements.is_required.checked = Boolean(Number(criterion.is_required));
+        criteriaFormTitle.textContent = 'Modifier le critère';
+        criteriaFormIcon.className = 'fas fa-edit';
+        criteriaFormSubmit.querySelector('span').textContent = 'Mettre à jour';
+        criteriaFormCancel.classList.remove('hidden');
+        criteriaForm.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        criteriaForm.elements.label.focus();
+      };
+
+      criteriaFormCancel.addEventListener('click', resetCriteriaForm);
+
       if (criteriaForm) {
         criteriaForm.addEventListener('submit', async function (event) {
           event.preventDefault();
           const formData = new FormData(criteriaForm);
-          const response = await fetch(window.CRITEVAL_BASE_URL + '/admin/criteria', { method: 'POST', body: formData });
+          const endpoint = editingCriterionId ? '/admin/criteria/update' : '/admin/criteria';
+          if (editingCriterionId) formData.append('id', String(editingCriterionId));
+          const response = await fetch(window.CRITEVAL_BASE_URL + endpoint, { method: 'POST', body: formData });
           const payload = await response.json();
 
           if (!response.ok || !payload.success) {
@@ -2838,10 +3838,8 @@ $('.chart-btn').on('click', function() {
             return;
           }
 
-          criteriaForm.reset();
-          const requiredToggle = criteriaForm.querySelector('input[name="is_required"]');
-          if (requiredToggle) requiredToggle.checked = true;
-          showToast('Critère enregistré avec succès', 'success');
+          showToast(editingCriterionId ? 'Critère modifié avec succès' : 'Critère enregistré avec succès', 'success');
+          resetCriteriaForm();
           loadCriteriaList();
         });
       }

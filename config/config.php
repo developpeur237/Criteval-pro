@@ -2,7 +2,7 @@
 declare(strict_types=1);
 
 define('APP_NAME', 'Criteval Pro');
-define('APP_ENV', 'development');
+define('APP_ENV', strtolower((string) ($_ENV['APP_ENV'] ?? getenv('APP_ENV') ?: 'production')));
 define('APP_ROOT', dirname(__DIR__));
 define('BASE_URL', rtrim($_ENV['BASE_URL'] ?? dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/\\'));
 define('APP_TIMEZONE', 'Africa/Douala');
