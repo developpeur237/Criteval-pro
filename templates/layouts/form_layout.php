@@ -14,5 +14,6 @@ $content = $content ?? '';
 </head>
 <body class="form-layout">
   <?= $content ?>
+  <script src="<?= BASE_URL ?>/assets/js/app.js"></script>
 </body>
 </html>

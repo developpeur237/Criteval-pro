@@ -1502,5 +1502,7 @@ $('.chart-btn').on('click', function() {
   }
 });
 </script>
+
+<script src="<?= BASE_URL ?>/assets/js/app.js"></script>
 </body>
 </html>

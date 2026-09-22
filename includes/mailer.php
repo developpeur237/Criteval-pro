@@ -107,6 +107,18 @@ function send_app_email($to, string $subject, string $html, ?string $text = null
         $settings['timeout'] = min((int) ($settings['timeout'] ?? 15), 5);
     }
 
+    // Explicit SMTP mode must never report success through a local PHP-mail
+    // fallback. That would hide bad credentials and make delivery appear
+    // successful when no authenticated SMTP message was accepted.
+    if ($transport === 'smtp') {
+        return [
+            'success' => false,
+            'transport' => 'smtp',
+            'online' => $connectivity['online'],
+            'message' => 'SMTP delivery failed. Check the SMTP username, password, security mode, and sender policy.',
+        ];
+    }
+
     try {
         php_mail_deliver($recipients, $subject, $html, $from, $fromName, $replyTo);
         return ['success' => true, 'transport' => 'php-mail', 'online' => $connectivity['online'], 'message' => 'Message accepte par PHP mail().'];
@@ -170,15 +182,29 @@ function send_otp_email(string $to, string $otp, ?array $form = null): array
     return send_app_email($to, 'Votre code de verification - Criteval Pro', $html, 'Votre code de verification Criteval Pro est : ' . $otp);
 }
 
-function send_submission_confirmation_email(string $to, string $candidateName, ?array $form = null, ?int $submissionId = null): array
+function send_submission_confirmation_email(string $to, string $candidateName, ?array $form = null, ?int $submissionId = null, ?array $submissionData = null): array
 {
     $title = $form['title'] ?? 'votre formulaire';
     $reference = $submissionId ? 'CRIT-' . str_pad((string) $submissionId, 6, '0', STR_PAD_LEFT) : null;
+    $summary = '';
+    if (is_array($submissionData)) {
+        $summary .= '<h2 style="font-size:16px;margin:22px 0 10px">Récapitulatif</h2><ul>';
+        foreach ([
+            'Organisation' => $submissionData['organisation'] ?? '',
+            'Pays' => $submissionData['country_code'] ?? '',
+            'Session' => $submissionData['training_session_id'] ?? 'Non précisée',
+        ] as $label => $value) {
+            if ((string) $value !== '') $summary .= '<li><strong>' . e($label) . ' :</strong> ' . e((string) $value) . '</li>';
+        }
+        $checked = is_array($submissionData['criteria_checked'] ?? null) ? count($submissionData['criteria_checked']) : 0;
+        $summary .= '<li><strong>Critères documentés :</strong> ' . $checked . '</li></ul>';
+    }
     $html = email_layout(
         'Candidature recue',
         '<p>Bonjour ' . e($candidateName !== '' ? $candidateName : 'cher candidat') . ',</p>'
         . '<p>Votre soumission pour <strong>' . e((string) $title) . '</strong> a bien ete recue.</p>'
         . ($reference ? '<p>Reference : <strong>' . e($reference) . '</strong></p>' : '')
+        . $summary
         . '<p>Vous recevrez une notification lorsque votre dossier evoluera.</p>'
     );
     return send_app_email($to, 'Confirmation de soumission - Criteval Pro', $html);

@@ -33,6 +33,7 @@
     <?php endif; ?>
 
     <form method="post" action="<?= BASE_URL ?>/install">
+      <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
       <div class="install-note">
         <p><strong>Base MVP :</strong> <code>storage/criteval_pro.sqlite</code></p>
         <p>Le fichier est créé automatiquement depuis <code>database/criteval_pro.sqlite.sql</code>. Le schéma MySQL existant est conservé pour la migration future.</p>

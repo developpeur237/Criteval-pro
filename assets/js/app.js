@@ -1,3 +1,8 @@
+if (window.__CRITEVAL_APP_JS_LOADED__) {
+  // Prevent the shared bundle from re-declaring globals when a page includes it more than once.
+} else {
+  window.__CRITEVAL_APP_JS_LOADED__ = true;
+
 // ══════════════════════════════════════
 // PAGE SYSTEM
 // ══════════════════════════════════════
@@ -354,6 +359,291 @@ function showToast(msg, type = 'success') {
 }
 
 // ══════════════════════════════════════
+// LIVE TUTORIAL SYSTEM
+// ══════════════════════════════════════
+window.CritevalTutorial = window.CritevalTutorial || {};
+
+(function() {
+  const tutorialState = {
+    visible: false,
+    page: null,
+    steps: [],
+    index: 0,
+    overlay: null,
+    highlight: null,
+    popover: null,
+    launchButton: null
+  };
+
+  const defaultTutorials = {
+    landing: [
+      { selector: '.pub-nav', title: 'Navigation principale', text: 'Commencez par la navigation globale de la plateforme et accédez aux sections clés.', position: 'bottom' },
+      { selector: '.hero-title', title: 'Message de valeur', text: 'Cette zone présente le programme et son objectif pour les organisations et les porteurs de projet.', position: 'left' },
+      { selector: '.hero-cta', title: 'Actions principales', text: 'Les boutons ci-dessous permettent d’ouvrir l’accès rapide ou la candidature.', position: 'bottom' },
+      { selector: '.timeline-step:nth-child(1)', title: 'Parcours en 4 étapes', text: 'Chaque étape décrit un bloc fonctionnel du parcours de candidature.', position: 'top' },
+      { selector: '.adv-card:nth-child(1)', title: 'Avantages clés', text: 'Cette section met en avant les bénéfices du programme pour les organisations.', position: 'left' }
+    ],
+    login: [
+      { selector: '.auth-logo', title: 'Connexion à la plateforme', text: 'Bienvenue dans le portail Criteval Pro. Cette étape vous aide à vous identifier.', position: 'bottom' },
+      { selector: 'input[type="email"], input[name="email"], input[name="login"]', title: 'Identifiant', text: 'Saisissez votre adresse email ou votre identifiant de connexion.', position: 'right' },
+      { selector: 'input[type="password"], input[name="password"]', title: 'Mot de passe', text: 'Entrez votre mot de passe pour accéder au tableau de bord sécurisé.', position: 'right' },
+      { selector: 'button[type="submit"], .btn-primary', title: 'Valider la session', text: 'Cliquez ici pour accéder à votre espace et démarrer votre parcours.', position: 'top' }
+    ],
+    dashboard: [
+      { selector: '.sidebar-item.active, .sidebar-item:nth-child(1)', title: 'Menu principal', text: 'Le menu latéral donne accès à chaque module de la plateforme.', position: 'right' },
+      { selector: '#trainingSessionSelect', title: 'Sélecteur de session', text: 'Choisissez la session de formation active pour mettre à jour les indicateurs et les critères.', position: 'bottom' },
+      { selector: '.training-kpi-grid', title: 'Indicateurs clés', text: 'Ces cartes synthétisent les performances de la session sélectionnée.', position: 'bottom' },
+      { selector: '#trainingDetailPanel', title: 'Pilotage de la session', text: 'Le panneau de pilotage centralise le contexte, les statistiques et les actions de gestion.', position: 'left' },
+      { selector: '#trainingCriteriaPanel', title: 'Liste des critères', text: 'La liste des critères associe les sujets de formation aux éléments de suivi et d’évaluation.', position: 'left' },
+      { selector: '#trainingParticipantsBody', title: 'Participants et notes', text: 'Cette table permet de gérer les présences, les notes et les commentaires.', position: 'top' }
+    ]
+  };
+
+  function getCurrentPageKey() {
+    if (document.getElementById('page-dashboard')) return 'dashboard';
+    if (document.getElementById('page-login')) return 'login';
+    if (document.getElementById('page-landing')) return 'landing';
+    return 'dashboard';
+  }
+
+  function getPageTutorialSteps(pageKey) {
+    const configured = window.CritevalTutorial && Array.isArray(window.CritevalTutorial.steps) ? window.CritevalTutorial.steps : [];
+    if (configured.length) return configured;
+    return defaultTutorials[pageKey] || [];
+  }
+
+  function ensureLaunchButton() {
+    if (document.getElementById('criteval-tutorial-launch')) {
+      return document.getElementById('criteval-tutorial-launch');
+    }
+
+    const button = document.createElement('button');
+    button.id = 'criteval-tutorial-launch';
+    button.type = 'button';
+    button.className = 'criteval-tutorial-launch';
+    button.innerHTML = '<i class="fas fa-compass"></i> Tutoriel';
+    button.addEventListener('click', () => startTutorial(getCurrentPageKey()));
+
+    const topbarActions = document.querySelector('.topbar-actions');
+    const pageDashboard = document.getElementById('page-dashboard');
+    const pageLanding = document.getElementById('page-landing');
+
+    if (topbarActions) {
+      topbarActions.appendChild(button);
+    } else if (pageDashboard || pageLanding) {
+      const wrapper = document.createElement('div');
+      wrapper.style.position = 'fixed';
+      wrapper.style.bottom = '24px';
+      wrapper.style.right = '24px';
+      wrapper.style.zIndex = '1200';
+      wrapper.appendChild(button);
+      document.body.appendChild(wrapper);
+    } else {
+      document.body.appendChild(button);
+    }
+
+    return button;
+  }
+
+  function setOverlayPosition(target, highlight, popover) {
+    const rect = target.getBoundingClientRect();
+    const highlightBox = highlight.getBoundingClientRect();
+    const padding = 18;
+
+    highlight.style.top = (rect.top - padding) + 'px';
+    highlight.style.left = (rect.left - padding) + 'px';
+    highlight.style.width = (rect.width + padding * 2) + 'px';
+    highlight.style.height = (rect.height + padding * 2) + 'px';
+
+    const popoverWidth = Math.min(300, window.innerWidth - 32);
+    const sidePadding = 16;
+    let left = rect.left + rect.width / 2 - popoverWidth / 2;
+    let top = rect.bottom + 18;
+    const placement = tutorialState.step && tutorialState.step.position ? tutorialState.step.position : 'bottom';
+
+    if (placement === 'left') {
+      left = rect.left - popoverWidth - 16;
+      top = rect.top + rect.height / 2 - 70;
+    } else if (placement === 'right') {
+      left = rect.right + 16;
+      top = rect.top + rect.height / 2 - 70;
+    } else if (placement === 'top') {
+      top = rect.top - 170;
+    }
+
+    left = Math.max(sidePadding, Math.min(left, window.innerWidth - popoverWidth - sidePadding));
+    top = Math.max(18, Math.min(top, window.innerHeight - 200));
+
+    popover.style.width = popoverWidth + 'px';
+    popover.style.left = left + 'px';
+    popover.style.top = top + 'px';
+
+    const arrow = popover.querySelector('.criteval-tutorial-arrow');
+    if (arrow) {
+      arrow.className = 'criteval-tutorial-arrow ' + placement;
+      if (placement === 'bottom') {
+        arrow.style.left = Math.max(18, Math.min(150, rect.left + rect.width / 2 - left)) + 'px';
+      } else if (placement === 'top') {
+        arrow.style.left = Math.max(18, Math.min(150, rect.left + rect.width / 2 - left)) + 'px';
+      } else if (placement === 'left') {
+        arrow.style.top = '50%';
+      } else if (placement === 'right') {
+        arrow.style.top = '50%';
+      }
+    }
+  }
+
+  function buildPopover(step) {
+    const popover = document.createElement('div');
+    popover.className = 'criteval-tutorial-popover';
+    popover.innerHTML = `
+      <div class="criteval-tutorial-arrow ${step.position || 'bottom'}"></div>
+      <div class="criteval-tutorial-header">
+        <span class="criteval-tutorial-badge">${tutorialState.index + 1}/${tutorialState.steps.length}</span>
+        <span class="criteval-tutorial-tag">Tutoriel</span>
+      </div>
+      <h3>${step.title || 'Étape'}</h3>
+      <p>${step.text || ''}</p>
+      <div class="criteval-tutorial-actions">
+        <button type="button" class="criteval-tutorial-btn secondary" data-tutorial-action="skip">Ignorer</button>
+        <button type="button" class="criteval-tutorial-btn" data-tutorial-action="prev">Précédent</button>
+        <button type="button" class="criteval-tutorial-btn primary" data-tutorial-action="next">${tutorialState.index === tutorialState.steps.length - 1 ? 'Terminer' : 'Suivant'}</button>
+      </div>
+    `;
+
+    popover.querySelector('[data-tutorial-action="skip"]').addEventListener('click', () => finishTutorial());
+    popover.querySelector('[data-tutorial-action="prev"]').addEventListener('click', () => previousStep());
+    popover.querySelector('[data-tutorial-action="next"]').addEventListener('click', () => nextStep());
+    return popover;
+  }
+
+  function showStep() {
+    if (!tutorialState.steps.length) return finishTutorial();
+    const step = tutorialState.steps[tutorialState.index];
+    if (!step) return finishTutorial();
+
+    tutorialState.step = step;
+    const target = document.querySelector(step.selector);
+    if (!target) {
+      tutorialState.index += 1;
+      if (tutorialState.index >= tutorialState.steps.length) return finishTutorial();
+      return showStep();
+    }
+
+    target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    const overlay = tutorialState.overlay || createOverlay();
+    tutorialState.overlay = overlay;
+
+    if (!tutorialState.highlight) {
+      tutorialState.highlight = document.createElement('div');
+      tutorialState.highlight.id = 'criteval-tutorial-highlight';
+      overlay.appendChild(tutorialState.highlight);
+    }
+
+    if (!tutorialState.popover) {
+      tutorialState.popover = document.createElement('div');
+      tutorialState.popover.id = 'criteval-tutorial-popover';
+      document.body.appendChild(tutorialState.popover);
+    }
+
+    tutorialState.popover.replaceChildren();
+    tutorialState.popover.appendChild(buildPopover(step));
+    setOverlayPosition(target, tutorialState.highlight, tutorialState.popover);
+    tutorialState.highlight.classList.add('visible');
+    tutorialState.popover.classList.add('visible');
+
+    const focusable = target.querySelector('input, button, select, textarea, a') || target;
+    if (focusable && 'focus' in focusable) {
+      focusable.focus({ preventScroll: true });
+    }
+  }
+
+  function createOverlay() {
+    const overlay = document.createElement('div');
+    overlay.id = 'criteval-tutorial-overlay';
+    overlay.setAttribute('aria-hidden', 'true');
+    document.body.appendChild(overlay);
+    return overlay;
+  }
+
+  function nextStep() {
+    tutorialState.index += 1;
+    if (tutorialState.index >= tutorialState.steps.length) return finishTutorial();
+    showStep();
+  }
+
+  function previousStep() {
+    tutorialState.index = Math.max(0, tutorialState.index - 1);
+    showStep();
+  }
+
+  function finishTutorial() {
+    if (tutorialState.overlay) {
+      tutorialState.overlay.remove();
+      tutorialState.overlay = null;
+    }
+    if (tutorialState.popover) {
+      tutorialState.popover.remove();
+      tutorialState.popover = null;
+    }
+    tutorialState.visible = false;
+    tutorialState.index = 0;
+    tutorialState.step = null;
+    const pageKey = getCurrentPageKey();
+    try { localStorage.setItem('criteval_tutorial_' + pageKey, 'done'); } catch (error) {}
+  }
+
+  function startTutorial(pageKey = getCurrentPageKey()) {
+    const steps = getPageTutorialSteps(pageKey);
+    if (!steps || !steps.length) return;
+
+    tutorialState.page = pageKey;
+    tutorialState.steps = steps;
+    tutorialState.index = 0;
+    tutorialState.visible = true;
+    if (tutorialState.overlay) tutorialState.overlay.remove();
+    if (tutorialState.popover) tutorialState.popover.remove();
+    tutorialState.overlay = createOverlay();
+    tutorialState.highlight = document.createElement('div');
+    tutorialState.highlight.id = 'criteval-tutorial-highlight';
+    tutorialState.overlay.appendChild(tutorialState.highlight);
+    tutorialState.popover = document.createElement('div');
+    tutorialState.popover.id = 'criteval-tutorial-popover';
+    document.body.appendChild(tutorialState.popover);
+    showStep();
+  }
+
+  function initTutorialSystem() {
+    const launchButton = ensureLaunchButton();
+    if (launchButton) {
+      launchButton.title = 'Lancer le tutoriel';
+      launchButton.setAttribute('aria-label', 'Lancer le tutoriel');
+    }
+
+    const pageKey = getCurrentPageKey();
+    const hasSeenTutorial = (() => { try { return localStorage.getItem('criteval_tutorial_' + pageKey) === 'done'; } catch (error) { return false; } })();
+
+    if (!hasSeenTutorial && (pageKey === 'dashboard' || pageKey === 'landing' || pageKey === 'login')) {
+      setTimeout(() => startTutorial(pageKey), 900);
+    }
+  }
+
+  window.CritevalTutorial.start = startTutorial;
+  window.CritevalTutorial.finish = finishTutorial;
+  window.CritevalTutorial.reset = function() {
+    try { localStorage.removeItem('criteval_tutorial_' + getCurrentPageKey()); } catch (error) {}
+    startTutorial(getCurrentPageKey());
+  };
+  window.CritevalTutorial.ready = true;
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initTutorialSystem, { once: true });
+  } else {
+    initTutorialSystem();
+  }
+})();
+
+// ══════════════════════════════════════
 // MODALS
 // ══════════════════════════════════════
 function confirmDelete() { $('#modalDelete').addClass('open'); }
@@ -463,4 +753,6 @@ function initAfricaMap() {
 // ══════════════════════════════════════
 function loginToDash() {
   navigateTo('dashboard');
+}
+
 }

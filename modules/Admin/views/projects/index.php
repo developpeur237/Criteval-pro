@@ -14,7 +14,7 @@
       <label>Téléphone<input type="tel" name="contact_phone" value="<?= e($editProject['contact_phone'] ?? '') ?>"></label>
       <label>E-mail de contact<input type="email" name="contact_email" value="<?= e($editProject['contact_email'] ?? '') ?>"></label>
       <label>Site web<input type="url" name="website" placeholder="https://..." value="<?= e($editProject['website'] ?? '') ?>"></label>
-      <label>Domaines thématiques<input name="domains" placeholder="Femmes, jeunesse, santé" value="<?= e($editProject['domains'] ?? '') ?>"></label>
+      <label>Domaines email autorisés<input name="domains" placeholder="exemple.org, partenaire.net" value="<?= e($editProject['domains'] ?? '') ?>"><small>Utilisés pour vérifier l’accès candidat. Séparez plusieurs domaines par des virgules.</small></label>
       <label>Publics cibles<input name="target_audiences" placeholder="Femmes, hommes, enfants, adolescents" value="<?= e($editProject['target_audiences'] ?? '') ?>"></label>
       <label>Statut juridique<select name="legal_status"><option value="legal" <?= ($editProject['legal_status'] ?? '') === 'legal' ? 'selected' : '' ?>>Légale</option><option value="non_legal" <?= ($editProject['legal_status'] ?? 'non_legal') === 'non_legal' ? 'selected' : '' ?>>Non légale</option></select></label>
       <label>Pays d’appartenance<input required name="country_code" maxlength="20" placeholder="Mali" value="<?= e($editProject['country_code'] ?? '') ?>"></label>

@@ -106,6 +106,7 @@ CREATE TABLE training_sessions (
   capacity INTEGER NOT NULL DEFAULT 50,
   format TEXT NOT NULL DEFAULT 'hybride',
   evaluation_weight REAL NOT NULL DEFAULT 0,
+  criteria_json TEXT,
   public_slug TEXT NOT NULL UNIQUE,
   is_active INTEGER NOT NULL DEFAULT 1,
   created_by INTEGER,

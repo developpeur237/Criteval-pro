@@ -4,6 +4,7 @@
   <p>Saisissez votre email pour recevoir votre code candidat.</p>
 
   <form id="candidateOtpRequestForm" method="post" action="<?= BASE_URL ?>/otp">
+    <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
     <label>Email candidat</label>
     <input type="email" name="email" required autocomplete="email">
     <input type="hidden" name="form_id" value="<?= e((string) ($_GET['form_id'] ?? 1)) ?>">
@@ -11,6 +12,7 @@
   </form>
 
   <form id="candidateOtpVerifyForm" method="post" action="<?= BASE_URL ?>/otp/verify" hidden>
+    <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
     <label>Code a 6 chiffres</label>
     <input name="otp" inputmode="numeric" maxlength="6" autocomplete="one-time-code" required>
     <input type="hidden" name="email">
@@ -20,6 +22,8 @@
 
   <p id="candidateOtpStatus" role="status"></p>
 </main>
+
+<script src="<?= BASE_URL ?>/assets/js/app.js"></script>
 
 <script>
 (function () {

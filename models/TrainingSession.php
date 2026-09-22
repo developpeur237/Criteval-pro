@@ -16,8 +16,8 @@ class TrainingSession
     public static function create(array $data): int
     {
         $stmt = db()->prepare(
-            'INSERT INTO training_sessions (name, objective, session_date, project_id, capacity, format, evaluation_weight, public_slug, is_active, created_by)
-             VALUES (:name, :objective, :session_date, :project_id, :capacity, :format, :evaluation_weight, :public_slug, :is_active, :created_by)'
+            'INSERT INTO training_sessions (name, objective, session_date, project_id, capacity, format, evaluation_weight, criteria_json, public_slug, is_active, created_by)
+             VALUES (:name, :objective, :session_date, :project_id, :capacity, :format, :evaluation_weight, :criteria_json, :public_slug, :is_active, :created_by)'
         );
         $stmt->execute([
             'name' => $data['name'],
@@ -27,11 +27,32 @@ class TrainingSession
             'capacity' => max(1, (int) ($data['capacity'] ?? 50)),
             'format' => $data['format'] ?? 'hybride',
             'evaluation_weight' => max(0, (float) ($data['evaluation_weight'] ?? 0)),
+            'criteria_json' => json_encode(array_values(array_unique(array_filter(array_map('intval', (array) ($data['criteria_ids'] ?? [])), static fn (int $id): bool => $id > 0))), JSON_THROW_ON_ERROR),
             'public_slug' => $data['public_slug'],
             'is_active' => $data['is_active'] ?? 1,
             'created_by' => $data['created_by'] ?? null,
         ]);
         return (int) db()->lastInsertId();
+    }
+
+    public static function criteria(int $sessionId): array
+    {
+        $sessionStatement = db()->prepare('SELECT project_id, criteria_json FROM training_sessions WHERE id = :id LIMIT 1');
+        $sessionStatement->execute(['id' => $sessionId]);
+        $session = $sessionStatement->fetch();
+        if (!is_array($session)) return [];
+
+        $selected = json_decode((string) ($session['criteria_json'] ?? ''), true);
+        $ids = is_array($selected) ? array_values(array_unique(array_filter(array_map('intval', $selected), static fn (int $id): bool => $id > 0))) : [];
+        if ($ids === []) {
+            $statement = db()->prepare('SELECT c.* FROM criteria c WHERE c.project_id = :project_id ORDER BY c.order_index ASC, c.id ASC');
+            $statement->execute(['project_id' => (int) ($session['project_id'] ?? 0)]);
+            return $statement->fetchAll() ?: [];
+        }
+        $placeholders = implode(',', array_fill(0, count($ids), '?'));
+        $statement = db()->prepare('SELECT c.* FROM criteria c WHERE c.project_id = ? AND c.id IN (' . $placeholders . ') ORDER BY c.order_index ASC, c.id ASC');
+        $statement->execute(array_merge([(int) ($session['project_id'] ?? 0)], $ids));
+        return $statement->fetchAll() ?: [];
     }
 
     public static function findBySlug(string $slug): ?array

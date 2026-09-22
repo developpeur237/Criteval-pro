@@ -1,6 +1,12 @@
 Options -Indexes
 RewriteEngine On
 
+# Redirect public production hosts to HTTPS while leaving Laragon local hosts usable over HTTP.
+RewriteCond %{HTTPS} !=on
+RewriteCond %{HTTP_HOST} !^(localhost|127\.0\.0\.1|\[::1\])(:\d+)?$ [NC]
+RewriteCond %{HTTP_HOST} !\.(test|local)(:\d+)?$ [NC]
+RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [R=301,L]
+
 # Keep the front controller public; protect code, templates, docs, archives, and legacy files.
 RewriteRule ^(templates|modules|config|controllers|models|includes|database|docs|storage|trash|pdf_templates|views)/ - [F,L]
 RewriteRule \.(md|sql|zip|bak|log)$ - [F,L]

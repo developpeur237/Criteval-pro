@@ -241,7 +241,7 @@ function upgrade_domain_schema(PDO $pdo): void
             )'
         );
         $trainingColumns = array_column($pdo->query('PRAGMA table_info(training_sessions)')->fetchAll(PDO::FETCH_ASSOC), 'name');
-        foreach (['project_id' => 'INTEGER', 'capacity' => 'INTEGER NOT NULL DEFAULT 50', 'format' => 'TEXT NOT NULL DEFAULT "hybride"', 'evaluation_weight' => 'REAL NOT NULL DEFAULT 0'] as $name => $definition) {
+        foreach (['project_id' => 'INTEGER', 'capacity' => 'INTEGER NOT NULL DEFAULT 50', 'format' => 'TEXT NOT NULL DEFAULT "hybride"', 'evaluation_weight' => 'REAL NOT NULL DEFAULT 0', 'criteria_json' => 'TEXT'] as $name => $definition) {
             if (!in_array($name, $trainingColumns, true)) {
                 $pdo->exec('ALTER TABLE training_sessions ADD COLUMN ' . $name . ' ' . $definition);
             }

@@ -168,6 +168,11 @@ function default_permissions_for_role(string $role): array
 function login_user(array $user): void
 {
     session_regenerate_id(true);
+    $rawPermissions = $user['permissions'] ?? null;
+    $permissions = normalize_permissions_structure($rawPermissions);
+    $permissionsConfigured = is_array($rawPermissions)
+        ? $rawPermissions !== []
+        : is_string($rawPermissions) && trim($rawPermissions) !== '';
     $_SESSION['user'] = [
         'id' => $user['id'],
         'username' => $user['username'] ?? null,
@@ -175,7 +180,8 @@ function login_user(array $user): void
         'email' => $user['email'],
         'role' => $user['role'],
         'avatar' => $user['avatar'] ?? null,
-        'permissions' => normalize_permissions_structure($user['permissions'] ?? null),
+        'permissions' => $permissionsConfigured ? $permissions : default_permissions_for_role((string) ($user['role'] ?? '')),
+        'permissions_configured' => $permissionsConfigured,
     ];
 }
 
@@ -247,6 +253,7 @@ function module_access_by_role(): array
             'projets',
             'criteres',
             'formulaires',
+            'formation',
             'evaluations',
             'classements',
             'calendrier',
@@ -279,7 +286,7 @@ function can_view_module(string $module): bool
     $role = $user['role'] ?? '';
     $map = module_access_by_role();
 
-    if ($user && isset($user['permissions'])) {
+    if ($user && !empty($user['permissions_configured'])) {
         $perms = normalize_permissions_structure($user['permissions']);
         if (isset($perms['modules'][$module]['view'])) {
             return (bool) $perms['modules'][$module]['view'];
@@ -303,7 +310,7 @@ function can_module_action(string $module, string $action = 'view'): bool
     $user = current_user();
     $role = $user['role'] ?? '';
 
-    if ($user && isset($user['permissions'])) {
+    if ($user && !empty($user['permissions_configured'])) {
         $perms = normalize_permissions_structure($user['permissions']);
         if (isset($perms['modules'][$module][$action])) {
             return (bool) $perms['modules'][$module][$action];

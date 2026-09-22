@@ -22,6 +22,14 @@ require_once __DIR__ . '/models/Dashboard.php';
 require_once __DIR__ . '/models/Notification.php';
 require_once __DIR__ . '/models/FormField.php';
 
+header('X-Content-Type-Options: nosniff');
+header('X-Frame-Options: SAMEORIGIN');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header('Permissions-Policy: geolocation=(), microphone=(), camera=()');
+if (APP_ENV === 'production' && ((!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') || (int) ($_SERVER['SERVER_PORT'] ?? 0) === 443)) {
+    header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+}
+
 $path = trim(parse_url($_SERVER['REQUEST_URI'] ?? '/', PHP_URL_PATH), '/');
 $base = trim(dirname($_SERVER['SCRIPT_NAME'] ?? ''), '/');
 
@@ -52,6 +60,10 @@ if ($route === 'install') {
     }
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (!verify_csrf($_POST['csrf_token'] ?? null)) {
+            http_response_code(403);
+            exit('Jeton CSRF invalide.');
+        }
         $settings = [
             'host' => sanitize_text($_POST['host'] ?? '127.0.0.1'),
             'port' => (int) ($_POST['port'] ?? 3306),
@@ -237,7 +249,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $route === 'admin/projects') {
             'contact_name' => sanitize_text($_POST['contact_name'] ?? ''),
             'contact_phone' => sanitize_text($_POST['contact_phone'] ?? ''),
             'contact_email' => $contactEmail,
-            'website' => sanitize_text($_POST['website'] ?? ''),
+            'website' => (($website = filter_var(trim(sanitize_text_max($_POST['website'] ?? '', 500)), FILTER_VALIDATE_URL)) && preg_match('/^https?:\/\//i', $website)) ? $website : '',
             'budget_requested' => $budgetRequested,
             'duration_months' => $durationMonths,
             'logo_path' => $logoPath,
@@ -306,6 +318,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $route === 'admin/sessions') {
         'capacity' => (int) ($_POST['capacity'] ?? 50),
         'format' => in_array($_POST['format'] ?? '', ['hybride', 'presentiel', 'en_ligne'], true) ? $_POST['format'] : 'hybride',
         'evaluation_weight' => (float) ($_POST['evaluation_weight'] ?? 0),
+        'criteria_ids' => (array) ($_POST['criteria_ids'] ?? []),
         'is_active' => (int) ($_POST['is_active'] ?? 1),
         'public_slug' => $slug,
         'created_by' => current_user()['id'] ?? null,
@@ -518,7 +531,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $route === 'admin/settings') {
     $appSettings['application_name'] = sanitize_text($_POST['application_name'] ?? $appSettings['application_name']);
     $appSettings['organization'] = sanitize_text($_POST['organization'] ?? $appSettings['organization']);
     $appSettings['contact_email'] = sanitize_text($_POST['contact_email'] ?? $appSettings['contact_email']);
-    $appSettings['website'] = sanitize_text($_POST['website'] ?? $appSettings['website']);
+    $appSettings['website'] = (($website = filter_var(trim(sanitize_text_max($_POST['website'] ?? $appSettings['website'], 500)), FILTER_VALIDATE_URL)) && preg_match('/^https?:\/\//i', $website)) ? $website : '';
 
     $appSettings['modules'] = [
         'apercu' => isset($_POST['modules']['apercu']) && $_POST['modules']['apercu'] === '1',
@@ -648,6 +661,11 @@ if ($route === 'admin/notifications/create' && $_SERVER['REQUEST_METHOD'] === 'P
 
 if ($route === 'otp' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json; charset=utf-8');
+    if (!verify_csrf($_POST['csrf_token'] ?? null) || !security_rate_limit('otp_request', 5, 600)) {
+        http_response_code(429);
+        echo json_encode(['success' => false, 'message' => 'Trop de demandes. Réessayez plus tard.']);
+        exit;
+    }
     $email = sanitize_text($_POST['email'] ?? '');
     $formId = max(0, (int) ($_POST['form_id'] ?? 0));
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -657,31 +675,59 @@ if ($route === 'otp' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $form = $formId > 0 ? Form::find($formId) : null;
-    $availability = $formId > 0 ? Form::availability($formId, null, $email) : ['available' => false, 'message' => 'Formulaire invalide.'];
+    $domain = strtolower((string) substr(strrchr($email, '@') ?: '', 1));
+    $domainStatement = db()->query('SELECT id, organization, title, domains, contact_email FROM projects WHERE status <> "archived"');
+    $organization = null;
+    foreach ($domainStatement->fetchAll() as $project) {
+        $configuredDomains = preg_split('/[,;\s]+/', strtolower((string) ($project['domains'] ?? ''))) ?: [];
+        if (filter_var((string) ($project['contact_email'] ?? ''), FILTER_VALIDATE_EMAIL)) {
+            $configuredDomains[] = strtolower((string) substr(strrchr((string) $project['contact_email'], '@') ?: '', 1));
+        }
+        foreach ($configuredDomains as $configuredDomain) {
+            $configuredDomain = ltrim(trim($configuredDomain), '@');
+            if ($configuredDomain !== '' && $configuredDomain === $domain) {
+                $organization = $project;
+                break 2;
+            }
+        }
+    }
+    if (!$organization) {
+        http_response_code(422);
+        echo json_encode(['success' => false, 'message' => 'Veuillez saisir une adresse email professionnelle valide appartenant à une organisation enregistrée.']);
+        exit;
+    }
+    $availability = $formId > 0 ? Form::availability($formId, null, $email) : ['available' => true, 'message' => null];
     if (!$availability['available']) {
         http_response_code(422);
         echo json_encode(['success' => false, 'message' => $availability['message']]);
         exit;
     }
     $otp = generate_otp();
-    $stmt = db()->prepare('INSERT INTO otp_tokens (email, token, form_id, expires_at, is_used) VALUES (:email, :token, :form_id, :expires_at, 0)');
+    // Store expiry in SQLite UTC so CLI, Apache and PHP-FPM timezone settings cannot disagree.
+    $stmt = db()->prepare('INSERT INTO otp_tokens (email, token, form_id, expires_at, is_used) VALUES (:email, :token, :form_id, datetime("now", "+10 minutes"), 0)');
     $stmt->execute([
         'email' => strtolower($email),
         'token' => password_hash($otp, PASSWORD_DEFAULT),
         'form_id' => $formId > 0 ? $formId : null,
-        'expires_at' => date('Y-m-d H:i:s', time() + 600),
     ]);
 
     $result = send_otp_email($email, $otp, $form);
     if (!$result['success']) {
         http_response_code(422);
     }
-    echo json_encode($result + ['message' => $result['success'] ? 'Code envoye par email.' : $result['message']]);
+    $_SESSION['candidate_country'] = strtoupper(sanitize_text($_POST['country_code'] ?? ''));
+    $_SESSION['candidate_organization_id'] = (int) $organization['id'];
+    echo json_encode($result + ['message' => $result['success'] ? 'Code envoyé par email.' : $result['message']]);
     exit;
 }
 
 if ($route === 'otp/verify' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json; charset=utf-8');
+    if (!verify_csrf($_POST['csrf_token'] ?? null) || !security_rate_limit('otp_verify', 10, 600)) {
+        http_response_code(429);
+        echo json_encode(['success' => false, 'message' => 'Trop de tentatives. Réessayez plus tard.']);
+        exit;
+    }
     $email = strtolower(sanitize_text($_POST['email'] ?? ''));
     $otp = trim((string) ($_POST['otp'] ?? ''));
     $formId = max(0, (int) ($_POST['form_id'] ?? 0));
@@ -691,8 +737,8 @@ if ($route === 'otp/verify' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $stmt = db()->prepare('SELECT * FROM otp_tokens WHERE email = :email AND is_used = 0 AND expires_at >= :now ORDER BY created_at DESC, id DESC LIMIT 5');
-    $stmt->execute(['email' => $email, 'now' => date('Y-m-d H:i:s')]);
+    $stmt = db()->prepare('SELECT * FROM otp_tokens WHERE email = :email AND is_used = 0 AND expires_at >= datetime("now") ORDER BY created_at DESC, id DESC LIMIT 5');
+    $stmt->execute(['email' => $email]);
     $matched = null;
     foreach ($stmt->fetchAll() as $row) {
         if (($formId === 0 || (int) ($row['form_id'] ?? 0) === $formId) && password_verify($otp, (string) $row['token'])) {
@@ -709,15 +755,21 @@ if ($route === 'otp/verify' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     db()->prepare('UPDATE otp_tokens SET is_used = 1 WHERE id = :id')->execute(['id' => (int) $matched['id']]);
     $_SESSION['candidate_email'] = $email;
     $_SESSION['candidate_form_id'] = $formId;
-    echo json_encode(['success' => true, 'redirect' => BASE_URL . '/formulaire/remplir']);
+    echo json_encode(['success' => true, 'redirect' => BASE_URL . '/candidate']);
     exit;
 }
 
 if ($route === 'candidate/submit' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json; charset=utf-8');
+    if (!verify_csrf($_POST['csrf_token'] ?? null) || !security_rate_limit('candidate_submit', 5, 3600)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Requête invalide ou trop fréquente.']);
+        exit;
+    }
     $email = strtolower(sanitize_text($_POST['email'] ?? ($_SESSION['candidate_email'] ?? '')));
-    $name = sanitize_text($_POST['candidate_name'] ?? '');
+    $name = sanitize_text_max($_POST['candidate_name'] ?? '', 150);
     $formId = max(1, (int) ($_POST['form_id'] ?? ($_SESSION['candidate_form_id'] ?? 1)));
+    $sessionId = max(0, (int) ($_POST['training_session_id'] ?? 0));
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         http_response_code(422);
         echo json_encode(['success' => false, 'message' => 'Adresse email invalide.']);
@@ -729,42 +781,75 @@ if ($route === 'candidate/submit' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
 
-    $availability = Form::availability($formId, $_POST['country_code'] ?? null, $email);
-    if (!$availability['available']) {
-        http_response_code(422);
-        echo json_encode(['success' => false, 'message' => $availability['message']]);
-        exit;
-    }
-
     $form = Form::find($formId);
     if (!$form) {
         http_response_code(404);
         echo json_encode(['success' => false, 'message' => 'Formulaire introuvable.']);
         exit;
     }
+    $session = null;
+    if ($sessionId > 0) {
+        $sessionStatement = db()->prepare('SELECT * FROM training_sessions WHERE id = :id AND is_active = 1 LIMIT 1');
+        $sessionStatement->execute(['id' => $sessionId]);
+        $session = $sessionStatement->fetch();
+        if (!is_array($session)) {
+            http_response_code(422);
+            echo json_encode(['success' => false, 'message' => 'La session sélectionnée est introuvable.']);
+            exit;
+        }
+    }
     $formCriteria = !empty($form['project_id']) ? Criteria::byProject((int) $form['project_id']) : [];
+    if ($sessionId > 0) {
+        $formCriteria = array_merge($formCriteria, TrainingSession::criteria($sessionId));
+    }
     $allowedCriteria = [];
-    $requiredCriteria = [];
     foreach ($formCriteria as $criterion) {
         $criterionId = (int) ($criterion['id'] ?? 0);
         if ($criterionId <= 0) continue;
         $allowedCriteria[$criterionId] = true;
-        if (!empty($criterion['is_required'])) $requiredCriteria[$criterionId] = true;
     }
+    $checkedCriteria = array_values(array_unique(array_map('intval', (array) ($_POST['criteria_checked'] ?? []))));
     $evidenceNames = is_array($_FILES['evidence']['name'] ?? null) ? $_FILES['evidence']['name'] : [];
-    foreach ($requiredCriteria as $criterionId => $_required) {
-        if (empty($evidenceNames[$criterionId])) {
+    foreach ($checkedCriteria as $criterionId) {
+        if (!isset($allowedCriteria[$criterionId])) {
             http_response_code(422);
-            echo json_encode(['success' => false, 'message' => 'Chaque critère obligatoire doit avoir une preuve.']);
+            echo json_encode(['success' => false, 'message' => 'Un critère sélectionné est invalide.']);
+            exit;
+        }
+        $details = trim((string) ($_POST['criteria'][$criterionId]['details'] ?? ''));
+        $names = $evidenceNames[$criterionId] ?? [];
+        if (is_string($names)) $names = [$names];
+        if ($details === '') {
+            http_response_code(422);
+            echo json_encode(['success' => false, 'message' => 'Chaque critère coché doit comporter des détails.']);
             exit;
         }
     }
+    $rawCriteria = is_array($_POST['criteria'] ?? null) ? $_POST['criteria'] : [];
+    $safeCriteria = [];
+    foreach ($checkedCriteria as $criterionId) {
+        $details = $rawCriteria[$criterionId]['details'] ?? '';
+        $safeCriteria[(string) $criterionId] = ['details' => sanitize_text_max($details, 10000)];
+    }
+    $safeCustomFields = sanitize_nested_scalars($_POST['custom_fields'] ?? [], 2, 5000);
+    if (!is_array($safeCustomFields)) $safeCustomFields = [];
+    $submissionPayload = [
+        'representator_name' => $name,
+        'organisation_id' => (int) ($_SESSION['candidate_organization_id'] ?? 0),
+        'form_id' => $formId,
+        'training_session_id' => $sessionId ?: null,
+        'country_code' => sanitize_text($_POST['country_code'] ?? ($_SESSION['candidate_country'] ?? '')),
+        'organisation' => sanitize_text($_POST['organisation'] ?? ''),
+        'criteria' => $safeCriteria,
+        'criteria_checked' => $checkedCriteria,
+        'custom_fields' => $safeCustomFields,
+    ];
     $submissionId = Submission::create([
         'form_id' => $formId,
         'candidate_email' => $email,
         'candidate_name' => $name,
         'country_code' => sanitize_text($_POST['country_code'] ?? ''),
-        'data_json' => json_encode($_POST, JSON_UNESCAPED_UNICODE),
+        'data_json' => json_encode($submissionPayload, JSON_UNESCAPED_UNICODE),
         'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
     ]);
     $evidenceFiles = $_FILES['evidence'] ?? [];
@@ -773,17 +858,19 @@ if ($route === 'candidate/submit' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         if (!is_dir($evidenceDirectory)) {
             mkdir($evidenceDirectory, 0775, true);
         }
-        foreach ($evidenceFiles['name'] as $criteriaId => $originalName) {
+        foreach ($evidenceFiles['name'] as $criteriaId => $originalNames) {
             if (!isset($allowedCriteria[(int) $criteriaId])) continue;
-            $error = (int) ($evidenceFiles['error'][$criteriaId] ?? UPLOAD_ERR_NO_FILE);
-            $temporaryPath = (string) ($evidenceFiles['tmp_name'][$criteriaId] ?? '');
-            $size = (int) ($evidenceFiles['size'][$criteriaId] ?? 0);
-            if ($error === UPLOAD_ERR_NO_FILE) continue;
-            if ($error !== UPLOAD_ERR_OK || $size <= 0 || $size > 10 * 1024 * 1024 || !is_uploaded_file($temporaryPath)) continue;
-            $mime = (new finfo(FILEINFO_MIME_TYPE))->file($temporaryPath);
-            if (!in_array($mime, ['application/pdf', 'image/jpeg', 'image/png'], true)) continue;
-            $safeName = bin2hex(random_bytes(16)) . '.' . ($mime === 'application/pdf' ? 'pdf' : ($mime === 'image/png' ? 'png' : 'jpg'));
-            if (move_uploaded_file($temporaryPath, $evidenceDirectory . '/' . $safeName)) {
+            $originalNames = is_array($originalNames) ? $originalNames : [$originalNames];
+            foreach ($originalNames as $fileIndex => $originalName) {
+                $error = (int) ($evidenceFiles['error'][$criteriaId][$fileIndex] ?? UPLOAD_ERR_NO_FILE);
+                $temporaryPath = (string) ($evidenceFiles['tmp_name'][$criteriaId][$fileIndex] ?? '');
+                $size = (int) ($evidenceFiles['size'][$criteriaId][$fileIndex] ?? 0);
+                if ($error === UPLOAD_ERR_NO_FILE) continue;
+                if ($error !== UPLOAD_ERR_OK || $size <= 0 || $size > 10 * 1024 * 1024 || !is_uploaded_file($temporaryPath)) continue;
+                $mime = (new finfo(FILEINFO_MIME_TYPE))->file($temporaryPath);
+                if (!in_array($mime, ['application/pdf', 'image/jpeg', 'image/png', 'image/webp'], true)) continue;
+                $safeName = bin2hex(random_bytes(16)) . '.' . ($mime === 'application/pdf' ? 'pdf' : ($mime === 'image/png' ? 'png' : ($mime === 'image/webp' ? 'webp' : 'jpg')));
+                if (move_uploaded_file($temporaryPath, $evidenceDirectory . '/' . $safeName)) {
                 $evidenceStatement = db()->prepare(
                     'INSERT INTO organization_evidence (submission_id, criteria_id, file_path, original_name, mime_type, file_size)
                      VALUES (:submission_id, :criteria_id, :file_path, :original_name, :mime_type, :file_size)'
@@ -796,10 +883,11 @@ if ($route === 'candidate/submit' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                     'mime_type' => $mime,
                     'file_size' => $size,
                 ]);
+                }
             }
         }
     }
-    $mail = send_submission_confirmation_email($email, $name, $form, $submissionId);
+    $mail = send_submission_confirmation_email($email, $name, $form, $submissionId, $submissionPayload);
     echo json_encode([
         'success' => true,
         'id' => $submissionId,
@@ -808,6 +896,31 @@ if ($route === 'candidate/submit' && $_SERVER['REQUEST_METHOD'] === 'POST') {
             ? 'Candidature soumise. Confirmation email mise en file.'
             : ($mail['success'] ? 'Candidature soumise et confirmation envoyee.' : 'Candidature soumise. Email non envoye : ' . $mail['message']),
     ]);
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'GET' && $route === 'admin/sessions/data') {
+    require_permission('formation', 'view');
+    header('Content-Type: application/json; charset=utf-8');
+    $sessionId = max(0, (int) ($_GET['training_id'] ?? 0));
+    if ($sessionId <= 0) {
+        http_response_code(422);
+        echo json_encode(['success' => false, 'message' => 'Session invalide.']);
+        exit;
+    }
+    $dashboard = TrainingSession::dashboardData($sessionId);
+    if (empty($dashboard['session'])) {
+        http_response_code(404);
+        echo json_encode(['success' => false, 'message' => 'Session introuvable.']);
+        exit;
+    }
+    echo json_encode([
+        'success' => true,
+        'session' => $dashboard['session'],
+        'participants' => $dashboard['participants'],
+        'stats' => $dashboard['stats'],
+        'criteria' => TrainingSession::criteria($sessionId),
+    ], JSON_UNESCAPED_UNICODE);
     exit;
 }
 
@@ -832,7 +945,8 @@ if (preg_match('#^admin/evidence/(\d+)$#', $route, $matches) && $_SERVER['REQUES
         exit('Preuve introuvable.');
     }
     header('Content-Type: ' . ((string) ($evidence['mime_type'] ?? 'application/octet-stream')));
-    header('Content-Disposition: inline; filename="' . addslashes(basename((string) ($evidence['original_name'] ?? 'preuve'))) . '"');
+    $downloadName = preg_replace('/[^A-Za-z0-9._-]/', '_', basename((string) ($evidence['original_name'] ?? 'preuve'))) ?: 'preuve';
+    header('Content-Disposition: inline; filename="' . $downloadName . '"');
     header('Content-Length: ' . (string) filesize($fullPath));
     readfile($fullPath);
     exit;
@@ -1178,6 +1292,9 @@ if (in_array($route, ['admin', 'dashboard'], true)) {
     $trainingSessions = TrainingSession::all();
     $selectedTrainingId = (int) ($_GET['training_id'] ?? ($trainingSessions[0]['id'] ?? 0));
     $trainingDashboard = $selectedTrainingId > 0 ? TrainingSession::dashboardData($selectedTrainingId) : ['session' => null, 'participants' => [], 'stats' => []];
+    $trainingCriteria = $selectedTrainingId > 0
+        ? TrainingSession::criteria($selectedTrainingId)
+        : [];
     $countNewRecords = static function (string $table, ?string $dateColumn): int {
         if ($dateColumn === null) {
             return 0;
@@ -1215,7 +1332,7 @@ if ($route === 'admin/projects') {
     $editProject = isset($_GET['edit']) ? Project::find((int) $_GET['edit']) : null;
 }
 if ($route === 'admin/criteria') { $projects = Project::dashboardProjects(); $criteria = Criteria::all(); }
-if ($route === 'admin/sessions') { $sessions = TrainingSession::all(); }
+if ($route === 'admin/sessions') { $sessions = TrainingSession::all(); $projects = Project::all(); }
 if ($route === 'admin/evaluations/ranking') { $rankings = Ranking::all(); }
 if ($route === 'admin/evaluations/score') {
     $submissions = Submission::forEvaluation();
@@ -1233,6 +1350,26 @@ if ($route === 'formulaire/remplir' || $route === 'candidate') {
     $candidateCriteria = $candidateForm && !empty($candidateForm['project_id'])
         ? Criteria::byProject((int) $candidateForm['project_id'])
         : Criteria::all();
+    $candidateForms = Form::all();
+    $candidateSessions = array_map(static function (array $session): array {
+        $session['criteria'] = TrainingSession::criteria((int) ($session['id'] ?? 0));
+        return $session;
+    }, TrainingSession::all());
+    $candidateFormCatalog = [];
+    foreach ($candidateForms as $formItem) {
+        $formProjectId = (int) ($formItem['project_id'] ?? 0);
+        $candidateFormCatalog[(int) $formItem['id']] = [
+            'form' => $formItem,
+            'criteria' => $formProjectId > 0 ? Criteria::byProject($formProjectId) : [],
+            'sessions' => $candidateSessions,
+        ];
+    }
+    $candidateOrganization = null;
+    if (!empty($_SESSION['candidate_organization_id'])) {
+        $organizationStatement = db()->prepare('SELECT * FROM projects WHERE id = :id LIMIT 1');
+        $organizationStatement->execute(['id' => (int) $_SESSION['candidate_organization_id']]);
+        $candidateOrganization = $organizationStatement->fetch() ?: null;
+    }
 }
 
 render_view($routes[$route], [
@@ -1242,6 +1379,7 @@ render_view($routes[$route], [
     'criteriaTemplates' => $criteriaTemplates ?? Criteria::templates(),
     'trainingSessions' => $trainingSessions ?? TrainingSession::all(),
     'trainingDashboard' => $trainingDashboard ?? ['session' => null, 'participants' => [], 'stats' => []],
+    'trainingCriteria' => $trainingCriteria ?? [],
     'moduleCounts' => $moduleCounts,
     'startModule' => $startModule,
     'overview' => $overview,
@@ -1250,6 +1388,10 @@ render_view($routes[$route], [
     'editProject' => $editProject ?? null,
     'sessions' => $sessions ?? [],
     'candidateCriteria' => $candidateCriteria ?? [],
+    'candidateForms' => $candidateForms ?? [],
+    'candidateSessions' => $candidateSessions ?? [],
+    'candidateFormCatalog' => $candidateFormCatalog ?? [],
+    'candidateOrganization' => $candidateOrganization ?? null,
     'rankings' => $rankings ?? [],
     'submissions' => $submissions ?? [],
     'databaseInfo' => is_superadmin() ? database_status_info() : null,
