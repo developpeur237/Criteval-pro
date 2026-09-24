@@ -840,10 +840,23 @@ if ($route === 'candidate/submit' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         exit;
     }
     $session = null;
+    $sessionType = 'training';
     if ($sessionId > 0) {
+        // Unified session list: training sessions and form schedules share the
+        // same dropdown, so resolve whichever kind was actually selected.
         $sessionStatement = db()->prepare('SELECT * FROM training_sessions WHERE id = :id AND is_active = 1 LIMIT 1');
         $sessionStatement->execute(['id' => $sessionId]);
         $session = $sessionStatement->fetch();
+        if (is_array($session)) {
+            $sessionType = 'training';
+        } else {
+            $sessionStatement = db()->prepare('SELECT * FROM form_schedules WHERE id = :id AND is_active = 1 LIMIT 1');
+            $sessionStatement->execute(['id' => $sessionId]);
+            $session = $sessionStatement->fetch();
+            if (is_array($session)) {
+                $sessionType = 'form_schedule';
+            }
+        }
         if (!is_array($session)) {
             http_response_code(422);
             echo json_encode(['success' => false, 'message' => 'La session sélectionnée est introuvable.']);
@@ -851,7 +864,7 @@ if ($route === 'candidate/submit' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     $formCriteria = !empty($form['project_id']) ? Criteria::byProject((int) $form['project_id']) : [];
-    if ($sessionId > 0) {
+    if ($sessionId > 0 && $sessionType === 'training') {
         $formCriteria = array_merge($formCriteria, TrainingSession::criteria($sessionId));
     }
     $allowedCriteria = [];
@@ -1433,10 +1446,48 @@ if ($route === 'formulaire/remplir' || $route === 'candidate') {
         ? Criteria::byProject((int) $candidateForm['project_id'])
         : Criteria::all();
     $candidateForms = Form::all();
-    $candidateSessions = array_map(static function (array $session): array {
-        $session['criteria'] = TrainingSession::criteria((int) ($session['id'] ?? 0));
-        return $session;
-    }, TrainingSession::all());
+
+    // Build unified sessions list: training sessions + form schedules
+    $trainingSessions = TrainingSession::all();
+    $formSchedules = Form::schedules();
+    $unifiedSessions = [];
+
+    // Training sessions
+    foreach ($trainingSessions as $ts) {
+        $unifiedSessions[] = [
+            'id' => (int) $ts['id'],
+            'name' => (string) ($ts['name'] ?? 'Session de formation'),
+            'session_date' => (string) ($ts['session_date'] ?? ''),
+            'end_date' => (string) ($ts['end_date'] ?? $ts['session_date'] ?? ''),
+            'format' => (string) ($ts['format'] ?? 'hybride'),
+            'type' => 'training',
+            'criteria' => TrainingSession::criteria((int) $ts['id']),
+            'project_id' => (int) ($ts['project_id'] ?? 0),
+        ];
+    }
+
+    // Form schedules
+    foreach ($formSchedules as $fs) {
+        $unifiedSessions[] = [
+            'id' => (int) $fs['id'],
+            'name' => (string) ($fs['form_title'] ?? 'Formulaire'),
+            'session_date' => (string) ($fs['start_datetime'] ?? ''),
+            'end_date' => (string) ($fs['end_datetime'] ?? $fs['start_datetime'] ?? ''),
+            'format' => 'planning',
+            'type' => 'form_schedule',
+            'criteria' => [],
+            'form_id' => (int) ($fs['form_id'] ?? 0),
+            'project_id' => (int) ($fs['project_id'] ?? 0),
+        ];
+    }
+
+    // Sort by session_date
+    usort($unifiedSessions, static function (array $a, array $b): int {
+        $da = $a['session_date'] ?? '';
+        $db = $b['session_date'] ?? '';
+        return $da <=> $db;
+    });
+
     $candidateFormCatalog = [];
     foreach ($candidateForms as $formItem) {
         $formProjectId = (int) ($formItem['project_id'] ?? 0);
@@ -1445,7 +1496,7 @@ if ($route === 'formulaire/remplir' || $route === 'candidate') {
             'criteria' => ($formItem['criteria_mode'] ?? 'inherit') === 'selected'
                 ? Form::criteriaForForm((int) $formItem['id'])
                 : ($formProjectId > 0 ? Criteria::byProject($formProjectId) : []),
-            'sessions' => $candidateSessions,
+            'sessions' => $unifiedSessions,
         ];
     }
     $candidateCountryOptions = [];
@@ -1481,7 +1532,7 @@ render_view($routes[$route], [
     'sessions' => $sessions ?? [],
     'candidateCriteria' => $candidateCriteria ?? [],
     'candidateForms' => $candidateForms ?? [],
-    'candidateSessions' => $candidateSessions ?? [],
+    'candidateSessions' => $unifiedSessions ?? [],
     'candidateFormCatalog' => $candidateFormCatalog ?? [],
     'candidateOrganization' => $candidateOrganization ?? null,
     'candidateCountryOptions' => $candidateCountryOptions ?? [],
