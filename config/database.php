@@ -108,6 +108,41 @@ function initialize_database(?PDO $pdo = null): void
     upgrade_domain_schema($pdo);
 }
 
+function reset_database_to_initial_state(): string
+{
+    if (!is_file(DATABASE_SCHEMA_PATH)) {
+        throw new RuntimeException('Le schéma SQLite est introuvable.');
+    }
+
+    $backupPath = DATABASE_PATH . '.backup-' . date('Ymd-His') . '.sqlite';
+    if (is_file(DATABASE_PATH) && !copy(DATABASE_PATH, $backupPath)) {
+        throw new RuntimeException('Impossible de créer la sauvegarde de sécurité.');
+    }
+
+    $pdo = db();
+    $tables = $pdo->query("SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite_%'")->fetchAll(PDO::FETCH_COLUMN);
+    try {
+        $pdo->exec('PRAGMA foreign_keys = OFF');
+        $pdo->beginTransaction();
+        foreach ($tables as $table) {
+            $quotedTable = '"' . str_replace('"', '""', (string) $table) . '"';
+            $pdo->exec('DROP TABLE IF EXISTS ' . $quotedTable);
+        }
+        $pdo->exec((string) file_get_contents(DATABASE_SCHEMA_PATH));
+        upgrade_domain_schema($pdo);
+        $pdo->commit();
+        $pdo->exec('PRAGMA foreign_keys = ON');
+    } catch (Throwable $exception) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        $pdo->exec('PRAGMA foreign_keys = ON');
+        throw $exception;
+    }
+
+    return $backupPath;
+}
+
 // Compatibility helpers used by the legacy installer. SQLite needs no server
 // credentials or dump export; initialization is handled directly above.
 function validate_database_connection(array $settings, ?string &$error = null): bool
@@ -149,6 +184,10 @@ function upgrade_domain_schema(PDO $pdo): void
                 $pdo->exec('ALTER TABLE projects ADD COLUMN ' . $name . ' ' . $definition);
             }
         }
+        $formColumns = $pdo->query('PRAGMA table_info(forms)')->fetchAll(PDO::FETCH_ASSOC);
+        if (!in_array('criteria_mode', array_column($formColumns, 'name'), true)) {
+            $pdo->exec("ALTER TABLE forms ADD COLUMN criteria_mode TEXT NOT NULL DEFAULT 'inherit'");
+        }
 
         $criteriaColumns = $pdo->query('PRAGMA table_info(criteria)')->fetchAll(PDO::FETCH_ASSOC);
         if (!in_array('source_template_id', array_column($criteriaColumns, 'name'), true)) {
@@ -178,6 +217,17 @@ function upgrade_domain_schema(PDO $pdo): void
             )'
         );
         $pdo->exec('CREATE INDEX IF NOT EXISTS idx_criteria_source_template ON criteria(source_template_id)');
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS form_criteria (
+                form_id INTEGER NOT NULL,
+                criteria_id INTEGER NOT NULL,
+                order_index INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY (form_id, criteria_id),
+                FOREIGN KEY (form_id) REFERENCES forms(id) ON DELETE CASCADE,
+                FOREIGN KEY (criteria_id) REFERENCES criteria(id) ON DELETE CASCADE
+            )'
+        );
+        $pdo->exec('CREATE INDEX IF NOT EXISTS idx_form_criteria_criteria ON form_criteria(criteria_id)');
 
         $templateCount = (int) $pdo->query('SELECT COUNT(*) FROM criteria_templates')->fetchColumn();
         if ($templateCount === 0) {
@@ -241,7 +291,7 @@ function upgrade_domain_schema(PDO $pdo): void
             )'
         );
         $trainingColumns = array_column($pdo->query('PRAGMA table_info(training_sessions)')->fetchAll(PDO::FETCH_ASSOC), 'name');
-        foreach (['project_id' => 'INTEGER', 'capacity' => 'INTEGER NOT NULL DEFAULT 50', 'format' => 'TEXT NOT NULL DEFAULT "hybride"', 'evaluation_weight' => 'REAL NOT NULL DEFAULT 0', 'criteria_json' => 'TEXT'] as $name => $definition) {
+        foreach (['project_id' => 'INTEGER', 'capacity' => 'INTEGER NOT NULL DEFAULT 50', 'format' => 'TEXT NOT NULL DEFAULT "hybride"', 'evaluation_weight' => 'REAL NOT NULL DEFAULT 0', 'criteria_json' => 'TEXT', 'end_date' => 'DATE'] as $name => $definition) {
             if (!in_array($name, $trainingColumns, true)) {
                 $pdo->exec('ALTER TABLE training_sessions ADD COLUMN ' . $name . ' ' . $definition);
             }

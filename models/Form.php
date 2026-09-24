@@ -13,6 +13,10 @@ class Form
             throw new InvalidArgumentException('La structure du formulaire est invalide ou trop volumineuse.');
         }
         $allowed = FormField::TYPES;
+        $clamp = static fn ($value, int $min, int $max, int $default): int => max($min, min($max, (int) ($value ?? $default)));
+        $choice = static fn ($value, array $allowed, string $default): string => in_array((string) $value, $allowed, true) ? (string) $value : $default;
+        $hex = static fn ($value, string $default): string => preg_match('/^#[0-9a-f]{6}$/i', (string) $value) ? (string) $value : $default;
+        $cssText = static fn ($value, string $default, int $length = 180): string => preg_replace('/[^a-zA-Z0-9_#(),.%+\-\s]/', '', substr((string) ($value ?? $default), 0, $length)) ?: $default;
         $normalized = [];
         foreach ($items as $index => $item) {
             if (!is_array($item) || !in_array((string) ($item['type'] ?? ''), $allowed, true)) {
@@ -29,12 +33,66 @@ class Form
                 'placeholder' => $clip(trim(strip_tags((string) ($item['placeholder'] ?? ''))), 500),
                 'options' => $clip((string) ($item['options'] ?? ''), 2000),
                 'required' => !empty($item['required']),
-                'span' => max(1, min(12, (int) ($item['span'] ?? 6))),
+                'gridVersion' => 2,
+                'span' => max(1, min(24, (int) ($item['span'] ?? 12) * ((int) ($item['gridVersion'] ?? 1) < 2 ? 2 : 1))),
                 'rowSpan' => max(1, min(6, (int) ($item['rowSpan'] ?? 1))),
-                'scale' => max(75, min(125, (int) ($item['scale'] ?? 100))),
+                'scale' => max(50, min(200, (int) ($item['scale'] ?? 100))),
                 'background' => preg_match('/^#[0-9a-f]{6}$/i', (string) ($item['background'] ?? '')) ? $item['background'] : '#ffffff',
                 'color' => preg_match('/^#[0-9a-f]{6}$/i', (string) ($item['color'] ?? '')) ? $item['color'] : '#1e293b',
                 'radius' => max(0, min(24, (int) ($item['radius'] ?? 10))),
+                'widthValue' => $clamp($item['widthValue'] ?? 100, 1, 2000, 100),
+                'widthUnit' => $choice($item['widthUnit'] ?? '%', ['%', 'px', 'auto'], '%'),
+                'heightValue' => $clamp($item['heightValue'] ?? 0, 0, 2000, 0),
+                'heightUnit' => $choice($item['heightUnit'] ?? 'auto', ['auto', 'px', '%'], 'auto'),
+                'marginTop' => $clamp($item['marginTop'] ?? 0, -200, 500, 0),
+                'marginRight' => $clamp($item['marginRight'] ?? 0, -200, 500, 0),
+                'marginBottom' => $clamp($item['marginBottom'] ?? 0, -200, 500, 0),
+                'marginLeft' => $clamp($item['marginLeft'] ?? 0, -200, 500, 0),
+                'paddingTop' => $clamp($item['paddingTop'] ?? 14, 0, 500, 14),
+                'paddingRight' => $clamp($item['paddingRight'] ?? 14, 0, 500, 14),
+                'paddingBottom' => $clamp($item['paddingBottom'] ?? 14, 0, 500, 14),
+                'paddingLeft' => $clamp($item['paddingLeft'] ?? 14, 0, 500, 14),
+                'position' => $choice($item['position'] ?? 'normal', ['normal', 'relative', 'absolute'], 'normal'),
+                'offsetX' => $clamp($item['offsetX'] ?? 0, -2000, 2000, 0),
+                'offsetY' => $clamp($item['offsetY'] ?? 0, -2000, 2000, 0),
+                'zIndex' => $clamp($item['zIndex'] ?? 1, 0, 9999, 1),
+                'borderWidth' => $clamp($item['borderWidth'] ?? 1, 0, 30, 1),
+                'borderStyle' => $choice($item['borderStyle'] ?? 'solid', ['none', 'solid', 'dashed', 'dotted', 'double'], 'solid'),
+                'borderColor' => $hex($item['borderColor'] ?? '#d5dce7', '#d5dce7'),
+                'opacity' => $clamp($item['opacity'] ?? 100, 0, 100, 100),
+                'shadow' => $choice($item['shadow'] ?? 'soft', ['none', 'soft', 'medium', 'strong'], 'soft'),
+                'textAlign' => $choice($item['textAlign'] ?? 'left', ['left', 'center', 'right', 'justify'], 'left'),
+                'fontSize' => $clamp($item['fontSize'] ?? 14, 8, 72, 14),
+                'fontWeight' => $choice($item['fontWeight'] ?? '600', ['400', '500', '600', '700', '800'], '600'),
+                'lineHeight' => $clamp($item['lineHeight'] ?? 140, 80, 240, 140),
+                'letterSpacing' => $clamp($item['letterSpacing'] ?? 0, -10, 30, 0),
+                'visibility' => $choice($item['visibility'] ?? 'visible', ['visible', 'hidden'], 'visible'),
+                'overflow' => $choice($item['overflow'] ?? 'visible', ['visible', 'hidden', 'auto'], 'visible'),
+                // Extended visual system: every element can be tuned independently.
+                'minWidth' => $clamp($item['minWidth'] ?? 0, 0, 2000, 0),
+                'maxWidth' => $clamp($item['maxWidth'] ?? 2000, 0, 3000, 2000),
+                'minHeight' => $clamp($item['minHeight'] ?? 0, 0, 2000, 0),
+                'maxHeight' => $clamp($item['maxHeight'] ?? 2000, 0, 3000, 2000),
+                'gridColumnStart' => $clamp(($item['gridColumnStart'] ?? 0) * ((int) ($item['gridVersion'] ?? 1) < 2 ? 2 : 1), 0, 24, 0),
+                'gridRowStart' => $clamp($item['gridRowStart'] ?? 0, 0, 100, 0),
+                'alignSelf' => $choice($item['alignSelf'] ?? 'stretch', ['auto', 'start', 'center', 'end', 'stretch'], 'stretch'),
+                'justifySelf' => $choice($item['justifySelf'] ?? 'stretch', ['auto', 'start', 'center', 'end', 'stretch'], 'stretch'),
+                'rotate' => $clamp($item['rotate'] ?? 0, -180, 180, 0),
+                'skewX' => $clamp($item['skewX'] ?? 0, -45, 45, 0),
+                'skewY' => $clamp($item['skewY'] ?? 0, -45, 45, 0),
+                'transformOrigin' => $choice($item['transformOrigin'] ?? 'center', ['top left', 'top center', 'top right', 'center left', 'center', 'center right', 'bottom left', 'bottom center', 'bottom right'], 'center'),
+                'radiusTopLeft' => $clamp($item['radiusTopLeft'] ?? ($item['radius'] ?? 10), 0, 200, 10),
+                'radiusTopRight' => $clamp($item['radiusTopRight'] ?? ($item['radius'] ?? 10), 0, 200, 10),
+                'radiusBottomRight' => $clamp($item['radiusBottomRight'] ?? ($item['radius'] ?? 10), 0, 200, 10),
+                'radiusBottomLeft' => $clamp($item['radiusBottomLeft'] ?? ($item['radius'] ?? 10), 0, 200, 10),
+                'backgroundType' => $choice($item['backgroundType'] ?? 'solid', ['solid', 'gradient'], 'solid'),
+                'backgroundGradient' => $cssText($item['backgroundGradient'] ?? 'linear-gradient(135deg,#ffffff,#f3f7fb)', 'linear-gradient(135deg,#ffffff,#f3f7fb)'),
+                'inputBackground' => $hex($item['inputBackground'] ?? '#ffffff', '#ffffff'),
+                'inputBorderColor' => $hex($item['inputBorderColor'] ?? '#d5dce7', '#d5dce7'),
+                'inputRadius' => $clamp($item['inputRadius'] ?? 8, 0, 60, 8),
+                'inputPadding' => $clamp($item['inputPadding'] ?? 12, 0, 60, 12),
+                'accentColor' => $hex($item['accentColor'] ?? '#2eaf7d', '#2eaf7d'),
+                'customClass' => preg_replace('/[^A-Za-z0-9_-]/', '', substr((string) ($item['customClass'] ?? ''), 0, 60)),
             ];
             if ($type === 'file' && count($normalized) > 100) {
                 throw new InvalidArgumentException('Le formulaire contient trop de champs fichier.');
@@ -46,9 +104,11 @@ class Form
     public static function all(): array
     {
         return db()->query(
-            'SELECT f.id, f.title, f.description, f.status, f.layout_json, f.created_at, p.title AS project_title
+            "SELECT f.id, f.title, f.description, f.status, f.criteria_mode, f.layout_json, f.created_at,
+                    f.project_id, p.title AS project_title
              FROM forms f LEFT JOIN projects p ON p.id = f.project_id
-             ORDER BY f.created_at DESC, f.id DESC'
+             WHERE f.status <> 'archived'
+             ORDER BY f.created_at DESC, f.id DESC"
         )->fetchAll();
     }
 
@@ -60,6 +120,56 @@ class Form
         return is_array($form) ? $form : null;
     }
 
+    public static function criteriaForForm(int $formId): array
+    {
+        $statement = db()->prepare(
+            'SELECT c.*, fc.order_index AS form_order_index
+             FROM form_criteria fc
+             JOIN criteria c ON c.id = fc.criteria_id
+             WHERE fc.form_id = :form_id
+             ORDER BY fc.order_index ASC, c.id ASC'
+        );
+        $statement->execute(['form_id' => $formId]);
+        $rows = $statement->fetchAll();
+        return is_array($rows) ? $rows : [];
+    }
+
+    public static function saveCriteriaSelection(int $formId, array $criteriaIds, bool $configured = false): void
+    {
+        $form = self::find($formId);
+        if (!$form) throw new RuntimeException('Formulaire introuvable.');
+
+        $pdo = db();
+        $pdo->beginTransaction();
+        try {
+            $validIds = [];
+            $projectId = (int) ($form['project_id'] ?? 0);
+            if ($configured && $projectId > 0) {
+                $candidateIds = array_values(array_unique(array_filter(array_map('intval', $criteriaIds), static fn (int $id): bool => $id > 0)));
+                if ($candidateIds !== []) {
+                    $placeholders = implode(',', array_fill(0, count($candidateIds), '?'));
+                    $statement = $pdo->prepare('SELECT id FROM criteria WHERE project_id = ? AND id IN (' . $placeholders . ')');
+                    $statement->execute(array_merge([$projectId], $candidateIds));
+                    $validIds = array_map('intval', $statement->fetchAll(PDO::FETCH_COLUMN));
+                    $validIds = array_values(array_intersect($candidateIds, $validIds));
+                }
+            }
+            $pdo->prepare('DELETE FROM form_criteria WHERE form_id = :form_id')->execute(['form_id' => $formId]);
+            if ($configured && $validIds !== []) {
+                $insert = $pdo->prepare('INSERT INTO form_criteria (form_id, criteria_id, order_index) VALUES (:form_id, :criteria_id, :order_index)');
+                foreach ($validIds as $order => $criteriaId) {
+                    $insert->execute(['form_id' => $formId, 'criteria_id' => $criteriaId, 'order_index' => $order + 1]);
+                }
+            }
+            $pdo->prepare("UPDATE forms SET criteria_mode = :criteria_mode WHERE id = :form_id")
+                ->execute(['criteria_mode' => $configured ? 'selected' : 'inherit', 'form_id' => $formId]);
+            $pdo->commit();
+        } catch (Throwable $exception) {
+            if ($pdo->inTransaction()) $pdo->rollBack();
+            throw $exception;
+        }
+    }
+
     public static function save(array $data): int
     {
         $id = (int) ($data['id'] ?? 0);
@@ -69,12 +179,35 @@ class Form
             'status' => $data['status'], 'created_by' => $data['created_by'] ?: null,
         ];
         if ($id > 0) {
-            $params['id'] = $id;
-            db()->prepare('UPDATE forms SET title=:title, description=:description, project_id=:project_id, layout_json=:layout_json, status=:status WHERE id=:id')->execute($params);
+            $existing = self::find($id);
+            if (!$existing) {
+                throw new RuntimeException('Formulaire introuvable.');
+            }
+            db()->prepare('UPDATE forms SET title=:title, description=:description, project_id=:project_id, layout_json=:layout_json, status=:status WHERE id=:id')->execute([
+                'title' => $params['title'],
+                'description' => $params['description'],
+                'project_id' => $params['project_id'],
+                'layout_json' => $params['layout_json'],
+                'status' => $params['status'],
+                'id' => $id,
+            ]);
             return $id;
         }
         db()->prepare('INSERT INTO forms (title, description, project_id, layout_json, status, created_by) VALUES (:title, :description, :project_id, :layout_json, :status, :created_by)')->execute($params);
         return (int) db()->lastInsertId();
+    }
+
+    /**
+     * Retire un formulaire sans casser ses réponses, évaluations ou liens publics.
+     * Les données historiques restent consultables et le formulaire n'est plus actif.
+     */
+    public static function delete(int $id): void
+    {
+        $statement = db()->prepare("UPDATE forms SET status = 'archived' WHERE id = :id AND status <> 'archived'");
+        $statement->execute(['id' => $id]);
+        if ($statement->rowCount() !== 1) {
+            throw new RuntimeException('Formulaire introuvable ou déjà retiré.');
+        }
     }
 
     public static function schedules(): array

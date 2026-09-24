@@ -40,6 +40,23 @@ if ($base !== '' && str_starts_with($path, $base)) {
 $route = $path === '' ? 'home' : $path;
 $route = trim($route, '/');
 
+if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'GET' && ($route === 'admin/projects' || str_starts_with($route, 'admin/projects/'))) {
+    $canonical = '/admin/organisations' . substr($route, strlen('admin/projects'));
+    $queryParams = [];
+    parse_str((string) ($_SERVER['QUERY_STRING'] ?? ''), $queryParams);
+    unset($queryParams['url']);
+    $query = http_build_query($queryParams);
+    header('Location: ' . BASE_URL . $canonical . ($query !== '' ? '?' . $query : ''), true, 301);
+    exit;
+}
+
+// Canonical public URL for the Organisations module. The database/model
+// vocabulary remains project_id for compatibility, while the UI URL uses the
+// native module name consistently.
+if ($route === 'admin/organisations' || str_starts_with($route, 'admin/organisations/')) {
+    $route = 'admin/projects' . substr($route, strlen('admin/organisations'));
+}
+
 if ($route !== 'install' && !database_is_ready()) {
     header('Location: ' . BASE_URL . '/install');
     exit;
@@ -267,7 +284,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $route === 'admin/projects') {
         }
     }
 
-    header('Location: ' . BASE_URL . '/dashboard');
+    header('Location: ' . flash_redirect_url(BASE_URL . '/dashboard', $existing ? 'Organisation modifiée avec succès.' : 'Organisation créée avec succès.'));
     exit;
 }
 
@@ -288,10 +305,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $route === 'admin/projects/delete')
         Project::delete($id);
     } catch (Throwable $exception) {
         http_response_code(422);
-        exit('Cette organisation ne peut pas être supprimée car elle possède encore des éléments associés.');
+        exit('Impossible de retirer cette organisation pour le moment.');
     }
 
-    header('Location: ' . BASE_URL . '/dashboard');
+    header('Location: ' . flash_redirect_url(safe_return_url($_POST['return_url'] ?? null, BASE_URL . '/dashboard'), 'Organisation retirée.'));
     exit;
 }
 
@@ -304,16 +321,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $route === 'admin/sessions') {
     $name = sanitize_text($_POST['name'] ?? '');
     $objective = sanitize_text($_POST['objective'] ?? '');
     $date = sanitize_text($_POST['session_date'] ?? '');
+    $endDate = sanitize_text($_POST['end_date'] ?? '');
     $projectId = (int) ($_POST['project_id'] ?? 0);
-    if ($name === '' || $objective === '' || $projectId <= 0 || !Project::find($projectId) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date)) {
+    if ($name === '' || $objective === '' || $projectId <= 0 || !Project::find($projectId) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || ($endDate !== '' && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $endDate))) {
         http_response_code(422);
-        exit('Nom, objectif et date de session requis.');
+        exit('Nom, objectif et dates de session requis.');
+    }
+    if ($endDate !== '' && strtotime($endDate) < strtotime($date)) {
+        http_response_code(422);
+        exit('La date de fin doit être postérieure ou égale à la date de début.');
     }
     $slug = trim(preg_replace('/[^a-z0-9]+/i', '-', strtolower($name)), '-') . '-' . bin2hex(random_bytes(3));
     $sessionId = TrainingSession::create([
         'name' => $name,
         'objective' => $objective,
         'session_date' => $date,
+        'end_date' => $endDate !== '' ? $endDate : $date,
         'project_id' => $projectId,
         'capacity' => (int) ($_POST['capacity'] ?? 50),
         'format' => in_array($_POST['format'] ?? '', ['hybride', 'presentiel', 'en_ligne'], true) ? $_POST['format'] : 'hybride',
@@ -323,7 +346,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $route === 'admin/sessions') {
         'public_slug' => $slug,
         'created_by' => current_user()['id'] ?? null,
     ]);
-    header('Location: ' . BASE_URL . '/dashboard?training_id=' . $sessionId);
+    header('Location: ' . flash_redirect_url(BASE_URL . '/dashboard?training_id=' . $sessionId, 'Formation enregistrée avec succès.'));
     exit;
 }
 
@@ -356,7 +379,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $route === 'admin/evaluations/score
         http_response_code(422);
         exit($exception->getMessage());
     }
-    header('Location: ' . BASE_URL . '/admin/evaluations/score?saved=1');
+    header('Location: ' . flash_redirect_url(BASE_URL . '/admin/evaluations/score?saved=1', 'Évaluation enregistrée avec succès.'));
     exit;
 }
 
@@ -378,7 +401,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $route === 'admin/forms') {
         'layout_json' => $layout, 'status' => in_array($_POST['status'] ?? '', ['draft', 'published', 'archived'], true) ? $_POST['status'] : 'draft',
         'created_by' => current_user()['id'] ?? 0,
     ]);
-    header('Location: ' . BASE_URL . '/admin/forms/builder?id=' . $id . '&saved=1'); exit;
+    Form::saveCriteriaSelection($id, (array) ($_POST['criteria_ids'] ?? []), isset($_POST['criteria_selection_submitted']));
+    $defaultFormRedirect = BASE_URL . '/admin/forms/builder?id=' . $id . '&saved=1';
+    header('Location: ' . flash_redirect_url(safe_return_url($_POST['return_url'] ?? null, $defaultFormRedirect), 'Formulaire enregistré avec succès.'));
+    exit;
+}
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && $route === 'admin/forms/delete') {
+    require_permission('formulaires', 'delete');
+    if (!verify_csrf($_POST['csrf_token'] ?? null)) {
+        http_response_code(403);
+        exit('Jeton CSRF invalide.');
+    }
+
+    $id = (int) ($_POST['id'] ?? 0);
+    if ($id <= 0 || !Form::find($id)) {
+        http_response_code(404);
+        exit('Formulaire introuvable.');
+    }
+
+    try {
+        Form::delete($id);
+    } catch (Throwable $exception) {
+        http_response_code(422);
+        exit('Impossible de retirer ce formulaire pour le moment.');
+    }
+
+    header('Location: ' . flash_redirect_url(safe_return_url($_POST['return_url'] ?? null, BASE_URL . '/admin/forms'), 'Formulaire retiré.'));
+    exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $route === 'admin/forms/schedules') {
@@ -408,7 +458,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && $route === 'admin/forms/schedules')
 
 if ($route === 'admin/forms/schedules' && $_SERVER['REQUEST_METHOD'] === 'GET') {
     require_admin(); header('Content-Type: application/json; charset=utf-8');
-    echo json_encode(Form::schedules()); exit;
+    $events = Form::schedules();
+    $events = array_merge($events, TrainingSession::calendarEvents());
+    echo json_encode($events); exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST' && $route === 'admin/criteria') {
@@ -715,7 +767,7 @@ if ($route === 'otp' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!$result['success']) {
         http_response_code(422);
     }
-    $_SESSION['candidate_country'] = strtoupper(sanitize_text($_POST['country_code'] ?? ''));
+    $_SESSION['candidate_country'] = strtoupper(sanitize_text_max($_POST['country_code'] ?? '', 25));
     $_SESSION['candidate_organization_id'] = (int) $organization['id'];
     echo json_encode($result + ['message' => $result['success'] ? 'Code envoyé par email.' : $result['message']]);
     exit;
@@ -838,7 +890,7 @@ if ($route === 'candidate/submit' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         'organisation_id' => (int) ($_SESSION['candidate_organization_id'] ?? 0),
         'form_id' => $formId,
         'training_session_id' => $sessionId ?: null,
-        'country_code' => sanitize_text($_POST['country_code'] ?? ($_SESSION['candidate_country'] ?? '')),
+        'country_code' => sanitize_text_max($_POST['country_code'] ?? ($_SESSION['candidate_country'] ?? ''), 25),
         'organisation' => sanitize_text($_POST['organisation'] ?? ''),
         'criteria' => $safeCriteria,
         'criteria_checked' => $checkedCriteria,
@@ -848,7 +900,7 @@ if ($route === 'candidate/submit' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         'form_id' => $formId,
         'candidate_email' => $email,
         'candidate_name' => $name,
-        'country_code' => sanitize_text($_POST['country_code'] ?? ''),
+        'country_code' => sanitize_text_max($_POST['country_code'] ?? '', 25),
         'data_json' => json_encode($submissionPayload, JSON_UNESCAPED_UNICODE),
         'ip_address' => $_SERVER['REMOTE_ADDR'] ?? null,
     ]);
@@ -1021,6 +1073,28 @@ if ($route === 'admin/database/export' && $_SERVER['REQUEST_METHOD'] === 'GET') 
     header('Content-Disposition: attachment; filename="criteval_pro-' . date('Y-m-d-His') . '.sqlite"');
     header('Content-Length: ' . (string) filesize(DATABASE_PATH));
     readfile(DATABASE_PATH);
+    exit;
+}
+
+if ($route === 'admin/database/reset' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    require_admin();
+    header('Content-Type: application/json; charset=utf-8');
+    if (!is_superadmin() || !verify_csrf($_POST['csrf_token'] ?? null)) {
+        http_response_code(403);
+        echo json_encode(['success' => false, 'message' => 'Accès refusé ou jeton CSRF invalide.']);
+        exit;
+    }
+
+    try {
+        $backupPath = reset_database_to_initial_state();
+        echo json_encode([
+            'success' => true,
+            'message' => 'Base réinitialisée. Sauvegarde créée : ' . basename($backupPath),
+        ]);
+    } catch (Throwable $exception) {
+        http_response_code(500);
+        echo json_encode(['success' => false, 'message' => 'Réinitialisation impossible : ' . $exception->getMessage()]);
+    }
     exit;
 }
 
@@ -1302,7 +1376,7 @@ if (in_array($route, ['admin', 'dashboard'], true)) {
 
         try {
             $stmt = db()->prepare('SELECT COUNT(*) FROM ' . $table . ' WHERE ' . $dateColumn . ' >= :since');
-            $stmt->execute(['since' => date('Y-m-d H:i:s', time() - 86400)]);
+            $stmt->execute(['since' => date('Y-m-d H:i:s', time() - (7 * 86400))]);
             return (int) $stmt->fetchColumn();
         } catch (Throwable $exception) {
             return 0;
@@ -1312,7 +1386,9 @@ if (in_array($route, ['admin', 'dashboard'], true)) {
         'apercu' => $countNewRecords('submissions', 'submitted_at'),
         'projets' => $countNewRecords('projects', 'created_at'),
         'criteres' => $countNewRecords('criteria', null),
-        'formulaires' => $countNewRecords('forms', 'created_at'),
+        // Keep the navigation badge aligned with the gallery: count the
+        // currently available forms, not only forms created in the last week.
+        'formulaires' => count($forms),
         'formation' => 0,
         'evaluations' => $countNewRecords('evaluations', 'evaluated_at'),
         'classements' => $countNewRecords('results', 'published_at'),
@@ -1343,7 +1419,13 @@ if ($route === 'admin/evaluations/score') {
     $criteria = Criteria::all();
 }
 if ($route === 'admin/forms') { $forms = Form::all(); }
-if ($route === 'admin/forms/builder') { $form = Form::find((int) ($_GET['id'] ?? 0)); $projects = Project::all(); }
+if ($route === 'admin/forms/builder') {
+    $form = Form::find((int) ($_GET['id'] ?? 0));
+    $projects = Project::all();
+    $availableCriteria = !empty($form['project_id']) ? Criteria::byProject((int) $form['project_id']) : [];
+    $formCriteria = !empty($form['id']) ? Form::criteriaForForm((int) $form['id']) : [];
+    $formCriteriaConfigured = !empty($formCriteria);
+}
 if ($route === 'admin/forms/planning') { $forms = Form::all(); $projects = Project::all(); }
 if ($route === 'formulaire/remplir' || $route === 'candidate') {
     $candidateForm = Form::find((int) ($_SESSION['candidate_form_id'] ?? 1));
@@ -1360,10 +1442,20 @@ if ($route === 'formulaire/remplir' || $route === 'candidate') {
         $formProjectId = (int) ($formItem['project_id'] ?? 0);
         $candidateFormCatalog[(int) $formItem['id']] = [
             'form' => $formItem,
-            'criteria' => $formProjectId > 0 ? Criteria::byProject($formProjectId) : [],
+            'criteria' => ($formItem['criteria_mode'] ?? 'inherit') === 'selected'
+                ? Form::criteriaForForm((int) $formItem['id'])
+                : ($formProjectId > 0 ? Criteria::byProject($formProjectId) : []),
             'sessions' => $candidateSessions,
         ];
     }
+    $candidateCountryOptions = [];
+    $countryOptionStatement = db()->query('SELECT DISTINCT country_code FROM projects WHERE country_code IS NOT NULL AND TRIM(country_code) <> "" ORDER BY country_code ASC');
+    foreach ($countryOptionStatement->fetchAll() as $countryRow) {
+        $countryValue = trim((string) ($countryRow['country_code'] ?? ''));
+        if ($countryValue === '') continue;
+        $candidateCountryOptions[] = sanitize_text_max($countryValue, 25);
+    }
+    $candidateCountryOptions = array_values(array_unique($candidateCountryOptions));
     $candidateOrganization = null;
     if (!empty($_SESSION['candidate_organization_id'])) {
         $organizationStatement = db()->prepare('SELECT * FROM projects WHERE id = :id LIMIT 1');
@@ -1392,6 +1484,7 @@ render_view($routes[$route], [
     'candidateSessions' => $candidateSessions ?? [],
     'candidateFormCatalog' => $candidateFormCatalog ?? [],
     'candidateOrganization' => $candidateOrganization ?? null,
+    'candidateCountryOptions' => $candidateCountryOptions ?? [],
     'rankings' => $rankings ?? [],
     'submissions' => $submissions ?? [],
     'databaseInfo' => is_superadmin() ? database_status_info() : null,

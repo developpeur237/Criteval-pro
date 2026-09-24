@@ -1,0 +1,222 @@
+:root {
+  --primary: #1A3C5E;
+  --secondary: #2EAF7D;
+  --accent: #F5A623;
+  --danger: #E74C3C;
+  --neutral-dark: #1E1E2E;
+  --neutral-light: #F4F6FA;
+  --text-main: #2C3E50;
+  --text-muted: #7F8C8D;
+  --white: #FFFFFF;
+  --border: #DDE1E7;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, Arial, sans-serif;
+  color: var(--text-main);
+  background: var(--neutral-light);
+}
+
+#criteval-tutorial-overlay {
+  position: fixed;
+  inset: 0;
+  width: 0;
+  height: 0;
+  background: transparent;
+  z-index: 1200;
+  pointer-events: none;
+  overflow: visible;
+  display: none;
+}
+
+#criteval-tutorial-highlight {
+  position: fixed;
+  border: 2px solid rgba(46, 175, 125, 0.95);
+  border-radius: 10px;
+  background: transparent;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+  pointer-events: none;
+  z-index: 1201;
+  margin: 0;
+  padding: 0;
+  display: none;
+}
+
+#criteval-tutorial-highlight.visible {
+  opacity: 1;
+  display: block;
+}
+
+#criteval-tutorial-popover {
+  position: fixed;
+  z-index: 1202;
+  opacity: 0;
+  pointer-events: auto;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  transform: translateY(4px);
+  display: none;
+}
+
+#criteval-tutorial-popover.visible {
+  opacity: 1;
+  transform: translateY(0);
+  display: block;
+}
+
+.criteval-tutorial-popover {
+  width: min(300px, calc(100vw - 24px));
+  background: rgba(22, 25, 38, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 12px 14px 10px;
+  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.34);
+  color: #edf3ff;
+}
+
+.criteval-tutorial-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+  gap: 10px;
+}
+
+.criteval-tutorial-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(46, 175, 125, 0.2);
+  color: #9be8c8;
+  border-radius: 999px;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.criteval-tutorial-tag {
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.48);
+}
+
+.criteval-tutorial-popover h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.criteval-tutorial-popover p {
+  margin: 0 0 14px;
+  color: rgba(255, 255, 255, 0.72);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.criteval-tutorial-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.criteval-tutorial-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 8px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #fff;
+  background: var(--secondary, #2EAF7D);
+}
+
+.criteval-tutorial-btn:hover {
+  filter: brightness(1.05);
+}
+
+.criteval-tutorial-btn.secondary {
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.criteval-tutorial-btn.primary {
+  background: var(--secondary, #2EAF7D);
+}
+
+.criteval-tutorial-arrow {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: rgba(22, 25, 38, 0.97);
+  transform: rotate(45deg);
+  border-left: 1px solid rgba(255,255,255,0.1);
+  border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.criteval-tutorial-arrow.bottom {
+  top: -7px;
+  left: 42px;
+}
+
+.criteval-tutorial-arrow.top {
+  bottom: -7px;
+  left: 42px;
+  transform: rotate(225deg);
+}
+
+.criteval-tutorial-arrow.left {
+  right: -7px;
+  top: 50%;
+  transform: translateY(-50%) rotate(135deg);
+}
+
+.criteval-tutorial-arrow.right {
+  left: -7px;
+  top: 50%;
+  transform: translateY(-50%) rotate(-45deg);
+}
+
+.criteval-tutorial-launch {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border: 1px solid rgba(46, 175, 125, 0.35);
+  background: rgba(46, 175, 125, 0.12);
+  color: #d8f9ea;
+  border-radius: 10px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.criteval-tutorial-launch:hover {
+  background: rgba(46, 175, 125, 0.2);
+  transform: translateY(-1px);
+}
+
+.stub-page {
+  max-width: 960px;
+  margin: 48px auto;
+  padding: 32px;
+  background: var(--white);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.stub-page h1 {
+  margin-top: 0;
+  font-family: Poppins, Arial, sans-serif;
+  color: var(--primary);
+}
+
+.admin-stub {
+  background: #fff;
+}

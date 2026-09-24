@@ -5,16 +5,16 @@ class Project
 {
     public static function all(): array
     {
-        return db()->query('SELECT id, title, organization, status FROM projects ORDER BY COALESCE(organization, title) ASC')->fetchAll();
+        return db()->query("SELECT id, title, organization, status FROM projects WHERE status <> 'archived' ORDER BY COALESCE(organization, title) ASC")->fetchAll();
     }
 
     public static function manageAll(): array
     {
         return db()->query(
-            'SELECT id, title, organization, domains, target_audiences, legal_status, country_code, project_count,
+            "SELECT id, title, organization, domains, target_audiences, legal_status, country_code, project_count,
                     intervention_zone, description, contact_name, contact_phone, contact_email, website,
                     budget_requested, duration_months, logo_path, status, created_at
-             FROM projects ORDER BY created_at DESC, id DESC'
+             FROM projects WHERE status <> 'archived' ORDER BY created_at DESC, id DESC"
         )->fetchAll();
     }
 
@@ -39,11 +39,11 @@ class Project
 
     public static function dashboardProjects(?int $limit = null): array
     {
-        $sql = 'SELECT id, title, organization, domains, target_audiences, legal_status, country_code, project_count,
+        $sql = "SELECT id, title, organization, domains, target_audiences, legal_status, country_code, project_count,
                     intervention_zone, description, contact_name, contact_phone, contact_email, website,
                     budget_requested, duration_months, logo_path, status, created_at
              FROM projects
-             ORDER BY created_at DESC, id DESC';
+             WHERE status <> 'archived' ORDER BY created_at DESC, id DESC";
 
         if ($limit !== null) {
             $sql .= ' LIMIT ' . max(0, $limit);
@@ -84,8 +84,12 @@ class Project
 
     public static function delete(int $id): void
     {
-        $stmt = db()->prepare('DELETE FROM projects WHERE id = :id');
-        $stmt->execute(['id' => $id]);
+        $pdo = db();
+        $statement = $pdo->prepare("UPDATE projects SET status = 'archived', updated_at = CURRENT_TIMESTAMP WHERE id = :id AND status <> 'archived'");
+        $statement->execute(['id' => $id]);
+        if ($statement->rowCount() !== 1) {
+            throw new RuntimeException('Organisation introuvable ou déjà retirée.');
+        }
     }
 
     private static function parameters(array $data): array

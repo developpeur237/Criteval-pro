@@ -503,7 +503,20 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
 .module-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 28px; }
 .module-title { font-family: 'Poppins', sans-serif; font-size: 24px; font-weight: 700; color: #fff; }
 .module-sub { color: rgba(255,255,255,0.4); font-size: 14px; margin-top: 4px; }
-.module-actions { display: flex; gap: 10px; align-items: center; }
+.module-actions {
+  text-align: right;
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+#trainingSessionSelect.filter-select {
+  width: 33.333%;
+  max-width: 33.333%;
+  min-width: 180px;
+  flex: 0 0 33.333%;
+}
 
 /* KPI Cards */
 .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px; }
@@ -530,6 +543,28 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
   background: var(--neutral-dark2); border: 1px solid var(--border-dark); border-radius: var(--radius); padding: 20px;
 }
 .chart-card-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px; }
+.training-kpi-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; width: 100%; max-width: 780px; overflow: hidden; justify-self: start; margin-right: auto; margin-top: -18px; }
+.training-kpi-grid .kpi-card { min-width: 0; padding: 15px; }
+.training-kpi-grid .kpi-card-top { margin-bottom: 11px; }
+.training-kpi-grid .kpi-val { font-size: 27px !important; }
+.training-kpi-grid .kpi-label { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.training-main-grid { display: grid; grid-template-columns: minmax(0, 1.55fr) minmax(320px, .95fr); gap: 20px; margin-bottom: 20px; margin-top: -10px; align-items: start; }
+.training-side-stack { display: grid; gap: 20px; min-width: 0; }
+.training-catalogue-card { min-width: 0; }
+.training-catalogue-scroll { max-height: 620px; overflow: auto; }
+.training-catalogue-card .dash-table { min-width: 760px; }
+.training-catalogue-card .dash-table td { vertical-align: top; }
+.training-criteria-card { min-height: 260px; }
+.training-criteria-list { max-height: 300px; overflow-y: auto; padding-right: 4px; }
+.training-criterion-item { display: flex; gap: 10px; padding: 10px 0; border-bottom: 1px solid var(--border-dark); color: rgba(255,255,255,.78); }
+.training-criterion-item:last-child { border-bottom: 0; }
+.training-criterion-item strong { color: #fff; font-size: 13px; line-height: 1.35; }
+.training-criterion-item p { color: rgba(255,255,255,.4); font-size: 12px; line-height: 1.4; margin-top: 4px; }
+.training-criterion-index { flex: 0 0 26px; height: 26px; border-radius: 50%; background: rgba(245,166,35,.14); color: var(--accent); display: inline-flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+.training-criteria-empty { color: rgba(255,255,255,.42); font-size: 13px; padding: 20px 0; text-align: center; }
+.training-modal-criteria { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; max-height: 150px; overflow: auto; padding: 10px; border: 1px solid var(--border-dark); border-radius: 9px; background: rgba(0,0,0,.12); }
+.training-modal-criteria label { display: flex; gap: 8px; align-items: flex-start; color: rgba(255,255,255,.68); font-size: 12px; line-height: 1.35; cursor: pointer; }
+.training-modal-criteria input { flex: 0 0 auto; margin-top: 2px; accent-color: var(--secondary); }
 .chart-title { color: #fff; font-weight: 600; font-size: 15px; }
 .chart-sub { color: rgba(255,255,255,0.35); font-size: 12px; margin-top: 2px; }
 .chart-actions { display: flex; gap: 4px; }
@@ -587,6 +622,12 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
   font-size: 13px; outline: none; appearance: none; cursor: pointer;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 10px center;
+}
+#trainingSessionSelect.filter-select {
+  width: 33.333%;
+  max-width: 33.333%;
+  min-width: 180px;
+  flex: 0 0 33.333%;
 }
 
 .projects-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
@@ -827,6 +868,8 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
 ══════════════════════════════════════════ */
 @media (max-width: 1024px) {
   .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+  .training-kpi-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .training-main-grid { grid-template-columns: minmax(0, 1.2fr) minmax(280px, .8fr); }
   .charts-row2 { grid-template-columns: 1fr 1fr; }
   .projects-grid { grid-template-columns: repeat(2, 1fr); }
   .advantages-grid { grid-template-columns: repeat(2, 1fr); }
@@ -837,6 +880,9 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
 @media (max-width: 768px) {
   .pub-nav .nav-links { display: none; }
   .kpi-grid { grid-template-columns: 1fr 1fr; }
+  .training-kpi-grid { grid-template-columns: 1fr 1fr; }
+  .training-main-grid { grid-template-columns: 1fr; }
+  .training-catalogue-scroll { max-height: 460px; }
   .advantages-grid { grid-template-columns: 1fr; }
   .stats-inner { grid-template-columns: repeat(2,1fr); }
   .footer-grid { grid-template-columns: 1fr 1fr; }
@@ -1027,7 +1073,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
         <div class="chart-card">
           <div class="chart-card-header">
             <div>
-              <div class="chart-title">Scores moyens par projet</div>
+              <div class="chart-title">Scores moyens par organisation</div>
               <div class="chart-sub">Sur 20 points</div>
             </div>
           </div>
@@ -1066,7 +1112,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
             <button class="btn btn-ghost-dark btn-sm" onclick="switchModule('evaluations')">Voir tout</button>
           </div>
           <table class="dash-table">
-            <thead><tr><th>Candidat</th><th>Projet</th><th>Pays</th><th>Statut</th><th>Score</th></tr></thead>
+            <thead><tr><th>Organisation / candidat</th><th>Organisation</th><th>Pays</th><th>Statut</th><th>Score</th></tr></thead>
             <tbody><?php foreach ($overviewLatest as $submission): ?><tr><td><?= e($submission['candidate_name'] ?: $submission['candidate_email']) ?></td><td><?= e($submission['project_title'] ?? '—') ?></td><td><?= e($submission['country_code'] ?? '—') ?></td><td><span class="badge <?= in_array($submission['status'], ['evaluated', 'published'], true) ? 'badge-success' : 'badge-warning' ?>"><?= e(ucfirst((string) $submission['status'])) ?></span></td><td class="font-mono"><?= $submission['score'] !== null ? e((string) round((float) $submission['score'], 1)) : '—' ?></td></tr><?php endforeach; ?><?php if (!$overviewLatest): ?><tr><td colspan="5">Aucune candidature enregistrée.</td></tr><?php endif; ?></tbody>
           </table>
         </div>
@@ -1111,7 +1157,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
           <?php foreach ($organisationCountries as $country): ?><option value="<?= e($country) ?>"><?= e($country) ?></option><?php endforeach; ?>
         </select>
         <select class="filter-select" data-organisation-sort aria-label="Trier les organisations">
-          <option value="date">Trier par date</option><option value="name">Trier par nom</option><option value="projects">Trier par projets</option>
+          <option value="date">Trier par date</option><option value="name">Trier par nom</option><option value="projects">Trier par nombre d’activités</option>
         </select>
       </div>
       <div class="table-card" style="display:none">
@@ -1145,7 +1191,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
               <div class="project-card-title"><?= e($project['organization'] ?: $project['title']) ?></div>
               <div class="project-card-org"><i class="fas fa-building"></i> <?= e($project['intervention_zone'] ?: ($project['country_code'] ?: 'Organisation')) ?></div>
               <div class="project-card-footer">
-                <div class="project-stat"><div class="project-stat-val"><?= (int) ($project['project_count'] ?? 0) ?></div><div class="project-stat-label">Projets</div></div>
+                <div class="project-stat"><div class="project-stat-val"><?= (int) ($project['project_count'] ?? 0) ?></div><div class="project-stat-label">Activités déclarées</div></div>
                 <div class="project-stat"><div class="project-stat-val"><?= e($project['country_code'] ?: '—') ?></div><div class="project-stat-label">Pays</div></div>
                 <div class="project-stat"><div class="project-stat-val"><?= e($project['legal_status'] === 'legal' ? 'Oui' : 'Non') ?></div><div class="project-stat-label">Légale</div></div>
                 <div class="project-card-actions">
@@ -1237,7 +1283,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
         <button type="button" class="project-card" onclick="openNewOrganisationModal()" style="border:2px dashed rgba(46,175,125,0.3);display:flex;align-items:center;justify-content:center;min-height:280px;cursor:pointer;transition:all 0.3s;width:100%;color:inherit" onmouseover="this.style.background='rgba(46,175,125,0.05)'" onmouseout="this.style.background='var(--neutral-dark2)'">
           <div style="text-align:center">
             <div style="width:52px;height:52px;border-radius:50%;background:rgba(46,175,125,0.1);display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:22px;color:var(--secondary)"><i class="fas fa-plus"></i></div>
-            <div style="color:var(--secondary);font-weight:600;font-size:15px">Nouveau projet</div>
+            <div style="color:var(--secondary);font-weight:600;font-size:15px">Nouvelle organisation</div>
             <div style="color:rgba(255,255,255,0.3);font-size:13px;margin-top:6px">Créer une fiche organisation</div>
           </div>
         </button>
@@ -1247,7 +1293,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
     <!-- ╔══ MODULE: CRITÈRES ══╗ -->
     <div class="dash-module" id="module-criteres">
       <div class="module-header">
-        <div><h1 class="module-title">Critères d'évaluation</h1><p class="module-sub">Gestion des critères par projet</p></div>
+        <div><h1 class="module-title">Critères d'évaluation</h1><p class="module-sub">Gestion des critères par organisation</p></div>
         <div class="module-actions">
           <select class="filter-select" id="criteriaProjectFilter" style="padding:10px 32px 10px 12px">
             <option value="">Toutes les organisations</option>
@@ -1285,7 +1331,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
             </div>
             <div class="form-group" style="margin-bottom:16px">
               <label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px">Libellé *</label>
-              <input type="text" name="label" class="form-input-dark" style="width:100%" placeholder="Ex: Pertinence du projet" required>
+              <input type="text" name="label" class="form-input-dark" style="width:100%" placeholder="Ex: Participation régulière aux activités CS4ME" required>
             </div>
             <div class="form-group" style="margin-bottom:16px">
               <label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px">Description</label>
@@ -1329,7 +1375,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
             <button class="tab-btn" onclick="switchFormTab('builder',this)" style="padding:6px 14px;border-radius:6px;border:none;font-size:13px;cursor:pointer;background:transparent;color:rgba(255,255,255,0.5)">Builder</button>
             <button class="tab-btn" onclick="switchFormTab('planning',this)" style="padding:6px 14px;border-radius:6px;border:none;font-size:13px;cursor:pointer;background:transparent;color:rgba(255,255,255,0.5)">Planning</button>
           </div>
-          <button class="btn btn-secondary"><i class="fas fa-plus"></i> Nouveau formulaire</button>
+          <button type="button" class="btn btn-secondary" onclick="$('#modalNewForm').addClass('open');document.getElementById('newFormTitle')?.focus()"><i class="fas fa-plus"></i> Nouveau formulaire</button>
         </div>
       </div>
 
@@ -1337,7 +1383,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
       <div id="formTab-galerie">
         <div class="filter-bar" style="margin-bottom:20px">
           <div class="filter-search"><i class="fas fa-search search-icon"></i><input type="text" placeholder="Rechercher un formulaire..."></div>
-          <select class="filter-select"><option>Tous les projets</option><option>AGRI-2025</option><option>Innov-Tech</option></select>
+          <select class="filter-select"><option>Toutes les organisations</option><option>Organisation CS4ME</option><option>Organisation partenaire</option></select>
           <select class="filter-select"><option>Tous les statuts</option><option>Publié</option><option>Brouillon</option></select>
         </div>
         <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
@@ -1426,8 +1472,8 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
                 <div class="elem-controls"><button class="elem-btn" style="background:rgba(46,175,125,0.3);color:var(--secondary)"><i class="fas fa-edit"></i></button><button class="elem-btn" style="background:rgba(231,76,60,0.3);color:var(--danger)"><i class="fas fa-times"></i></button></div>
               </div>
               <div class="canvas-element" id="elem3">
-                <div class="elem-label">Description du projet *</div>
-                <div class="elem-input-mock" style="height:70px;align-items:flex-start;padding-top:8px">Décrivez votre projet en détail...</div>
+                <div class="elem-label">Description de l’organisation *</div>
+                <div class="elem-input-mock" style="height:70px;align-items:flex-start;padding-top:8px">Décrivez votre organisation, ses réalisations et son impact...</div>
                 <div class="elem-controls"><button class="elem-btn" style="background:rgba(46,175,125,0.3);color:var(--secondary)"><i class="fas fa-edit"></i></button><button class="elem-btn" style="background:rgba(231,76,60,0.3);color:var(--danger)"><i class="fas fa-times"></i></button></div>
               </div>
               <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
@@ -1485,6 +1531,11 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
       $selectedTraining = $trainingDashboard['session'] ?? null;
       $trainingStats = $trainingDashboard['stats'] ?? [];
       $trainingParticipants = $trainingDashboard['participants'] ?? [];
+      $trainingCriteria = $trainingCriteria ?? [];
+      $trainingCriteriaByProject = [];
+      foreach (($projects ?? []) as $trainingProject) {
+        $trainingCriteriaByProject[(int) $trainingProject['id']] = Criteria::byProject((int) $trainingProject['id']);
+      }
       $trainingFormatLabels = ['hybride' => 'Hybride', 'presentiel' => 'Présentiel', 'en_ligne' => 'En ligne'];
       $trainingStatusLabel = !empty($selectedTraining['is_active']) ? 'Active' : 'Désactivée';
     ?>
@@ -1500,55 +1551,56 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
         </div>
       </div>
 
-      <div class="kpi-grid" style="margin-bottom:20px">
+      <div class="kpi-grid training-kpi-grid" style="margin-bottom:20px">
         <div class="kpi-card">
-          <div class="kpi-card-top"><div class="kpi-icon" style="background:rgba(46,175,125,0.15);color:var(--secondary)"><i class="fas fa-chalkboard-teacher"></i></div><span class="badge <?= !empty($selectedTraining) && $selectedTraining['is_active'] ? 'badge-success' : 'badge-muted' ?>"><?= $trainingStatusLabel ?></span></div>
-          <div class="kpi-val" style="font-size:30px"><?= count($trainingSessions) ?></div><div class="kpi-label">Formations planifiées</div>
+          <div class="kpi-card-top"><div class="kpi-icon" style="background:rgba(46,175,125,0.15);color:var(--secondary)"><i class="fas fa-chalkboard-teacher"></i></div><span id="trainingSelectedStatus" class="badge <?= !empty($selectedTraining) && $selectedTraining['is_active'] ? 'badge-success' : 'badge-muted' ?>"><?= $trainingStatusLabel ?></span></div>
+          <div id="trainingCount" class="kpi-val" style="font-size:30px"><?= count($trainingSessions) ?></div><div class="kpi-label">Formations planifiées</div>
           <div class="kpi-bar"><div class="kpi-bar-fill" style="width:<?= count($trainingSessions) ? 100 : 0 ?>%;background:var(--secondary)"></div></div>
         </div>
         <div class="kpi-card">
-          <div class="kpi-card-top"><div class="kpi-icon" style="background:rgba(245,166,35,0.15);color:var(--accent)"><i class="fas fa-user-check"></i></div><span class="kpi-trend up"><?= (int) ($trainingStats['registered'] ?? 0) ?>/<?= (int) ($selectedTraining['capacity'] ?? 0) ?></span></div>
-          <div class="kpi-val" style="font-size:30px"><?= (int) ($trainingStats['registered'] ?? 0) ?></div><div class="kpi-label">Participants de l’organisation</div>
+          <div class="kpi-card-top"><div class="kpi-icon" style="background:rgba(245,166,35,0.15);color:var(--accent)"><i class="fas fa-user-check"></i></div><span id="trainingCapacityLabel" class="kpi-trend up"><?= (int) ($trainingStats['registered'] ?? 0) ?>/<?= (int) ($selectedTraining['capacity'] ?? 0) ?></span></div>
+          <div id="trainingRegistered" class="kpi-val" style="font-size:30px"><?= (int) ($trainingStats['registered'] ?? 0) ?></div><div class="kpi-label">Participants de l’organisation</div>
           <div class="kpi-bar"><div class="kpi-bar-fill" style="width:<?= !empty($selectedTraining['capacity']) ? min(100, round(($trainingStats['registered'] / $selectedTraining['capacity']) * 100)) : 0 ?>%;background:var(--accent)"></div></div>
         </div>
         <div class="kpi-card">
           <div class="kpi-card-top"><div class="kpi-icon" style="background:rgba(52,152,219,0.15);color:#3498db"><i class="fas fa-clipboard-check"></i></div><span class="badge badge-info">Présence</span></div>
-          <div class="kpi-val" style="font-size:30px"><?= (int) ($trainingStats['attendance_rate'] ?? 0) ?>%</div><div class="kpi-label">Taux de présence</div>
+          <div id="trainingAttendance" class="kpi-val" style="font-size:30px"><?= (int) ($trainingStats['attendance_rate'] ?? 0) ?>%</div><div class="kpi-label">Taux de présence</div>
           <div class="kpi-bar"><div class="kpi-bar-fill" style="width:<?= (int) ($trainingStats['attendance_rate'] ?? 0) ?>%;background:#3498db"></div></div>
         </div>
         <div class="kpi-card">
           <div class="kpi-card-top"><div class="kpi-icon" style="background:rgba(155,89,182,0.15);color:#9b59b6"><i class="fas fa-award"></i></div><span class="kpi-trend up"><?= (int) ($trainingStats['graded'] ?? 0) ?> notées</span></div>
-          <div class="kpi-val" style="font-size:30px"><?= e((string) ($trainingStats['average'] ?? 0)) ?></div><div class="kpi-label">Moyenne des acquis /20</div>
+          <div id="trainingAverage" class="kpi-val" style="font-size:30px"><?= e((string) ($trainingStats['average'] ?? 0)) ?></div><div class="kpi-label">Moyenne des acquis /20</div>
           <div class="kpi-bar"><div class="kpi-bar-fill" style="width:<?= min(100, (int) (($trainingStats['average'] ?? 0) * 5)) ?>%;background:#9b59b6"></div></div>
         </div>
       </div>
 
-      <div style="display:grid;grid-template-columns:1.15fr 0.85fr;gap:20px;margin-bottom:20px">
-        <div class="table-card">
+      <div class="training-main-grid">
+        <div class="table-card training-catalogue-card">
           <div class="chart-card-header" style="margin-bottom:16px">
             <div><div class="chart-title">Catalogue des formations</div><div class="chart-sub">Chaque session est rattachée à une organisation</div></div>
           </div>
-          <table class="dash-table">
-            <thead><tr><th>Formation</th><th>Projet</th><th>Dates</th><th>Participants</th><th>Statut</th><th>Action</th></tr></thead>
-            <tbody><?php foreach ($trainingSessions as $training): ?><tr>
+          <div class="training-catalogue-scroll"><table class="dash-table">
+          <thead><tr><th>Formation</th><th>Organisation</th><th>Dates</th><th>Participants</th><th>Statut</th><th>Action</th></tr></thead>
+            <tbody><?php foreach ($trainingSessions as $training): ?><tr data-training-row="<?= (int) $training['id'] ?>">
               <td><div style="font-weight:600;color:#fff"><?= e($training['name']) ?></div><div style="color:rgba(255,255,255,.35);font-size:12px"><?= e($trainingFormatLabels[$training['format']] ?? $training['format']) ?> · <?= e($training['objective']) ?></div></td>
-              <td><?= e($training['organization'] ?? '—') ?></td><td><?= e($training['session_date']) ?></td><td><?= ((int) $training['id'] === (int) ($selectedTraining['id'] ?? 0)) ? (int) ($trainingStats['registered'] ?? 0) : '—' ?> / <?= (int) $training['capacity'] ?></td>
+              <td><?= e($training['organization'] ?? '—') ?></td><td><?= e($training['session_date']) ?></td><td data-training-participants><?= ((int) $training['id'] === (int) ($selectedTraining['id'] ?? 0)) ? (int) ($trainingStats['registered'] ?? 0) : '—' ?> / <?= (int) $training['capacity'] ?></td>
               <td><span class="badge <?= !empty($training['is_active']) ? 'badge-success' : 'badge-muted' ?>"><?= !empty($training['is_active']) ? 'Active' : 'Désactivée' ?></span></td>
               <td><button class="btn btn-ghost-dark btn-sm" type="button" onclick="selectTrainingSession(<?= (int) $training['id'] ?>)"><i class="fas fa-eye"></i></button></td>
             </tr><?php endforeach; ?><?php if (!$trainingSessions): ?><tr><td colspan="6">Aucune formation enregistrée.</td></tr><?php endif; ?></tbody>
-          </table>
+          </table></div>
         </div>
 
+        <div class="training-side-stack">
         <div class="chart-card" id="trainingDetailPanel">
           <div class="chart-card-header" style="margin-bottom:16px">
-            <div><div class="chart-title">Pilotage de la session</div><div class="chart-sub"><?= e($selectedTraining['organization'] ?? 'Aucune organisation') ?></div></div>
-            <span class="badge <?= !empty($selectedTraining['is_active']) ? 'badge-success' : 'badge-muted' ?>"><i class="fas fa-circle" style="font-size:8px"></i> <?= $trainingStatusLabel ?></span>
+            <div><div class="chart-title">Pilotage de la session</div><div id="trainingOrganisation" class="chart-sub"><?= e($selectedTraining['organization'] ?? 'Aucune organisation') ?></div></div>
+            <span id="trainingDetailStatus" class="badge <?= !empty($selectedTraining['is_active']) ? 'badge-success' : 'badge-muted' ?>"><i class="fas fa-circle" style="font-size:8px"></i> <?= $trainingStatusLabel ?></span>
           </div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
-            <div style="background:rgba(255,255,255,.04);border:1px solid var(--border-dark);border-radius:10px;padding:12px"><div style="color:rgba(255,255,255,.35);font-size:12px">Présence</div><div style="color:#fff;font-size:22px;font-weight:700"><?= (int) ($trainingStats['attendance_rate'] ?? 0) ?>%</div></div>
+            <div style="background:rgba(255,255,255,.04);border:1px solid var(--border-dark);border-radius:10px;padding:12px"><div style="color:rgba(255,255,255,.35);font-size:12px">Présence</div><div id="trainingDetailAttendance" style="color:#fff;font-size:22px;font-weight:700"><?= (int) ($trainingStats['attendance_rate'] ?? 0) ?>%</div></div>
             <div style="background:rgba(255,255,255,.04);border:1px solid var(--border-dark);border-radius:10px;padding:12px"><div style="color:rgba(255,255,255,.35);font-size:12px">Poids optionnel</div><div style="color:#fff;font-size:22px;font-weight:700"><?= e((string) ($selectedTraining['evaluation_weight'] ?? 0)) ?>%</div></div>
-            <div style="background:rgba(255,255,255,.04);border:1px solid var(--border-dark);border-radius:10px;padding:12px"><div style="color:rgba(255,255,255,.35);font-size:12px">Présents</div><div style="color:#fff;font-size:22px;font-weight:700"><?= (int) ($trainingStats['present'] ?? 0) ?></div></div>
-            <div style="background:rgba(255,255,255,.04);border:1px solid var(--border-dark);border-radius:10px;padding:12px"><div style="color:rgba(255,255,255,.35);font-size:12px">Moyenne</div><div style="color:#fff;font-size:22px;font-weight:700"><?= e((string) ($trainingStats['average'] ?? 0)) ?></div></div>
+            <div style="background:rgba(255,255,255,.04);border:1px solid var(--border-dark);border-radius:10px;padding:12px"><div style="color:rgba(255,255,255,.35);font-size:12px">Présents</div><div id="trainingPresent" style="color:#fff;font-size:22px;font-weight:700"><?= (int) ($trainingStats['present'] ?? 0) ?></div></div>
+            <div style="background:rgba(255,255,255,.04);border:1px solid var(--border-dark);border-radius:10px;padding:12px"><div style="color:rgba(255,255,255,.35);font-size:12px">Moyenne</div><div id="trainingDetailAverage" style="color:#fff;font-size:22px;font-weight:700"><?= e((string) ($trainingStats['average'] ?? 0)) ?></div></div>
           </div>
           <div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-top:1px solid var(--border-dark);border-bottom:1px solid var(--border-dark);margin-bottom:14px">
             <div><div style="color:#fff;font-weight:600">Notes incluses dans les évaluations</div><div style="color:rgba(255,255,255,.38);font-size:12px">Configuration de la session sélectionnée.</div></div>
@@ -1559,6 +1611,17 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
             <button class="btn btn-ghost-dark btn-sm" type="button" onclick="switchModule('evaluations')"><i class="fas fa-star"></i> Voir impact</button>
           </div>
         </div>
+        <div class="chart-card training-criteria-card" id="trainingCriteriaPanel">
+          <div class="chart-card-header" style="margin-bottom:12px">
+            <div><div class="chart-title">Training criteria list</div><div class="chart-sub">Critères liés à l’organisation de la session</div></div>
+            <span id="trainingCriteriaCount" class="badge badge-muted"><?= count($trainingCriteria) ?> critères</span>
+          </div>
+          <div id="trainingCriteriaList" class="training-criteria-list">
+            <?php foreach ($trainingCriteria as $criterion): ?><div class="training-criterion-item"><span class="training-criterion-index"><?= (int) ($criterion['order_index'] ?? 0) ?></span><div><strong><?= e((string) ($criterion['label'] ?? 'Critère')) ?></strong><?php if (!empty($criterion['description'])): ?><p><?= e((string) $criterion['description']) ?></p><?php endif; ?></div></div><?php endforeach; ?>
+            <?php if (!$trainingCriteria): ?><div class="training-criteria-empty">Aucun critère n’est encore lié à cette organisation.</div><?php endif; ?>
+          </div>
+        </div>
+        </div>
       </div>
 
       <div class="table-card">
@@ -1566,8 +1629,8 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
           <div><div class="chart-title">Présences et notes des candidats</div><div class="chart-sub">Candidatures de <?= e($selectedTraining['organization'] ?? 'l’organisation sélectionnée') ?></div></div>
         </div>
         <table class="dash-table">
-          <thead><tr><th>Candidat</th><th>Projet</th><th>Présence</th><th>Note /20</th><th>Appréciation</th><th>Inclure</th><th>Statut</th></tr></thead>
-          <tbody><?php foreach ($trainingParticipants as $participant): ?><tr data-submission-id="<?= (int) $participant['submission_id'] ?>">
+          <thead><tr><th>Organisation / candidat</th><th>Organisation</th><th>Présence</th><th>Note /20</th><th>Appréciation</th><th>Inclure</th><th>Statut</th></tr></thead>
+          <tbody id="trainingParticipantsBody"><?php foreach ($trainingParticipants as $participant): ?><tr data-submission-id="<?= (int) $participant['submission_id'] ?>">
             <td><?= e($participant['candidate_name'] ?: $participant['candidate_email']) ?></td><td><?= e($selectedTraining['organization'] ?? '—') ?></td><td><select class="filter-select training-attendance"><option value="registered" <?= $participant['attendance_status'] === 'registered' ? 'selected' : '' ?>>Inscrit</option><option value="present" <?= $participant['attendance_status'] === 'present' ? 'selected' : '' ?>>Présent</option><option value="absent" <?= $participant['attendance_status'] === 'absent' ? 'selected' : '' ?>>Absent</option><option value="certified" <?= $participant['attendance_status'] === 'certified' ? 'selected' : '' ?>>Certifié</option></select></td><td><input class="form-input-dark training-grade" value="<?= e((string) ($participant['grade'] ?? '')) ?>" type="number" min="0" max="20" step="0.5" style="width:70px"></td><td><input class="form-input-dark training-comment" value="<?= e((string) ($participant['comment'] ?? '')) ?>" placeholder="Commentaire" style="width:100%"></td><td><input type="checkbox" class="training-included" <?= !empty($participant['included_in_evaluation']) ? 'checked' : '' ?>></td><td><span class="badge <?= $participant['attendance_status'] === 'certified' ? 'badge-success' : 'badge-muted' ?>"><?= e(ucfirst($participant['attendance_status'])) ?></span></td>
           </tr><?php endforeach; ?><?php if (!$trainingParticipants): ?><tr><td colspan="7">Aucune candidature liée à l’organisation de cette formation.</td></tr><?php endif; ?></tbody>
         </table>
@@ -1601,7 +1664,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
           </div>
         </div>
         <table class="dash-table">
-          <thead><tr><th>#Réf</th><th>Candidat</th><th>Pays</th><th>Projet</th><th>Soumis le</th><th>Statut</th><th>Action</th></tr></thead>
+          <thead><tr><th>#Réf</th><th>Candidat</th><th>Pays</th><th>Organisation</th><th>Soumis le</th><th>Statut</th><th>Action</th></tr></thead>
           <tbody>
             <tr style="cursor:pointer" onclick="showEvalForm()"><td class="font-mono" style="color:var(--secondary)">AGRI-047</td><td><div class="candidate-name"><div class="candidate-av" style="background:var(--secondary)">AK</div> Amara Konaté</div></td><td>🇨🇮 Côte d'Ivoire</td><td>AGRI-2025</td><td>12 nov. 2025</td><td><span class="badge badge-warning">En révision</span></td><td><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();showEvalForm()"><i class="fas fa-star"></i> Évaluer</button></td></tr>
             <tr><td class="font-mono" style="color:var(--secondary)">AGRI-046</td><td><div class="candidate-name"><div class="candidate-av" style="background:#e67e22">JN</div> Jean Ngoma</div></td><td>🇨🇲 Cameroun</td><td>AGRI-2025</td><td>11 nov. 2025</td><td><span class="badge badge-info">Soumis</span></td><td><button class="btn btn-ghost-dark btn-sm"><i class="fas fa-star"></i> Évaluer</button></td></tr>
@@ -1618,7 +1681,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
               <div class="candidate-av" style="width:48px;height:48px;font-size:18px;background:var(--secondary)">AK</div>
               <div><div style="color:#fff;font-weight:600;font-size:16px">Amara Konaté</div><div style="color:rgba(255,255,255,0.4);font-size:13px">amara.konate@email.ci — 🇨🇮 Côte d'Ivoire</div><div style="color:rgba(255,255,255,0.3);font-size:12px;margin-top:2px">Réf: AGRI-047 · Soumis le 12 nov. 2025</div></div>
             </div>
-            <div style="margin-bottom:20px"><div style="color:rgba(255,255,255,0.5);font-size:12px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Description du projet</div><div style="color:rgba(255,255,255,0.8);font-size:14px;line-height:1.7;background:rgba(255,255,255,0.03);padding:14px;border-radius:8px;border:1px solid var(--border-dark)">Notre projet vise à développer un système d'irrigation solaire pour les petits agriculteurs de la région de Korhogo. Nous prévoyons d'équiper 200 exploitations sur 24 mois, avec un impact estimé de 1500 familles bénéficiaires.</div></div>
+                <div style="margin-bottom:20px"><div style="color:rgba(255,255,255,0.5);font-size:12px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Description de l’organisation</div><div style="color:rgba(255,255,255,0.8);font-size:14px;line-height:1.7;background:rgba(255,255,255,0.03);padding:14px;border-radius:8px;border:1px solid var(--border-dark)">Présentation, réalisations documentées et résultats de l’organisation.</div></div>
             <div style="margin-bottom:20px"><div style="color:rgba(255,255,255,0.5);font-size:12px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Budget demandé</div><div style="color:var(--secondary);font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:700">45 000 000 FCFA</div></div>
             <div><div style="color:rgba(255,255,255,0.5);font-size:12px;text-transform:uppercase;letter-spacing:0.08em;margin-bottom:8px">Pays d'implémentation</div><div style="color:rgba(255,255,255,0.8)">🇨🇮 Côte d'Ivoire — Région du Poro</div></div>
           </div>
@@ -1637,7 +1700,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
             </div>
             <div id="criteriaScoring">
               <div class="criteria-score-item">
-                <div class="criteria-score-label">Pertinence du projet <span class="criteria-score-max">×2.0 — /20</span></div>
+                <div class="criteria-score-label">Participation et réalisations de l’organisation <span class="criteria-score-max">×2.0 — /20</span></div>
                 <div class="slider-wrap">
                   <div class="score-slider-track" onclick="handleSliderClick(event, this, 'score1')"><div class="score-slider-fill" style="width:70%" id="fill-score1"></div><div class="score-slider-thumb" style="left:calc(70% - 9px)"></div></div>
                   <input type="number" class="score-input-mini" id="score1" value="14" min="0" max="20" step="0.5" oninput="updateEvalScore()">
@@ -1702,10 +1765,10 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
       <!-- Eval Levels -->
       <div style="margin-top:24px"><div class="module-title" style="font-size:18px;margin-bottom:16px">Niveaux d'évaluation définis</div></div>
       <div class="levels-grid">
-        <div class="level-card" style="border-left-color:var(--secondary)"><div class="level-range">17.0 — 20.0</div><div class="level-name" style="color:var(--secondary)">Excellent</div><div class="level-desc">Projet exemplaire. Réunit toutes les conditions de financement.</div></div>
-        <div class="level-card" style="border-left-color:#3498db"><div class="level-range">14.0 — 16.9</div><div class="level-name" style="color:#3498db">Très bien</div><div class="level-desc">Projet solide avec quelques points à renforcer.</div></div>
+        <div class="level-card" style="border-left-color:var(--secondary)"><div class="level-range">17.0 — 20.0</div><div class="level-name" style="color:var(--secondary)">Excellent</div><div class="level-desc">Organisation exemplaire. Réunit toutes les conditions d’éligibilité.</div></div>
+        <div class="level-card" style="border-left-color:#3498db"><div class="level-range">14.0 — 16.9</div><div class="level-name" style="color:#3498db">Très bien</div><div class="level-desc">Organisation solide avec quelques points à renforcer.</div></div>
         <div class="level-card" style="border-left-color:var(--accent)"><div class="level-range">11.0 — 13.9</div><div class="level-name" style="color:var(--accent)">Bien</div><div class="level-desc">Bonne proposition mais nécessite des améliorations ciblées.</div></div>
-        <div class="level-card" style="border-left-color:#e67e22"><div class="level-range">8.0 — 10.9</div><div class="level-name" style="color:#e67e22">Passable</div><div class="level-desc">Projet à potentiel, mais insuffisant en l'état actuel.</div></div>
+        <div class="level-card" style="border-left-color:#e67e22"><div class="level-range">8.0 — 10.9</div><div class="level-name" style="color:#e67e22">Passable</div><div class="level-desc">Organisation à potentiel, mais insuffisante en l’état actuel.</div></div>
         <div class="level-card" style="border-left-color:var(--danger)"><div class="level-range">0.0 — 7.9</div><div class="level-name" style="color:var(--danger)">Insuffisant</div><div class="level-desc">Ne répond pas aux critères minimaux du programme.</div></div>
         <div class="level-card" style="border:2px dashed rgba(46,175,125,0.3);cursor:pointer;display:flex;align-items:center;justify-content:center" onclick="showToast('Formulaire niveau ouvert', 'success')"><div style="text-align:center"><i class="fas fa-plus" style="font-size:24px;color:var(--secondary);display:block;margin-bottom:8px"></i><span style="color:var(--secondary);font-weight:600">Ajouter un niveau</span></div></div>
       </div>
@@ -1806,7 +1869,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
                     <div style="grid-column:1/-1"><strong>Chemin:</strong> <?= e((string) ($databaseInfo['path'] ?? '—')) ?></div>
                   </div>
                   <?php if (!empty($databaseInfo['error'])): ?><div class="settings-desc" style="color:var(--danger);margin-top:8px"><?= e((string) $databaseInfo['error']) ?></div><?php endif; ?>
-                  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px"><a class="btn btn-ghost-dark btn-sm" href="<?= BASE_URL ?>/admin/database/export"><i class="fas fa-download"></i> Exporter la base</a><input id="databaseImportFile" type="file" accept=".sqlite,.db" hidden><button type="button" class="btn btn-ghost-dark btn-sm" onclick="document.getElementById('databaseImportFile').click()"><i class="fas fa-upload"></i> Importer une base</button><span id="databaseImportStatus" class="settings-desc"></span></div>
+                  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px"><a class="btn btn-ghost-dark btn-sm" href="<?= BASE_URL ?>/admin/database/export"><i class="fas fa-download"></i> Sauvegarder la base</a><input id="databaseImportFile" type="file" accept=".sqlite,.db" hidden><button type="button" class="btn btn-ghost-dark btn-sm" onclick="document.getElementById('databaseImportFile').click()"><i class="fas fa-upload"></i> Importer une base</button><button id="databaseResetBtn" type="button" class="btn btn-sm" style="background:rgba(231,76,60,0.15);color:var(--danger)"><i class="fas fa-trash-alt"></i> Vider et réinitialiser</button><span id="databaseImportStatus" class="settings-desc"></span></div>
                 </div>
               <?php endif; ?>
             </div>
@@ -2130,11 +2193,95 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
 <script>
 let organisationPreviewLastFocus = null;
 
-function selectTrainingSession(sessionId) {
+let selectedTrainingSessionId = <?= (int) ($selectedTraining['id'] ?? 0) ?>;
+const trainingCriteriaCatalog = <?= json_encode($trainingCriteriaByProject, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+
+function renderTrainingCriteriaPicker(projectId) {
+  const picker = document.getElementById('trainingCriteriaPicker');
+  if (!picker) return;
+  picker.replaceChildren();
+  const criteria = trainingCriteriaCatalog[String(projectId)] || [];
+  if (!criteria.length) { picker.innerHTML = '<span style="color:rgba(255,255,255,.4);font-size:12px">Aucun critère défini pour cette organisation.</span>'; return; }
+  criteria.forEach(function (criterion) {
+    const label = document.createElement('label');
+    const input = document.createElement('input'); input.type = 'checkbox'; input.name = 'criteria_ids[]'; input.value = criterion.id;
+    const text = document.createElement('span'); text.textContent = criterion.label || 'Critère'; label.append(input, text); picker.appendChild(label);
+  });
+}
+
+document.getElementById('trainingProjectSelect')?.addEventListener('change', function () { renderTrainingCriteriaPicker(this.value); });
+
+async function selectTrainingSession(sessionId) {
   if (!sessionId) return;
-  const url = new URL(window.location.href);
-  url.searchParams.set('training_id', sessionId);
-  window.location.href = url.toString();
+  const select = document.getElementById('trainingSessionSelect');
+  const panel = document.getElementById('trainingDetailPanel');
+  if (select) select.disabled = true;
+  panel?.classList.add('is-loading');
+  try {
+    const response = await fetch((window.CRITEVAL_BASE_URL || '') + '/admin/sessions/data?training_id=' + encodeURIComponent(sessionId), { headers: { 'Accept': 'application/json' } });
+    const data = await response.json();
+    if (!response.ok || !data.success) throw new Error(data.message || 'Impossible de charger la session.');
+    const session = data.session || {}, stats = data.stats || {};
+    const setText = (id, value) => { const element = document.getElementById(id); if (element) element.textContent = value; };
+    const status = Number(session.is_active) === 1 ? 'Active' : 'Désactivée';
+    setText('trainingSelectedStatus', status);
+    setText('trainingCapacityLabel', `${Number(stats.registered || 0)}/${Number(session.capacity || 0)}`);
+    setText('trainingRegistered', Number(stats.registered || 0));
+    setText('trainingAttendance', `${Number(stats.attendance_rate || 0)}%`);
+    setText('trainingAverage', Number(stats.average || 0));
+    setText('trainingOrganisation', session.organization || 'Aucune organisation');
+    setText('trainingDetailAttendance', `${Number(stats.attendance_rate || 0)}%`);
+    setText('trainingPresent', Number(stats.present || 0));
+    setText('trainingDetailAverage', Number(stats.average || 0));
+    const statusBadge = document.getElementById('trainingDetailStatus');
+    if (statusBadge) { statusBadge.className = 'badge ' + (Number(session.is_active) === 1 ? 'badge-success' : 'badge-muted'); statusBadge.innerHTML = '<i class="fas fa-circle" style="font-size:8px"></i> ' + status; }
+    const selectedRow = document.querySelector(`[data-training-row="${sessionId}"]`);
+    document.querySelectorAll('[data-training-participants]').forEach(cell => { const row = cell.closest('[data-training-row]'); cell.textContent = row === selectedRow ? `${Number(stats.registered || 0)} / ${Number(session.capacity || 0)}` : '— / ' + (row?.querySelector('[data-training-participants]')?.textContent.split('/')[1]?.trim() || '0'); });
+    renderTrainingCriteria(data.criteria || []);
+    renderTrainingParticipants(data.participants || [], session);
+    selectedTrainingSessionId = Number(sessionId);
+    const url = new URL(window.location.href); url.searchParams.set('training_id', sessionId); window.history.replaceState({}, '', url.toString());
+  } catch (error) {
+    showToast(error.message || 'Impossible de charger la session.', 'error');
+    if (select) select.value = select.dataset.previousValue || select.value;
+  } finally {
+    if (select) { select.disabled = false; select.dataset.previousValue = sessionId; }
+    panel?.classList.remove('is-loading');
+  }
+}
+
+function renderTrainingCriteria(criteria) {
+  const list = document.getElementById('trainingCriteriaList');
+  const count = document.getElementById('trainingCriteriaCount');
+  if (!list) return;
+  if (count) count.textContent = criteria.length + ' critères';
+  list.replaceChildren();
+  if (!criteria.length) { list.innerHTML = '<div class="training-criteria-empty">Aucun critère n’est encore lié à cette formation.</div>'; return; }
+  criteria.forEach(function (criterion, index) {
+    const item = document.createElement('div'); item.className = 'training-criterion-item';
+    const badge = document.createElement('span'); badge.className = 'training-criterion-index'; badge.textContent = criterion.order_index || index + 1;
+    const content = document.createElement('div'); const title = document.createElement('strong'); title.textContent = criterion.label || 'Critère'; content.appendChild(title);
+    if (criterion.description) { const description = document.createElement('p'); description.textContent = criterion.description; content.appendChild(description); }
+    item.append(badge, content); list.appendChild(item);
+  });
+}
+
+function renderTrainingParticipants(participants, session) {
+  const body = document.getElementById('trainingParticipantsBody');
+  if (!body) return;
+  body.replaceChildren();
+  if (!participants.length) { body.innerHTML = '<tr><td colspan="7">Aucune candidature liée à l’organisation de cette formation.</td></tr>'; return; }
+  participants.forEach(function (participant) {
+    const row = document.createElement('tr'); row.dataset.submissionId = participant.submission_id;
+    const cell = value => { const td = document.createElement('td'); td.textContent = value || '—'; return td; };
+    row.append(cell(participant.candidate_name || participant.candidate_email), cell(session.organization));
+    const attendance = document.createElement('select'); attendance.className = 'filter-select training-attendance'; ['registered','present','absent','certified'].forEach(value => { const option = new Option(value === 'registered' ? 'Inscrit' : value === 'present' ? 'Présent' : value === 'absent' ? 'Absent' : 'Certifié', value, false, value === (participant.attendance_status || 'registered')); attendance.appendChild(option); });
+    const attendanceCell = document.createElement('td'); attendanceCell.appendChild(attendance); row.appendChild(attendanceCell);
+    const gradeCell = document.createElement('td'), grade = document.createElement('input'); grade.className = 'form-input-dark training-grade'; grade.type = 'number'; grade.min = '0'; grade.max = '20'; grade.step = '0.5'; grade.style.width = '70px'; grade.value = participant.grade || ''; gradeCell.appendChild(grade); row.appendChild(gradeCell);
+    const commentCell = document.createElement('td'), comment = document.createElement('input'); comment.className = 'form-input-dark training-comment'; comment.placeholder = 'Commentaire'; comment.style.width = '100%'; comment.value = participant.comment || ''; commentCell.appendChild(comment); row.appendChild(commentCell);
+    const includeCell = document.createElement('td'), include = document.createElement('input'); include.type = 'checkbox'; include.className = 'training-included'; include.checked = Number(participant.included_in_evaluation) === 1; includeCell.appendChild(include); row.appendChild(includeCell);
+    const stateCell = document.createElement('td'), state = document.createElement('span'); state.className = 'badge ' + (participant.attendance_status === 'certified' ? 'badge-success' : 'badge-muted'); state.textContent = participant.attendance_status || 'registered'; stateCell.appendChild(state); row.appendChild(stateCell); body.appendChild(row);
+  });
 }
 
 function exportTrainingRegister() {
@@ -2159,8 +2306,8 @@ function exportTrainingRegister() {
 
 async function saveTrainingParticipant(row) {
   const data = new FormData();
-  data.append('csrf_token', document.querySelector('#modalNewProject input[name="csrf_token"]')?.value || '');
-  data.append('session_id', '<?= (int) ($selectedTraining['id'] ?? 0) ?>');
+  data.append('csrf_token', document.querySelector('#trainingCreateForm input[name="csrf_token"]')?.value || document.querySelector('#modalNewProject input[name="csrf_token"]')?.value || '');
+  data.append('session_id', String(selectedTrainingSessionId));
   data.append('submission_id', row.dataset.submissionId);
   data.append('attendance_status', row.querySelector('.training-attendance').value);
   data.append('grade', row.querySelector('.training-grade').value);
@@ -2176,7 +2323,6 @@ async function saveAllTrainingParticipants() {
   try {
     await Promise.all(rows.map(saveTrainingParticipant));
     showToast('Présences et notes enregistrées.', 'success');
-    window.location.reload();
   } catch (error) {
     showToast(error.message, 'error');
   }
@@ -2432,6 +2578,28 @@ if (document.readyState === 'loading') document.addEventListener('DOMContentLoad
 else initOrganisationFilters();
 </script>
 
+<div class="modal-overlay" id="modalNewForm" onclick="if(event.target===this)$(this).removeClass('open')">
+  <div class="modal" style="max-width:680px">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fas fa-file-alt" style="color:var(--secondary);margin-right:8px"></i> Nouveau formulaire</div>
+      <button type="button" class="modal-close" onclick="$('#modalNewForm').removeClass('open')"><i class="fas fa-times"></i></button>
+    </div>
+    <form method="post" action="<?= BASE_URL ?>/admin/forms" id="newFormCreateForm">
+      <div class="modal-body">
+        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+        <input type="hidden" name="layout_json" value="[]">
+        <div style="display:grid;gap:16px">
+          <label class="form-label">Titre du formulaire *<input id="newFormTitle" name="title" required class="form-input-dark" style="width:100%" placeholder="Ex. Évaluation annuelle de l’organisation"></label>
+          <label class="form-label">Organisation liée *<select name="project_id" required class="form-input-dark" style="width:100%"><option value="">Choisir une organisation</option><?php foreach (($projects ?? []) as $project): ?><option value="<?= (int) $project['id'] ?>"><?= e((string) ($project['organization'] ?: $project['title'])) ?></option><?php endforeach; ?></select></label>
+          <label class="form-label">Description<textarea name="description" class="form-input-dark" style="width:100%;min-height:90px" placeholder="Objectif et consignes du formulaire"></textarea></label>
+          <label class="form-label">Statut<select name="status" class="form-input-dark" style="width:100%"><option value="draft">Brouillon — construire avant publication</option><option value="published">Publié — disponible selon le planning</option></select></label>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-ghost-dark" onclick="$('#modalNewForm').removeClass('open')">Annuler</button><button type="submit" class="btn btn-secondary"><i class="fas fa-arrow-right"></i> Créer et ouvrir le builder</button></div>
+    </form>
+  </div>
+</div>
+
 <div class="modal-overlay" id="modalTraining" onclick="if(event.target===this)$(this).removeClass('open')">
   <div class="modal" style="max-width:720px">
     <div class="modal-header">
@@ -2443,13 +2611,14 @@ else initOrganisationFilters();
       <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
       <div style="display:grid;grid-template-columns:1.2fr 0.8fr;gap:16px;margin-bottom:16px">
         <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Titre de la formation *</label><input name="name" required class="form-input-dark" id="trainingTitle" style="width:100%" placeholder="Ex: Préparation au pitch financement"></div>
-        <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Organisation liée *</label><select name="project_id" class="form-input-dark" style="width:100%" required><option value="">Choisir une organisation</option><?php foreach (($projects ?? []) as $project): ?><option value="<?= (int) $project['id'] ?>"><?= e($project['organization'] ?: $project['title']) ?></option><?php endforeach; ?></select></div>
+        <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Organisation liée *</label><select name="project_id" id="trainingProjectSelect" class="form-input-dark" style="width:100%" required><option value="">Choisir une organisation</option><?php foreach (($projects ?? []) as $project): ?><option value="<?= (int) $project['id'] ?>"><?= e($project['organization'] ?: $project['title']) ?></option><?php endforeach; ?></select></div>
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px">
         <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Date</label><input type="date" name="session_date" required class="form-input-dark" style="width:100%"></div>
         <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Date fin</label><input type="date" class="form-input-dark" style="width:100%"></div>
         <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Capacité</label><input type="number" name="capacity" class="form-input-dark" style="width:100%" value="50" min="1"></div>
       </div>
+      <div style="margin-bottom:16px"><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Critères de la formation</label><div id="trainingCriteriaPicker" class="training-modal-criteria"><span style="color:rgba(255,255,255,.4);font-size:12px">Sélectionnez une organisation pour choisir les critères.</span></div><small style="display:block;color:rgba(255,255,255,.35);font-size:11px;margin-top:6px">Si aucun critère n’est sélectionné, tous les critères de l’organisation seront associés.</small></div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:16px">
         <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Format</label><select name="format" class="form-input-dark" style="width:100%"><option value="hybride">Hybride</option><option value="presentiel">Présentiel</option><option value="en_ligne">En ligne</option></select></div>
         <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Formateur / organisme</label><input class="form-input-dark" style="width:100%" placeholder="Ex: Cabinet Impact Afrique"></div>
@@ -2601,7 +2770,7 @@ function showPage(name) {
 
 function loginToDash() {
   showPage('dashboard');
-  setTimeout(() => initCharts(), 300);
+  setTimeout(() => initDashboardCharts(), 300);
   animateKPIs();
 }
 
@@ -2610,7 +2779,7 @@ function loginToDash() {
 // ══════════════════════════════════════
 const moduleLabels = {
   apercu: 'Aperçu',
-  projets: 'Projets',
+  projets: 'Organisations',
   criteres: 'Critères d\'évaluation',
   formulaires: 'Formulaires',
   formation: 'Formation',
@@ -2622,7 +2791,8 @@ const moduleLabels = {
 const DASHBOARD_MODULE_STORAGE_KEY = 'criteval.activeModule';
 const sidebarModuleCounts = <?= json_encode($moduleCounts, JSON_UNESCAPED_SLASHES) ?>;
 const dashboardRoleDefaults = <?= json_encode($rolePermissionDefaults, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
-const overviewData = <?= json_encode($overview, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
+const overviewData = <?= json_encode($overview, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
+window.__CRITEVAL_DASHBOARD__ = true;
 
 function renderSidebarCounts() {
   document.querySelectorAll('.sidebar-item').forEach(item => {
@@ -2766,6 +2936,29 @@ function initSettingsPanel() {
         showToast(error.message, 'error');
       } finally {
         importInput.value = '';
+      }
+    });
+  }
+
+  const databaseResetButton = document.getElementById('databaseResetBtn');
+  if (databaseResetButton) {
+    databaseResetButton.addEventListener('click', async () => {
+      if (!confirm('Cette action effacera toutes les données et recréera la base initiale. Une sauvegarde sera créée avant la réinitialisation. Continuer ?')) return;
+      const importStatus = document.getElementById('databaseImportStatus');
+      databaseResetButton.disabled = true;
+      if (importStatus) importStatus.textContent = 'Réinitialisation en cours...';
+      const data = new FormData();
+      data.append('csrf_token', form.querySelector('[name="csrf_token"]').value);
+      try {
+        const response = await fetch('<?= BASE_URL ?>/admin/database/reset', { method: 'POST', body: data });
+        const result = await response.clone().json().catch(async () => ({ message: await response.text() }));
+        if (!response.ok || !result.success) throw new Error(result.message || 'Réinitialisation impossible.');
+        showToast(result.message || 'Base réinitialisée', 'success');
+        setTimeout(() => location.reload(), 900);
+      } catch (error) {
+        databaseResetButton.disabled = false;
+        if (importStatus) importStatus.textContent = error.message;
+        showToast(error.message, 'error');
       }
     });
   }
@@ -2916,7 +3109,7 @@ function switchModule(name, trigger = null, updateHistory = true) {
     window.history.pushState({ module: name }, '', targetUrl);
   }
   if (name === 'calendrier') setTimeout(initCalendar, 100);
-  if (name === 'apercu') { initCharts(); animateKPIs(); }
+  if (name === 'apercu') { initDashboardCharts(); animateKPIs(); }
   if (name === 'criteres') setTimeout(initCriteriaChart, 100);
 }
 
@@ -2928,9 +3121,11 @@ let chartInstances = {};
 const submissionChartPeriods = ['1m', '3m', '6m', '1a', '18m', '2a', 'tout'];
 
 function updateSubmissionsChart(period) {
-  const chart = chartInstances.submissions;
   const range = overviewData.chart_ranges?.[period];
-  if (!chart || !range || !submissionChartPeriods.includes(period)) return;
+  if (!range || !submissionChartPeriods.includes(period)) return;
+
+  const chart = chartInstances.submissions || Chart.getChart(document.getElementById('chartSubmissions'));
+  if (!chart) return;
 
   chart.data.labels = range.labels;
   chart.data.datasets[0].data = range.totals;
@@ -2942,7 +3137,7 @@ function updateSubmissionsChart(period) {
   });
 }
 
-function initCharts() {
+function initDashboardCharts() {
   if (chartsInit) return;
   chartsInit = true;
   Chart.defaults.color = 'rgba(255,255,255,0.4)';
@@ -2951,6 +3146,8 @@ function initCharts() {
   // Submissions line chart
   const ctx1 = document.getElementById('chartSubmissions');
   if (ctx1) {
+    const existingSubmissionChart = Chart.getChart(ctx1);
+    if (existingSubmissionChart) existingSubmissionChart.destroy();
     chartInstances.submissions = new Chart(ctx1, {
       type: 'line',
       data: {
@@ -3679,7 +3876,7 @@ function initDashboard() {
     switchModule(module, null, false);
   });
   setTimeout(() => {
-    initCharts();
+    initDashboardCharts();
     animateKPIs();
     initSortable();
   }, 200);
@@ -3725,6 +3922,8 @@ $(function() {
 
       window.CRITEVAL_BASE_URL = window.CRITEVAL_BASE_URL || '<?= BASE_URL ?>';
 
+      const escapeCriteriaHtml = (value) => String(value ?? '').replace(/[&<>"']/g, (char) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[char]));
+
       async function loadCriteriaList() {
         const projectFilter = document.getElementById('criteriaProjectFilter');
         const listEl = document.getElementById('criteriaList');
@@ -3750,8 +3949,8 @@ $(function() {
                   <i class="fas fa-grip-vertical drag-handle"></i>
                   <div class="criteria-num">${String(index + 1).padStart(2, '0')}</div>
                   <div class="criteria-info">
-                    <div class="criteria-label">${(item.label || 'Critère sans libellé')}</div>
-                    <div class="criteria-desc">${item.description || 'Aucune description'}</div>
+                   <div class="criteria-label">${escapeCriteriaHtml(item.label || 'Critère sans libellé')}</div>
+                   <div class="criteria-desc">${escapeCriteriaHtml(item.description || 'Aucune description')}</div>
                   </div>
                   <div class="criteria-weights">
                     <span class="weight-pill">×${Number(item.weight || 1).toFixed(2)}</span>

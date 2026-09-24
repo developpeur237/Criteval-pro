@@ -24,9 +24,20 @@ $modulePermissionLabels = [
 $overview = $overview ?? [];
 $overviewKpis = $overview['kpis'] ?? [];
 $overviewLatest = $overview['latest'] ?? [];
+$overviewPending = $overview['pending_submissions'] ?? [];
 $overviewRanking = $overview['ranking'] ?? [];
 $overviewUpcoming = $overview['upcoming'] ?? [];
 $permissionActionLabels = function_exists('permission_action_labels') ? permission_action_labels() : ['view' => 'Voir', 'create' => 'Créer', 'update' => 'Modifier', 'delete' => 'Supprimer'];
+$weightedAverage = (float) ($overviewKpis['weighted_average'] ?? 0);
+$scorePercent = max(0, min(100, ($weightedAverage / 20) * 100));
+$scoreDashOffset = 351.9 - (351.9 * $scorePercent / 100);
+$scoreLabel = $weightedAverage >= 17 ? 'Excellent' : ($weightedAverage >= 14 ? 'Très bien' : ($weightedAverage >= 11 ? 'Bien' : ($weightedAverage >= 8 ? 'Passable' : 'Insuffisant')));
+$submissionTotal = max(1, (int) ($overviewKpis['submissions'] ?? 0));
+$currentReturnUrl = (string) ($_SERVER['REQUEST_URI'] ?? (BASE_URL . '/dashboard'));
+$formCriteriaCatalog = [];
+foreach (($criteria ?? []) as $criterion) {
+  $formCriteriaCatalog[(int) ($criterion['project_id'] ?? 0)][] = $criterion;
+}
 ?>
 <html lang="fr">
 <head>
@@ -924,17 +935,17 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
     </div>
     <nav class="sidebar-nav">
       <div class="nav-section-label">Navigation</div>
-      <a class="sidebar-item active" onclick="switchModule('apercu')"><i class="fas fa-home"></i> Aperçu</a>
-      <a class="sidebar-item" onclick="switchModule('projets')"><i class="fas fa-building"></i> Organisations <span class="sidebar-badge">3</span></a>
-      <a class="sidebar-item" onclick="switchModule('criteres')"><i class="fas fa-check-square"></i> Critères</a>
-      <a class="sidebar-item" onclick="switchModule('formulaires')"><i class="fas fa-file-alt"></i> Formulaires</a>
-      <a class="sidebar-item" onclick="switchModule('formation')"><i class="fas fa-chalkboard-teacher"></i> Formation</a>
-      <a class="sidebar-item" onclick="switchModule('evaluations')"><i class="fas fa-star"></i> Évaluations</a>
-      <a class="sidebar-item" onclick="switchModule('classements')"><i class="fas fa-trophy"></i> Classements</a>
-      <a class="sidebar-item" onclick="switchModule('calendrier')"><i class="fas fa-calendar-alt"></i> Planning</a>
+      <a class="sidebar-item active" data-module="apercu" onclick="switchModule('apercu')"><i class="fas fa-home"></i> Aperçu</a>
+      <a class="sidebar-item" data-module="projets" onclick="switchModule('projets')"><i class="fas fa-building"></i> Organisations</a>
+      <a class="sidebar-item" data-module="criteres" onclick="switchModule('criteres')"><i class="fas fa-check-square"></i> Critères</a>
+      <a class="sidebar-item" data-module="formulaires" onclick="switchModule('formulaires')"><i class="fas fa-file-alt"></i> Formulaires</a>
+      <a class="sidebar-item" data-module="formation" onclick="switchModule('formation')"><i class="fas fa-chalkboard-teacher"></i> Formation</a>
+      <a class="sidebar-item" data-module="evaluations" onclick="switchModule('evaluations')"><i class="fas fa-star"></i> Évaluations</a>
+      <a class="sidebar-item" data-module="classements" onclick="switchModule('classements')"><i class="fas fa-trophy"></i> Classements</a>
+      <a class="sidebar-item" data-module="calendrier" onclick="switchModule('calendrier')"><i class="fas fa-calendar-alt"></i> Planning</a>
 
       <div class="nav-section-label" style="margin-top:8px">Configuration</div>
-      <a class="sidebar-item" onclick="switchModule('parametres')"><i class="fas fa-cog"></i> Paramètres</a>
+      <a class="sidebar-item" data-module="parametres" onclick="switchModule('parametres')"><i class="fas fa-cog"></i> Paramètres</a>
     </nav>
     <div class="sidebar-user">
       <?php
@@ -1008,7 +1019,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
           </div>
           <div class="kpi-val" data-target="<?= (int) ($overviewKpis['active_projects'] ?? 0) ?>"><?= (int) ($overviewKpis['active_projects'] ?? 0) ?></div>
           <div class="kpi-label">Organisations actives</div>
-          <div class="kpi-bar"><div class="kpi-bar-fill" style="width:70%;background:var(--secondary)"></div></div>
+          <div class="kpi-bar"><div class="kpi-bar-fill" style="width:<?= (int) (($overviewKpis['active_projects'] ?? 0) > 0 ? 100 : 0) ?>%;background:var(--secondary)"></div></div>
         </div>
         <div class="kpi-card widget-handle">
           <div class="kpi-card-top">
@@ -1017,7 +1028,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
           </div>
           <div class="kpi-val" data-target="<?= (int) ($overviewKpis['submissions'] ?? 0) ?>"><?= (int) ($overviewKpis['submissions'] ?? 0) ?></div>
           <div class="kpi-label">Candidatures reçues</div>
-          <div class="kpi-bar"><div class="kpi-bar-fill" style="width:85%;background:var(--accent)"></div></div>
+          <div class="kpi-bar"><div class="kpi-bar-fill" style="width:<?= (int) (($overviewKpis['submissions'] ?? 0) > 0 ? 100 : 0) ?>%;background:var(--accent)"></div></div>
         </div>
         <div class="kpi-card widget-handle" onclick="switchModule('evaluations')" role="button" tabindex="0" title="Ouvrir les évaluations" style="cursor:pointer">
           <div class="kpi-card-top">
@@ -1026,7 +1037,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
           </div>
           <div class="kpi-val" data-target="<?= (int) ($overviewKpis['evaluated'] ?? 0) ?>"><?= (int) ($overviewKpis['evaluated'] ?? 0) ?></div>
           <div class="kpi-label">Évaluations complètes</div>
-          <div class="kpi-bar"><div class="kpi-bar-fill" style="width:76%;background:#7eb8e8"></div></div>
+          <div class="kpi-bar"><div class="kpi-bar-fill" style="width:<?= (int) min(100, ((int) ($overviewKpis['evaluated'] ?? 0) / $submissionTotal) * 100) ?>%;background:#7eb8e8"></div></div>
         </div>
         <div class="kpi-card widget-handle">
           <div class="kpi-card-top">
@@ -1035,7 +1046,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
           </div>
           <div class="kpi-val" data-target="<?= (int) ($overviewKpis['pending'] ?? 0) ?>"><?= (int) ($overviewKpis['pending'] ?? 0) ?></div>
           <div class="kpi-label">En attente d'évaluation</div>
-          <div class="kpi-bar"><div class="kpi-bar-fill" style="width:24%;background:var(--danger)"></div></div>
+          <div class="kpi-bar"><div class="kpi-bar-fill" style="width:<?= (int) min(100, ((int) ($overviewKpis['pending'] ?? 0) / $submissionTotal) * 100) ?>%;background:var(--danger)"></div></div>
         </div>
       </div>
 
@@ -1061,8 +1072,8 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
         <div class="chart-card">
           <div class="chart-card-header">
             <div>
-              <div class="chart-title">Répartition par pays</div>
-              <div class="chart-sub">Top 5 pays africains</div>
+              <div class="chart-title">Pays des candidatures et organisations</div>
+              <div class="chart-sub">Données détectées dans les formulaires et organisations</div>
             </div>
           </div>
           <canvas id="chartCountries" height="120"></canvas>
@@ -1083,17 +1094,17 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
           <div class="chart-title" style="text-align:center">Score global</div>
           <svg class="score-ring-big" viewBox="0 0 140 140" id="globalScoreRing">
             <circle cx="70" cy="70" r="56" fill="none" stroke="rgba(255,255,255,0.06)" stroke-width="10"/>
-            <circle cx="70" cy="70" r="56" fill="none" stroke="url(#ringGrad)" stroke-width="10" stroke-linecap="round" stroke-dasharray="351.9" stroke-dashoffset="88" transform="rotate(-90 70 70)" id="scoreRingCircle"/>
+            <circle cx="70" cy="70" r="56" fill="none" stroke="url(#ringGrad)" stroke-width="10" stroke-linecap="round" stroke-dasharray="351.9" stroke-dashoffset="<?= e((string) $scoreDashOffset) ?>" transform="rotate(-90 70 70)" id="scoreRingCircle"/>
             <defs>
               <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                 <stop offset="0%" stop-color="#2EAF7D"/>
                 <stop offset="100%" stop-color="#5dd5a8"/>
               </linearGradient>
             </defs>
-            <text x="70" y="65" text-anchor="middle" fill="#fff" font-size="28" font-weight="700" font-family="Poppins"><?= e((string) ($overviewKpis['weighted_average'] ?? 0)) ?></text>
-            <text x="70" y="82" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="11">/100 pts</text>
+            <text x="70" y="65" text-anchor="middle" fill="#fff" font-size="28" font-weight="700" font-family="Poppins"><?= e((string) $weightedAverage) ?></text>
+            <text x="70" y="82" text-anchor="middle" fill="rgba(255,255,255,0.4)" font-size="11">/20 pts</text>
           </svg>
-          <div style="text-align:center"><span class="badge badge-success"><i class="fas fa-arrow-up"></i> Excellent</span></div>
+          <div style="text-align:center"><span class="badge <?= $weightedAverage >= 11 ? 'badge-success' : 'badge-muted' ?>"><i class="fas fa-chart-line"></i> <?= e($scoreLabel) ?></span></div>
         </div>
         <div class="mini-cal-card">
           <div class="chart-title">Échéances à venir</div>
@@ -1181,6 +1192,9 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
         <?php foreach ($organisationProjects as $project): ?>
           <?php $projectStatus = (string) ($project['status'] ?? 'draft'); ?>
           <?php $projectCountry = strtoupper(trim((string) ($project['country_code'] ?? ''))); ?>
+          <?php $legalStatusIcon = ((string) ($project['legal_status'] ?? '')) === 'legal'
+              ? '<i class="fas fa-check-circle" style="color:#2EAF7D;font-size:18px;vertical-align:middle"></i>'
+              : '<i class="fas fa-times-circle" style="color:#E74C3C;font-size:18px;vertical-align:middle"></i>'; ?>
           <article class="project-card organisation-card" data-organisation-card data-name="<?= e(strtolower((string) ($project['organization'] ?: $project['title']))) ?>" data-title="<?= e(strtolower((string) $project['title'])) ?>" data-country="<?= e($projectCountry) ?>" data-status="<?= e($projectStatus) ?>" data-projects="<?= (int) ($project['project_count'] ?? 0) ?>" data-created="<?= e((string) ($project['created_at'] ?? '')) ?>">
             <div class="project-card-img" style="background:linear-gradient(135deg,#1a4a2a,#2EAF7D20)">
               <?php if (!empty($project['logo_path'])): ?><img src="<?= BASE_URL . '/' . e($project['logo_path']) ?>" alt="Logo <?= e($project['organization'] ?: $project['title']) ?>" style="width:100%;height:100%;object-fit:contain;padding:24px"><?php else: ?><i class="fas fa-building proj-icon" style="color:#2EAF7D"></i><?php endif; ?>
@@ -1193,7 +1207,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
               <div class="project-card-footer">
                 <div class="project-stat"><div class="project-stat-val"><?= (int) ($project['project_count'] ?? 0) ?></div><div class="project-stat-label">Activités déclarées</div></div>
                 <div class="project-stat"><div class="project-stat-val"><?= e($project['country_code'] ?: '—') ?></div><div class="project-stat-label">Pays</div></div>
-                <div class="project-stat"><div class="project-stat-val"><?= e($project['legal_status'] === 'legal' ? 'Oui' : 'Non') ?></div><div class="project-stat-label">Légale</div></div>
+                <div class="project-stat"><div class="project-stat-val"><?= $legalStatusIcon ?></div><div class="project-stat-label">Légale</div></div>
                 <div class="project-card-actions">
                   <button type="button" class="btn btn-icon btn-ghost-dark" title="Modifier" onclick='openOrganisationModal(<?= json_encode($project, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>)'><i class="fas fa-edit"></i></button>
                   <button type="button" class="btn btn-icon" style="background:rgba(231,76,60,0.15);color:var(--danger)" title="Supprimer" onclick='confirmOrganisationDelete(<?= (int) $project['id'] ?>, <?= json_encode($project['organization'] ?: $project['title'], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>)'><i class="fas fa-trash"></i></button>
@@ -1383,140 +1397,204 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
       <div id="formTab-galerie">
         <div class="filter-bar" style="margin-bottom:20px">
           <div class="filter-search"><i class="fas fa-search search-icon"></i><input type="text" placeholder="Rechercher un formulaire..."></div>
-          <select class="filter-select"><option>Toutes les organisations</option><option>Organisation CS4ME</option><option>Organisation partenaire</option></select>
+          <select class="filter-select"><option>Toutes les organisations</option><?php foreach (($projects ?? []) as $project): ?><option value="<?= (int) $project['id'] ?>"><?= e((string) ($project['title'] ?? $project['organization'] ?? 'Organisation')) ?></option><?php endforeach; ?></select>
           <select class="filter-select"><option>Tous les statuts</option><option>Publié</option><option>Brouillon</option></select>
         </div>
-        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
-          <div class="chart-card" style="cursor:pointer;transition:all 0.3s" onclick="switchFormTab('builder',null)" onmouseover="this.style.borderColor='rgba(46,175,125,0.4)'" onmouseout="this.style.borderColor='var(--border-dark)'">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
-              <span class="badge badge-success">Publié</span>
-              <span style="color:rgba(255,255,255,0.3);font-size:12px">12 nov. 2025</span>
-            </div>
-            <div style="color:#fff;font-weight:600;font-size:15px;margin-bottom:4px">Dossier de candidature AGRI</div>
-            <div style="color:rgba(255,255,255,0.4);font-size:13px;margin-bottom:16px">Programme AGRI-2025</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
-              <span class="badge badge-muted"><i class="fas fa-question-circle"></i> 12 champs</span>
-              <span class="badge badge-muted"><i class="fas fa-users"></i> 47 soumissions</span>
-            </div>
-            <div style="display:flex;gap:6px">
-              <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();switchFormTab('builder',null)"><i class="fas fa-edit"></i> Éditer</button>
-              <button class="btn btn-ghost-dark btn-sm" onclick="event.stopPropagation()"><i class="fas fa-eye"></i></button>
-              <button class="btn btn-ghost-dark btn-sm" onclick="event.stopPropagation()"><i class="fas fa-copy"></i></button>
-              <button class="btn btn-sm" style="background:rgba(231,76,60,0.15);color:var(--danger)" onclick="event.stopPropagation();confirmDelete()"><i class="fas fa-trash"></i></button>
-            </div>
+
+        <?php if (empty($forms)): ?>
+          <div class="chart-card" style="padding:24px; color: rgba(255,255,255,0.7); text-align:center;">
+            Aucun formulaire réel n’est encore enregistré dans la base de données.
           </div>
-          <div class="chart-card">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><span class="badge badge-success">Publié</span><span style="color:rgba(255,255,255,0.3);font-size:12px">8 oct. 2025</span></div>
-            <div style="color:#fff;font-weight:600;font-size:15px;margin-bottom:4px">Formulaire Innovation Tech</div>
-            <div style="color:rgba(255,255,255,0.4);font-size:13px;margin-bottom:16px">Fonds Innovation Technologique</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px"><span class="badge badge-muted"><i class="fas fa-question-circle"></i> 9 champs</span><span class="badge badge-muted"><i class="fas fa-users"></i> 83 soumissions</span></div>
-            <div style="display:flex;gap:6px"><button class="btn btn-ghost-dark btn-sm"><i class="fas fa-edit"></i> Éditer</button><button class="btn btn-ghost-dark btn-sm"><i class="fas fa-eye"></i></button></div>
+        <?php else: ?>
+          <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:16px">
+            <?php foreach ($forms as $formItem): ?>
+              <?php
+                $formStatus = strtolower((string) ($formItem['status'] ?? 'draft'));
+                $isPublished = $formStatus === 'published';
+                $layout = json_decode((string) ($formItem['layout_json'] ?? '[]'), true);
+                $fieldCount = is_array($layout) ? count($layout) : 0;
+                $projectName = trim((string) ($formItem['project_title'] ?? '')) !== '' ? $formItem['project_title'] : '—';
+                $createdAt = $formItem['created_at'] ?? '';
+                $dateLabel = $createdAt ? date('d M Y', strtotime((string) $createdAt)) : '—';
+                $formProjectId = (int) ($formItem['project_id'] ?? 0);
+                $formCriteriaOptions = $formCriteriaCatalog[$formProjectId] ?? [];
+                $formSelectedCriteria = ($formItem['criteria_mode'] ?? 'inherit') === 'selected'
+                  ? Form::criteriaForForm((int) $formItem['id'])
+                  : $formCriteriaOptions;
+                $formEditData = [
+                  'id' => (int) $formItem['id'], 'title' => (string) ($formItem['title'] ?? ''),
+                  'description' => (string) ($formItem['description'] ?? ''), 'project_id' => $formProjectId,
+                  'status' => $formStatus, 'layout_json' => (string) ($formItem['layout_json'] ?? '[]'),
+                  'criteria_mode' => (string) ($formItem['criteria_mode'] ?? 'inherit'),
+                  'criteria_ids' => array_map(static fn (array $item): int => (int) $item['id'], $formSelectedCriteria),
+                ];
+              ?>
+              <div class="chart-card" style="cursor:pointer;transition:all 0.3s" onclick='openFormEditModal(<?= json_encode($formEditData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>)' onmouseover="this.style.borderColor='rgba(46,175,125,0.4)'" onmouseout="this.style.borderColor='var(--border-dark)'">
+                <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+                  <span class="badge <?= $isPublished ? 'badge-success' : 'badge-muted' ?>"><?= $isPublished ? 'Publié' : 'Brouillon' ?></span>
+                  <span style="color:rgba(255,255,255,0.3);font-size:12px"><?= e($dateLabel) ?></span>
+                </div>
+                <div style="color:#fff;font-weight:600;font-size:15px;margin-bottom:4px"><?= e((string) ($formItem['title'] ?? 'Formulaire sans titre')) ?></div>
+                <div style="color:rgba(255,255,255,0.4);font-size:13px;margin-bottom:16px"><?= e($projectName) ?></div>
+                <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px">
+                  <span class="badge badge-muted"><i class="fas fa-question-circle"></i> <?= (int) $fieldCount ?> champ<?= $fieldCount > 1 ? 's' : '' ?></span>
+                  <span class="badge badge-muted"><i class="fas fa-users"></i> 0 soumission<?= $fieldCount === 0 ? '' : '' ?></span>
+                </div>
+                <div style="display:flex;gap:6px">
+                  <button class="btn btn-secondary btn-sm" data-edit-form-id="<?= (int) $formItem['id'] ?>" onclick='event.stopPropagation();openFormEditModal(<?= json_encode($formEditData, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>)'><i class="fas fa-edit"></i> Éditer</button>
+                  <button class="btn btn-ghost-dark btn-sm" onclick="event.stopPropagation()"><i class="fas fa-eye"></i></button>
+                  <button class="btn btn-ghost-dark btn-sm" onclick="event.stopPropagation()"><i class="fas fa-copy"></i></button>
+                  <button class="btn btn-sm" style="background:rgba(231,76,60,0.15);color:var(--danger)" title="Retirer le formulaire" onclick='event.stopPropagation();confirmFormDelete(<?= (int) $formItem['id'] ?>, <?= json_encode((string) ($formItem['title'] ?? 'Formulaire'), JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE) ?>)'><i class="fas fa-trash"></i></button>
+                </div>
+              </div>
+            <?php endforeach; ?>
           </div>
-          <div class="chart-card">
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px"><span class="badge badge-muted">Brouillon</span><span style="color:rgba(255,255,255,0.3);font-size:12px">2 déc. 2025</span></div>
-            <div style="color:#fff;font-weight:600;font-size:15px;margin-bottom:4px">Candidature Bourses 2026</div>
-            <div style="color:rgba(255,255,255,0.4);font-size:13px;margin-bottom:16px">Bourses d'Excellence 2026</div>
-            <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px"><span class="badge badge-muted"><i class="fas fa-question-circle"></i> 6 champs</span><span class="badge badge-muted"><i class="fas fa-users"></i> 0 soumissions</span></div>
-            <div style="display:flex;gap:6px"><button class="btn btn-secondary btn-sm"><i class="fas fa-rocket"></i> Publier</button><button class="btn btn-ghost-dark btn-sm"><i class="fas fa-edit"></i></button></div>
-          </div>
-        </div>
+        <?php endif; ?>
       </div>
 
       <!-- Builder -->
       <div id="formTab-builder" class="hidden">
-        <div class="canvas-toolbar">
-          <button class="btn btn-ghost-dark btn-sm"><i class="fas fa-undo"></i></button>
-          <button class="btn btn-ghost-dark btn-sm"><i class="fas fa-redo"></i></button>
-          <div style="width:1px;height:24px;background:var(--border-dark)"></div>
-          <button class="btn btn-ghost-dark btn-sm" onclick="$(this).toggleClass('active');$(this).css('color',$(this).hasClass('active')?'var(--secondary)':'')"><i class="fas fa-th"></i> Grille</button>
-          <button class="btn btn-ghost-dark btn-sm active" style="color:var(--secondary)"><i class="fas fa-magnet"></i> Magnétisme</button>
-          <div style="flex:1"></div>
-          <button class="btn btn-ghost-dark btn-sm"><i class="fas fa-eye"></i> Aperçu</button>
-          <button class="btn btn-ghost-dark btn-sm" onclick="showToast('Brouillon sauvegardé', 'success')"><i class="fas fa-save"></i> Brouillon</button>
-          <button class="btn btn-secondary btn-sm" onclick="showToast('Formulaire publié avec succès !', 'success')"><i class="fas fa-rocket"></i> Publier</button>
-        </div>
-        <div class="form-builder-wrap">
-          <div class="fb-sidebar">
-            <div class="fb-section-title">TEXTE</div>
-            <div class="fb-component"><i class="fas fa-heading"></i> Titre H1</div>
-            <div class="fb-component"><i class="fas fa-heading"></i> Titre H2</div>
-            <div class="fb-component"><i class="fas fa-paragraph"></i> Paragraphe</div>
-            <div class="fb-section-title" style="margin-top:12px">CHAMPS</div>
-            <div class="fb-component" draggable="true"><i class="fas fa-font"></i> Texte court</div>
-            <div class="fb-component" draggable="true"><i class="fas fa-envelope"></i> Email</div>
-            <div class="fb-component" draggable="true"><i class="fas fa-phone"></i> Téléphone</div>
-            <div class="fb-component" draggable="true"><i class="fas fa-hashtag"></i> Numérique</div>
-            <div class="fb-component" draggable="true"><i class="fas fa-calendar"></i> Date</div>
-            <div class="fb-component" draggable="true"><i class="fas fa-align-left"></i> Texte long</div>
-            <div class="fb-section-title" style="margin-top:12px">SÉLECTION</div>
-            <div class="fb-component" draggable="true"><i class="fas fa-check-square"></i> Case à cocher</div>
-            <div class="fb-component" draggable="true"><i class="fas fa-dot-circle"></i> Bouton radio</div>
-            <div class="fb-component" draggable="true"><i class="fas fa-list"></i> Liste déroulante</div>
-            <div class="fb-section-title" style="margin-top:12px">MÉDIAS</div>
-            <div class="fb-component" draggable="true"><i class="fas fa-upload"></i> Upload fichier</div>
-            <div class="fb-component" draggable="true"><i class="fas fa-image"></i> Upload image</div>
-            <div class="fb-section-title" style="margin-top:12px">STRUCTURE</div>
-            <div class="fb-component"><i class="fas fa-columns"></i> Grille 2 colonnes</div>
-            <div class="fb-component"><i class="fas fa-grip-horizontal"></i> Séparateur</div>
-          </div>
-          <div class="fb-canvas" id="fbCanvas">
-            <div class="fb-canvas-inner" id="fbCanvasInner">
-              <div class="canvas-element selected" id="elem1">
-                <div class="elem-label">Nom complet *</div>
-                <div class="elem-input-mock">Entrez votre nom et prénom...</div>
-                <div class="elem-controls"><button class="elem-btn" style="background:rgba(46,175,125,0.3);color:var(--secondary)"><i class="fas fa-edit"></i></button><button class="elem-btn" style="background:rgba(231,76,60,0.3);color:var(--danger)"><i class="fas fa-times"></i></button></div>
+        <div class="builder-shell-wrap builder-shell-dashboard">
+          <div class="builder-page">
+            <form method="post" action="<?= BASE_URL ?>/admin/forms" id="form-builder" class="builder-form-panel">
+              <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+              <input type="hidden" name="id" value="0">
+              <div class="builder-inline-header">
+                <div><span class="builder-inline-kicker">Constructeur de formulaire</span><h2>Créer ou modifier un formulaire</h2><p>Composez une expérience simple, claire et agréable pour vos candidats.</p></div>
+                <span class="builder-inline-status"><i class="fas fa-circle"></i> Brouillon</span>
               </div>
-              <div class="canvas-element" id="elem2">
-                <div class="elem-label">Adresse email *</div>
-                <div class="elem-input-mock"><i class="fas fa-envelope" style="margin-right:6px"></i> votre@email.com</div>
-                <div class="elem-controls"><button class="elem-btn" style="background:rgba(46,175,125,0.3);color:var(--secondary)"><i class="fas fa-edit"></i></button><button class="elem-btn" style="background:rgba(231,76,60,0.3);color:var(--danger)"><i class="fas fa-times"></i></button></div>
+              <div class="builder-meta">
+                <label>Titre <input required name="title" value="Nouveau formulaire" placeholder="Titre du formulaire"></label>
+                <label>Organisation liée
+                  <select name="project_id">
+                    <option value="">Aucune</option>
+                    <?php foreach (($projects ?? []) as $project): ?>
+                      <option value="<?= (int) $project['id'] ?>"><?= e((string) ($project['organization'] ?: $project['title'])) ?></option>
+                    <?php endforeach; ?>
+                  </select>
+                </label>
+                <label>Statut
+                  <select name="status">
+                    <option value="draft">Brouillon</option>
+                    <option value="published">Publié</option>
+                    <option value="archived">Archivé</option>
+                  </select>
+                </label>
               </div>
-              <div class="canvas-element" id="elem3">
-                <div class="elem-label">Description de l’organisation *</div>
-                <div class="elem-input-mock" style="height:70px;align-items:flex-start;padding-top:8px">Décrivez votre organisation, ses réalisations et son impact...</div>
-                <div class="elem-controls"><button class="elem-btn" style="background:rgba(46,175,125,0.3);color:var(--secondary)"><i class="fas fa-edit"></i></button><button class="elem-btn" style="background:rgba(231,76,60,0.3);color:var(--danger)"><i class="fas fa-times"></i></button></div>
+              <label class="builder-description">Description <textarea name="description" rows="2" placeholder="Objectif et consignes du formulaire"></textarea></label>
+              <div class="builder-workspace">
+                <aside class="builder-tools">
+                  <strong>Éléments</strong>
+                  <div id="element-palette"></div>
+                  <hr>
+                  <button type="button" id="toggle-grid">Grille : active</button>
+                  <button type="button" id="split-element">Scinder</button>
+                  <button type="button" id="duplicate-element">Dupliquer</button>
+                  <button type="button" id="delete-element">Supprimer</button>
+                </aside>
+                <section>
+                  <div class="builder-toolbar">
+                    <span>Glissez les blocs ou utilisez les poignées pour les redimensionner.</span>
+                    <button type="button" id="undo-builder">Annuler</button>
+                    <button type="button" id="redo-builder">Rétablir</button>
+                  </div>
+                  <div id="builder-canvas" class="grid-on" aria-label="Canvas du formulaire"></div>
+                </section>
+                <aside class="builder-properties">
+                  <strong>Propriétés</strong>
+                  <div id="property-empty">Sélectionnez un élément.</div>
+                  <div id="property-editor" hidden>
+                    <label>Libellé <input data-prop="label"></label>
+                    <label>Nom technique <input data-prop="name" pattern="[A-Za-z0-9_-]+" title="Lettres, chiffres, tirets et underscores uniquement"></label>
+                    <label>Texte d’aide <input data-prop="placeholder"></label>
+                    <label>Type <select data-prop="type"></select></label>
+                    <label>Options (une par ligne) <textarea data-prop="options" rows="3"></textarea></label>
+                    <label><input type="checkbox" data-prop="required"> Obligatoire</label>
+                    <label>Colonnes <input type="range" min="1" max="12" data-prop="span"><output data-out="span"></output></label>
+                    <label>Lignes <input type="range" min="1" max="6" data-prop="rowSpan"><output data-out="rowSpan"></output></label>
+                    <label>Échelle <input type="range" min="75" max="125" data-prop="scale"><output data-out="scale"></output>%</label>
+                    <label>Fond <input type="color" data-prop="background"></label>
+                    <label>Texte <input type="color" data-prop="color"></label>
+                    <label>Rayon <input type="range" min="0" max="24" data-prop="radius"><output data-out="radius"></output>px</label>
+                  </div>
+                </aside>
               </div>
-              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
-                <div class="canvas-element" id="elem4">
-                  <div class="elem-label">Pays</div>
-                  <div class="elem-input-mock"><i class="fas fa-globe-africa" style="margin-right:6px"></i> Sélectionner...</div>
-                  <div class="elem-controls"><button class="elem-btn" style="background:rgba(46,175,125,0.3);color:var(--secondary)"><i class="fas fa-edit"></i></button><button class="elem-btn" style="background:rgba(231,76,60,0.3);color:var(--danger)"><i class="fas fa-times"></i></button></div>
-                </div>
-                <div class="canvas-element" id="elem5">
-                  <div class="elem-label">Budget demandé (FCFA)</div>
-                  <div class="elem-input-mock">0</div>
-                  <div class="elem-controls"><button class="elem-btn" style="background:rgba(46,175,125,0.3);color:var(--secondary)"><i class="fas fa-edit"></i></button><button class="elem-btn" style="background:rgba(231,76,60,0.3);color:var(--danger)"><i class="fas fa-times"></i></button></div>
-                </div>
+              <input type="hidden" id="layout_json" name="layout_json" value='[]'>
+              <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:16px;">
+                <button type="button" class="btn btn-ghost-dark btn-sm" onclick="showToast('Brouillon sauvegardé', 'success')"><i class="fas fa-save"></i> Brouillon</button>
+                <button class="btn btn-secondary btn-sm" type="submit"><i class="fas fa-rocket"></i> Enregistrer</button>
               </div>
-                <input type="hidden" id="fb_layout_json" value="[]">
-              <div class="canvas-element" id="elem6">
-                <div class="elem-label">Document de présentation (PDF)</div>
-                <div style="height:60px;background:rgba(255,255,255,0.03);border:2px dashed rgba(255,255,255,0.1);border-radius:6px;display:flex;align-items:center;justify-content:center;gap:8px;color:rgba(255,255,255,0.2);font-size:13px"><i class="fas fa-cloud-upload-alt"></i> Glissez ou cliquez pour uploader</div>
-                <div class="elem-controls"><button class="elem-btn" style="background:rgba(46,175,125,0.3);color:var(--secondary)"><i class="fas fa-edit"></i></button><button class="elem-btn" style="background:rgba(231,76,60,0.3);color:var(--danger)"><i class="fas fa-times"></i></button></div>
-              </div>
-            </div>
-          </div>
-          <div class="fb-props">
-            <div class="fb-section-title">PROPRIÉTÉS DE L'ÉLÉMENT</div>
-            <div style="background:rgba(46,175,125,0.08);border:1px solid rgba(46,175,125,0.2);border-radius:8px;padding:10px;margin-bottom:16px;display:flex;align-items:center;gap:8px">
-              <i class="fas fa-font" style="color:var(--secondary)"></i>
-              <span style="color:var(--secondary);font-size:13px">Champ texte sélectionné</span>
-            </div>
-            <div style="margin-bottom:12px"><label style="color:rgba(255,255,255,0.5);font-size:11px;display:block;margin-bottom:6px">LIBELLÉ</label><input class="form-input-dark" style="width:100%" value="Nom complet"></div>
-            <div style="margin-bottom:12px"><label style="color:rgba(255,255,255,0.5);font-size:11px;display:block;margin-bottom:6px">PLACEHOLDER</label><input class="form-input-dark" style="width:100%" value="Entrez votre nom et prénom..."></div>
-            <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;padding:8px 0;border-bottom:1px solid var(--border-dark)"><span style="color:rgba(255,255,255,0.6);font-size:13px">Obligatoire</span><div class="toggle-switch on" onclick="$(this).toggleClass('on')"><div class="toggle-knob"></div></div></div>
-            <div class="fb-section-title" style="margin-top:16px">STYLE</div>
-            <div style="margin-bottom:12px"><label style="color:rgba(255,255,255,0.5);font-size:11px;display:block;margin-bottom:6px">LARGEUR</label><input type="range" min="25" max="100" value="100" style="width:100%;accent-color:var(--secondary)"></div>
-            <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px">
-              <div><label style="color:rgba(255,255,255,0.5);font-size:11px;display:block;margin-bottom:6px">TAILLE POLICE</label><input class="form-input-dark" style="width:100%" value="14" type="number"></div>
-              <div><label style="color:rgba(255,255,255,0.5);font-size:11px;display:block;margin-bottom:6px">BORDURE (px)</label><input class="form-input-dark" style="width:100%" value="1" type="number"></div>
-            </div>
-            <div class="fb-section-title" style="margin-top:16px">VALIDATION</div>
-            <div style="margin-bottom:12px"><label style="color:rgba(255,255,255,0.5);font-size:11px;display:block;margin-bottom:6px">LONGUEUR MIN</label><input class="form-input-dark" style="width:100%" value="3" type="number"></div>
-            <div style="margin-bottom:12px"><label style="color:rgba(255,255,255,0.5);font-size:11px;display:block;margin-bottom:6px">MESSAGE D'ERREUR</label><input class="form-input-dark" style="width:100%" value="Ce champ est obligatoire"></div>
+            </form>
           </div>
         </div>
       </div>
+
+      <style>
+        /* Embedded form builder used by the dashboard. */
+        .builder-shell-dashboard { margin-top: 18px; }
+        .builder-shell-dashboard .builder-page { max-width: none; padding: 0; }
+        .builder-form-panel { padding: 24px; border: 1px solid var(--border-dark); border-radius: 16px; background: linear-gradient(145deg, #202031, #1b1b2b); box-shadow: 0 16px 40px rgba(0,0,0,.18); }
+        .builder-inline-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; margin-bottom: 24px; padding-bottom: 20px; border-bottom: 1px solid rgba(255,255,255,.08); }
+        .builder-inline-kicker { color: var(--secondary); font-size: 10px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+        .builder-inline-header h2 { margin: 5px 0 4px; color: #fff; font-family: Poppins, Inter, sans-serif; font-size: 20px; }
+        .builder-inline-header p { color: rgba(255,255,255,.42); font-size: 12px; }
+        .builder-inline-status { display: inline-flex; align-items: center; gap: 7px; padding: 7px 11px; border: 1px solid rgba(245,166,35,.25); border-radius: 999px; color: #f8c66e; background: rgba(245,166,35,.08); font-size: 11px; font-weight: 700; white-space: nowrap; }
+        .builder-inline-status i { font-size: 7px; }
+        .builder-form-panel .builder-meta { display: grid; grid-template-columns: minmax(230px, 1.7fr) minmax(190px, 1fr) minmax(150px, .7fr); gap: 14px; margin: 0 0 14px; }
+        .builder-form-panel .builder-meta label, .builder-form-panel .builder-description, .builder-form-panel .builder-properties label { display: grid; gap: 7px; color: rgba(255,255,255,.62); font-size: 11px; font-weight: 700; }
+        .builder-form-panel .builder-meta input, .builder-form-panel .builder-meta select, .builder-form-panel .builder-description textarea, .builder-form-panel .builder-properties input, .builder-form-panel .builder-properties select, .builder-form-panel .builder-properties textarea { width: 100%; box-sizing: border-box; min-height: 38px; padding: 9px 11px; border: 1px solid rgba(255,255,255,.11); border-radius: 8px; outline: none; color: #f7f8fa; background: #2a2a3c; font: inherit; font-size: 12px; transition: border-color .2s, background .2s, box-shadow .2s; }
+        .builder-form-panel .builder-meta input:focus, .builder-form-panel .builder-meta select:focus, .builder-form-panel .builder-description textarea:focus, .builder-form-panel .builder-properties input:focus, .builder-form-panel .builder-properties select:focus, .builder-form-panel .builder-properties textarea:focus { border-color: var(--secondary); background: #303044; box-shadow: 0 0 0 3px rgba(46,175,125,.12); }
+        .builder-form-panel .builder-description { margin: 0 0 18px; }
+        .builder-form-panel .builder-description textarea { min-height: 64px; resize: vertical; line-height: 1.5; }
+        .builder-form-panel .builder-workspace { display: grid; grid-template-columns: 190px minmax(0, 1fr) 248px; gap: 14px; align-items: start; }
+        .builder-form-panel .builder-tools, .builder-form-panel .builder-properties, .builder-form-panel .builder-toolbar { border: 1px solid rgba(255,255,255,.1); border-radius: 12px; background: rgba(255,255,255,.035); box-shadow: none; }
+        .builder-form-panel .builder-tools, .builder-form-panel .builder-properties { padding: 13px; }
+        .builder-form-panel .builder-tools { display: grid; gap: 7px; position: sticky; top: 16px; }
+        .builder-form-panel .builder-tools > strong, .builder-form-panel .builder-properties > strong { padding-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,.08); color: #fff; font-size: 12px; letter-spacing: .04em; }
+        .builder-form-panel #element-palette { display: grid; gap: 6px; padding: 12px 0; }
+        .builder-form-panel .builder-tools button, .builder-form-panel #element-palette button { display: flex; align-items: center; width: 100%; min-height: 32px; padding: 7px 9px; border: 1px solid rgba(255,255,255,.08); border-radius: 7px; color: rgba(255,255,255,.68); background: rgba(255,255,255,.045); cursor: pointer; font: inherit; font-size: 11px; text-align: left; transition: .2s; }
+        .builder-form-panel .builder-tools button:hover, .builder-form-panel #element-palette button:hover { border-color: rgba(46,175,125,.55); color: #a8e8ce; background: rgba(46,175,125,.12); transform: translateX(2px); }
+        .builder-form-panel .builder-tools hr { width: 100%; border: 0; border-top: 1px solid rgba(255,255,255,.08); }
+        .builder-form-panel .builder-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 52px; margin-bottom: 10px; padding: 10px 13px; color: rgba(255,255,255,.48); font-size: 11px; }
+        .builder-form-panel .builder-toolbar button { width: auto; min-height: 29px; margin-left: 5px; padding: 5px 9px; border: 1px solid rgba(255,255,255,.12); border-radius: 6px; color: rgba(255,255,255,.68); background: transparent; font-size: 11px; }
+        .builder-form-panel .builder-toolbar button:hover { border-color: var(--secondary); color: #fff; background: rgba(46,175,125,.1); }
+        .builder-form-panel #builder-canvas { position: relative; display: grid; grid-template-columns: repeat(24, minmax(0, 1fr)); grid-auto-rows: minmax(68px, auto); gap: 10px; min-height: 540px; padding: 16px; border: 1px solid rgba(255,255,255,.12); border-radius: 12px; background-color: #242437; background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px); background-size: 12px 12px; }
+        .builder-form-panel #builder-canvas:not(.grid-on) { background-image: none; }
+        .builder-form-panel .builder-element { min-width: 0; padding: 11px; border: 1px solid rgba(255,255,255,.15); border-radius: var(--builder-radius); color: var(--builder-color); background: var(--builder-bg); box-shadow: 0 4px 12px rgba(0,0,0,.14); }
+        .builder-form-panel .builder-element:hover { border-color: rgba(46,175,125,.65); }
+        .builder-form-panel .builder-element.selected { outline: 2px solid var(--secondary); box-shadow: 0 0 0 4px rgba(46,175,125,.14), 0 6px 16px rgba(0,0,0,.2); }
+        .builder-form-panel .edge-handle, .builder-form-panel .corner-handle, .builder-form-panel .scale-handle { display: none; position: absolute; z-index: 999; pointer-events: auto; touch-action: none; background: var(--secondary); border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,.35); }
+        .builder-form-panel .builder-element.selected .edge-handle, .builder-form-panel .builder-element.selected .corner-handle, .builder-form-panel .builder-element.selected .scale-handle { display: block; }
+        .builder-form-panel .edge-left, .builder-form-panel .edge-right { top: 18%; bottom: 18%; width: 14px; border-radius: 4px; cursor: ew-resize; }
+        .builder-form-panel .edge-left { left: -8px; } .builder-form-panel .edge-right { right: -8px; }
+        .builder-form-panel .edge-top, .builder-form-panel .edge-bottom { left: 18%; right: 18%; height: 14px; border-radius: 4px; cursor: ns-resize; }
+        .builder-form-panel .edge-top { top: -8px; } .builder-form-panel .edge-bottom { bottom: -8px; }
+        .builder-form-panel .corner-handle { width: 18px; height: 18px; border-radius: 50%; }
+        .builder-form-panel .corner-tl { top: -10px; left: -10px; cursor: nwse-resize; } .builder-form-panel .corner-tr { top: -10px; right: -10px; cursor: nesw-resize; }
+        .builder-form-panel .corner-bl { bottom: -10px; left: -10px; cursor: nesw-resize; } .builder-form-panel .corner-br { bottom: -10px; right: -10px; cursor: nwse-resize; }
+        .builder-form-panel .scale-handle { right: -12px; bottom: -12px; width: 24px; height: 24px; border-radius: 50%; background: #f5a623; cursor: nwse-resize; }
+        .builder-form-panel .builder-element-head { display: flex; align-items: center; justify-content: space-between; gap: 7px; color: rgba(255,255,255,.48); font-size: 10px; }
+        .builder-form-panel .builder-element-head button { width: auto; min-height: 0; padding: 0; border: 0; color: var(--danger); background: transparent; font-size: 18px; }
+        .builder-form-panel .builder-element input, .builder-form-panel .builder-element textarea, .builder-form-panel .builder-element select { width: 100%; box-sizing: border-box; padding: 7px; border: 1px solid #ccd6e0; border-radius: 6px; background: #fff; }
+        .builder-form-panel .builder-properties { position: sticky; top: 16px; }
+        .builder-form-panel .builder-properties label { margin: 10px 0; }
+        .builder-form-panel .builder-properties output { margin-left: 5px; color: var(--secondary); }
+        .builder-form-panel .builder-properties input[type=range] { min-height: 0; padding: 0; accent-color: var(--secondary); }
+        .builder-form-panel .builder-properties input[type=color] { min-height: 31px; padding: 2px; }
+        .builder-form-panel .builder-properties [data-prop=required] { width: auto; min-height: 0; }
+        .builder-form-panel .builder-properties label:has([data-prop=required]) { display: flex; align-items: center; gap: 7px; }
+        .builder-form-panel .builder-advanced-properties { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.08); }
+        .builder-form-panel .builder-property-title { margin: 16px 0 8px; color: var(--secondary); font-size: 9px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; }
+        .builder-form-panel .builder-property-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+        .builder-form-panel .builder-property-grid.four { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px; }
+        .builder-form-panel .builder-property-grid label { min-width: 0; }
+        .builder-form-panel .builder-property-grid label > span { display: grid; grid-template-columns: minmax(0, 1fr) 54px; gap: 4px; }
+        .builder-form-panel .builder-range-line { display: flex; align-items: center; gap: 6px; }
+        .builder-form-panel .builder-range-line input { min-width: 0; }
+        .builder-form-panel .builder-range-line output { min-width: 27px; }
+        @media (max-width: 1080px) { .builder-form-panel .builder-workspace { grid-template-columns: 180px minmax(0, 1fr); } .builder-form-panel .builder-properties { grid-column: 1 / -1; position: static; } }
+        @media (max-width: 700px) { .builder-form-panel { padding: 16px; } .builder-inline-header { flex-direction: column; } .builder-form-panel .builder-meta, .builder-form-panel .builder-workspace { grid-template-columns: 1fr; } .builder-form-panel .builder-tools, .builder-form-panel .builder-properties { position: static; } .builder-form-panel #element-palette { grid-template-columns: repeat(2, minmax(0, 1fr)); } .builder-form-panel #builder-canvas { min-height: 420px; padding: 10px; } }
+      </style>
 
       <!-- Planning -->
       <div id="formTab-planning" class="hidden">
@@ -1666,9 +1744,10 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
         <table class="dash-table">
           <thead><tr><th>#Réf</th><th>Candidat</th><th>Pays</th><th>Organisation</th><th>Soumis le</th><th>Statut</th><th>Action</th></tr></thead>
           <tbody>
-            <tr style="cursor:pointer" onclick="showEvalForm()"><td class="font-mono" style="color:var(--secondary)">AGRI-047</td><td><div class="candidate-name"><div class="candidate-av" style="background:var(--secondary)">AK</div> Amara Konaté</div></td><td>🇨🇮 Côte d'Ivoire</td><td>AGRI-2025</td><td>12 nov. 2025</td><td><span class="badge badge-warning">En révision</span></td><td><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();showEvalForm()"><i class="fas fa-star"></i> Évaluer</button></td></tr>
-            <tr><td class="font-mono" style="color:var(--secondary)">AGRI-046</td><td><div class="candidate-name"><div class="candidate-av" style="background:#e67e22">JN</div> Jean Ngoma</div></td><td>🇨🇲 Cameroun</td><td>AGRI-2025</td><td>11 nov. 2025</td><td><span class="badge badge-info">Soumis</span></td><td><button class="btn btn-ghost-dark btn-sm"><i class="fas fa-star"></i> Évaluer</button></td></tr>
-            <tr><td class="font-mono" style="color:var(--secondary)">AGRI-045</td><td><div class="candidate-name"><div class="candidate-av" style="background:#9b59b6">OB</div> Omar Ba</div></td><td>🇬🇳 Guinée</td><td>AGRI-2025</td><td>10 nov. 2025</td><td><span class="badge badge-info">Soumis</span></td><td><button class="btn btn-ghost-dark btn-sm"><i class="fas fa-star"></i> Évaluer</button></td></tr>
+            <?php foreach ($overviewPending as $submission): ?>
+              <tr style="cursor:pointer" onclick="showEvalForm()"><td class="font-mono" style="color:var(--secondary)">#<?= (int) ($submission['id'] ?? 0) ?></td><td><?= e($submission['candidate_name'] ?: $submission['candidate_email']) ?></td><td><?= e($submission['country_code'] ?: '—') ?></td><td><?= e($submission['organization'] ?: '—') ?></td><td><?= e((string) ($submission['submitted_at'] ?? '—')) ?></td><td><span class="badge badge-warning"><?= e(ucfirst((string) ($submission['status'] ?? 'pending'))) ?></span></td><td><button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();showEvalForm()"><i class="fas fa-star"></i> Évaluer</button></td></tr>
+            <?php endforeach; ?>
+            <?php if (!$overviewPending): ?><tr><td colspan="7">Aucune candidature en attente d'évaluation.</td></tr><?php endif; ?>
           </tbody>
         </table>
       </div>
@@ -1869,7 +1948,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
                     <div style="grid-column:1/-1"><strong>Chemin:</strong> <?= e((string) ($databaseInfo['path'] ?? '—')) ?></div>
                   </div>
                   <?php if (!empty($databaseInfo['error'])): ?><div class="settings-desc" style="color:var(--danger);margin-top:8px"><?= e((string) $databaseInfo['error']) ?></div><?php endif; ?>
-                  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px"><a class="btn btn-ghost-dark btn-sm" href="<?= BASE_URL ?>/admin/database/export"><i class="fas fa-download"></i> Exporter la base</a><input id="databaseImportFile" type="file" accept=".sqlite,.db" hidden><button type="button" class="btn btn-ghost-dark btn-sm" onclick="document.getElementById('databaseImportFile').click()"><i class="fas fa-upload"></i> Importer une base</button><span id="databaseImportStatus" class="settings-desc"></span></div>
+                  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px"><a class="btn btn-ghost-dark btn-sm" href="<?= BASE_URL ?>/admin/database/export"><i class="fas fa-download"></i> Sauvegarder la base</a><input id="databaseImportFile" type="file" accept=".sqlite,.db" hidden><button type="button" class="btn btn-ghost-dark btn-sm" onclick="document.getElementById('databaseImportFile').click()"><i class="fas fa-upload"></i> Importer une base</button><button id="databaseResetBtn" type="button" class="btn btn-sm" style="background:rgba(231,76,60,0.15);color:var(--danger)"><i class="fas fa-trash-alt"></i> Vider et réinitialiser</button><span id="databaseImportStatus" class="settings-desc"></span></div>
                 </div>
               <?php endif; ?>
             </div>
@@ -2006,7 +2085,7 @@ body { font-family: 'Inter', sans-serif; color: var(--text-main); background: va
       <div class="organisation-edit-heading"><div class="organisation-edit-icon"><i class="fas fa-building"></i></div><div><div class="organisation-edit-eyebrow">Référentiel</div><div class="modal-title" id="organisationModalTitle">Nouvelle organisation</div><div class="organisation-edit-subtitle">Créez une fiche claire et complète pour le suivi des évaluations.</div></div></div>
       <button class="modal-close" onclick="$('#modalNewProject').removeClass('open')"><i class="fas fa-times"></i></button>
     </div>
-    <form method="post" action="<?= BASE_URL ?>/admin/projects" enctype="multipart/form-data">
+    <form method="post" action="<?= BASE_URL ?>/admin/organisations" enctype="multipart/form-data">
       <div class="modal-body organisation-modal-body">
         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
         <input type="hidden" name="id" value="0">
@@ -2593,9 +2672,56 @@ else initOrganisationFilters();
           <label class="form-label">Organisation liée *<select name="project_id" required class="form-input-dark" style="width:100%"><option value="">Choisir une organisation</option><?php foreach (($projects ?? []) as $project): ?><option value="<?= (int) $project['id'] ?>"><?= e((string) ($project['organization'] ?: $project['title'])) ?></option><?php endforeach; ?></select></label>
           <label class="form-label">Description<textarea name="description" class="form-input-dark" style="width:100%;min-height:90px" placeholder="Objectif et consignes du formulaire"></textarea></label>
           <label class="form-label">Statut<select name="status" class="form-input-dark" style="width:100%"><option value="draft">Brouillon — construire avant publication</option><option value="published">Publié — disponible selon le planning</option></select></label>
+          <input type="hidden" name="criteria_selection_submitted" value="1">
+          <div class="edit-form-criteria-head"><div><strong>Critères demandés aux candidats</strong><small>Les critères de l’organisation sont chargés automatiquement. Désélectionnez ceux qui ne concernent pas ce formulaire.</small></div><a href="<?= BASE_URL ?>/admin/criteria" target="_blank" rel="noopener">Gérer les critères</a></div>
+          <div id="newFormCriteriaList" class="edit-form-criteria-list"></div>
+          <p id="newFormCriteriaEmpty" class="edit-form-criteria-empty" hidden>Choisissez une organisation pour charger ses critères.</p>
         </div>
       </div>
       <div class="modal-footer"><button type="button" class="btn btn-ghost-dark" onclick="$('#modalNewForm').removeClass('open')">Annuler</button><button type="submit" class="btn btn-secondary"><i class="fas fa-arrow-right"></i> Créer et ouvrir le builder</button></div>
+    </form>
+  </div>
+</div>
+
+<style>
+  .edit-form-grid { display:grid; grid-template-columns:1.5fr 1fr .75fr; gap:14px; margin-bottom:16px; }
+  .edit-form-criteria-head { display:flex; align-items:center; justify-content:space-between; gap:16px; margin-top:18px; padding:12px 0; border-top:1px solid rgba(255,255,255,.08); }
+  .edit-form-criteria-head strong { display:block; color:#fff; font-size:14px; }
+  .edit-form-criteria-head small { display:block; margin-top:4px; color:rgba(255,255,255,.45); }
+  .edit-form-criteria-head a { color:var(--secondary); font-size:12px; white-space:nowrap; }
+  .edit-form-criteria-list { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; max-height:250px; overflow:auto; }
+  .edit-form-criteria-item { display:flex; gap:9px; align-items:flex-start; padding:11px; border:1px solid rgba(255,255,255,.1); border-radius:9px; background:rgba(255,255,255,.035); cursor:pointer; }
+  .edit-form-criteria-item:has(input:checked) { border-color:rgba(46,175,125,.7); background:rgba(46,175,125,.1); }
+  .edit-form-criteria-item input { margin-top:3px; accent-color:var(--secondary); }
+  .edit-form-criteria-item span { display:grid; gap:3px; color:rgba(255,255,255,.85); font-size:12px; }
+  .edit-form-criteria-item small { color:rgba(255,255,255,.42); line-height:1.35; }
+  .edit-form-criteria-empty { padding:14px; border:1px dashed rgba(255,255,255,.15); border-radius:9px; color:rgba(255,255,255,.5); }
+  @media(max-width:760px){.edit-form-grid,.edit-form-criteria-list{grid-template-columns:1fr}.edit-form-criteria-head{align-items:flex-start;flex-direction:column}}
+</style>
+<div class="modal-overlay" id="modalEditForm" onclick="if(event.target===this)$(this).removeClass('open')">
+  <div class="modal" style="max-width:760px">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fas fa-file-pen" style="color:var(--secondary);margin-right:8px"></i> Modifier le formulaire</div>
+      <button type="button" class="modal-close" onclick="$('#modalEditForm').removeClass('open')"><i class="fas fa-times"></i></button>
+    </div>
+    <form method="post" action="<?= BASE_URL ?>/admin/forms" id="editFormModalForm">
+      <div class="modal-body">
+        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+        <input type="hidden" name="id" id="editFormId">
+        <input type="hidden" name="layout_json" id="editFormLayout">
+        <input type="hidden" name="return_url" value="<?= e($currentReturnUrl) ?>">
+        <input type="hidden" name="criteria_selection_submitted" value="1">
+        <div class="edit-form-grid">
+          <label class="form-label">Titre du formulaire *<input required name="title" id="editFormTitle" class="form-input-dark" style="width:100%"></label>
+          <label class="form-label">Organisation liée<select required name="project_id" id="editFormProject" class="form-input-dark" style="width:100%"><option value="">Choisir une organisation</option><?php foreach (($projects ?? []) as $project): ?><option value="<?= (int) $project['id'] ?>"><?= e((string) ($project['organization'] ?: $project['title'])) ?></option><?php endforeach; ?></select></label>
+          <label class="form-label">Statut<select name="status" id="editFormStatus" class="form-input-dark" style="width:100%"><option value="draft">Brouillon</option><option value="published">Publié</option><option value="archived">Archivé</option></select></label>
+        </div>
+        <label class="form-label">Description<textarea name="description" id="editFormDescription" class="form-input-dark" style="width:100%;min-height:90px"></textarea></label>
+        <div class="edit-form-criteria-head"><div><strong>Critères demandés aux candidats</strong><small>Sélectionnez exactement les critères à afficher pour ce formulaire.</small></div><a href="<?= BASE_URL ?>/admin/criteria" target="_blank" rel="noopener">Gérer les critères</a></div>
+        <div id="editFormCriteriaList" class="edit-form-criteria-list"></div>
+        <p id="editFormCriteriaEmpty" class="edit-form-criteria-empty" hidden>Cette organisation ne possède encore aucun critère.</p>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-ghost-dark" onclick="$('#modalEditForm').removeClass('open')">Annuler</button><button type="submit" class="btn btn-secondary"><i class="fas fa-save"></i> Enregistrer les modifications</button></div>
     </form>
   </div>
 </div>
@@ -2615,7 +2741,7 @@ else initOrganisationFilters();
       </div>
       <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px">
         <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Date</label><input type="date" name="session_date" required class="form-input-dark" style="width:100%"></div>
-        <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Date fin</label><input type="date" class="form-input-dark" style="width:100%"></div>
+        <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Date fin</label><input type="date" name="end_date" class="form-input-dark" style="width:100%"></div>
         <div><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Capacité</label><input type="number" name="capacity" class="form-input-dark" style="width:100%" value="50" min="1"></div>
       </div>
       <div style="margin-bottom:16px"><label class="form-label" style="color:rgba(255,255,255,0.6);font-size:13px;display:block;margin-bottom:6px">Critères de la formation</label><div id="trainingCriteriaPicker" class="training-modal-criteria"><span style="color:rgba(255,255,255,.4);font-size:12px">Sélectionnez une organisation pour choisir les critères.</span></div><small style="display:block;color:rgba(255,255,255,.35);font-size:11px;margin-top:6px">Si aucun critère n’est sélectionné, tous les critères de l’organisation seront associés.</small></div>
@@ -2651,14 +2777,36 @@ else initOrganisationFilters();
       <button class="modal-close" onclick="$('#modalDelete').removeClass('open')"><i class="fas fa-times"></i></button>
     </div>
     <div class="modal-body">
-      <p style="color:rgba(255,255,255,0.7);font-size:14px;line-height:1.6">Êtes-vous sûr de vouloir supprimer <strong id="organisationDeleteName" style="color:#fff"></strong> ? Cette action est <strong style="color:var(--danger)">irréversible</strong>.</p>
+      <p style="color:rgba(255,255,255,0.7);font-size:14px;line-height:1.6">Retirer <strong id="organisationDeleteName" style="color:#fff"></strong> des organisations actives ? Ses formulaires, critères, réponses et historiques seront conservés.</p>
     </div>
     <div class="modal-footer">
       <button class="btn btn-ghost-dark" onclick="$('#modalDelete').removeClass('open')">Annuler</button>
-      <form method="post" action="<?= BASE_URL ?>/admin/projects/delete" id="organisationDeleteForm">
+          <form method="post" action="<?= BASE_URL ?>/admin/organisations/delete" id="organisationDeleteForm">
         <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
         <input type="hidden" name="id" id="organisationDeleteId" value="">
-        <button class="btn btn-danger" type="submit"><i class="fas fa-trash"></i> Supprimer définitivement</button>
+        <input type="hidden" name="return_url" value="<?= e($currentReturnUrl) ?>">
+        <button class="btn btn-danger" type="submit"><i class="fas fa-box-archive"></i> Retirer l’organisation</button>
+      </form>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modalFormDelete" onclick="if(event.target===this)$(this).removeClass('open')">
+  <div class="modal" style="max-width:440px">
+    <div class="modal-header">
+      <div class="modal-title"><i class="fas fa-file-circle-xmark" style="color:var(--danger);margin-right:8px"></i> Retirer le formulaire</div>
+      <button type="button" class="modal-close" onclick="$('#modalFormDelete').removeClass('open')"><i class="fas fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="color:rgba(255,255,255,0.7);font-size:14px;line-height:1.6">Retirer <strong id="formDeleteName" style="color:#fff"></strong> ? Ses réponses, évaluations, critères et historiques seront conservés.</p>
+    </div>
+    <div class="modal-footer">
+      <button type="button" class="btn btn-ghost-dark" onclick="$('#modalFormDelete').removeClass('open')">Annuler</button>
+      <form method="post" action="<?= BASE_URL ?>/admin/forms/delete" id="formDeleteForm">
+        <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
+        <input type="hidden" name="id" id="formDeleteId" value="">
+        <input type="hidden" name="return_url" value="<?= e($currentReturnUrl) ?>">
+        <button class="btn btn-danger" type="submit"><i class="fas fa-box-archive"></i> Retirer le formulaire</button>
       </form>
     </div>
   </div>
@@ -2770,7 +2918,7 @@ function showPage(name) {
 
 function loginToDash() {
   showPage('dashboard');
-  setTimeout(() => initCharts(), 300);
+  setTimeout(() => initDashboardCharts(), 300);
   animateKPIs();
 }
 
@@ -2792,16 +2940,93 @@ const DASHBOARD_MODULE_STORAGE_KEY = 'criteval.activeModule';
 const sidebarModuleCounts = <?= json_encode($moduleCounts, JSON_UNESCAPED_SLASHES) ?>;
 const dashboardRoleDefaults = <?= json_encode($rolePermissionDefaults, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
 const overviewData = <?= json_encode($overview, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE) ?>;
+window.__CRITEVAL_DASHBOARD__ = true;
+
+function notificationReadMeta() {
+  try {
+    const raw = localStorage.getItem('criteval_read_notifications');
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
+    if (Array.isArray(parsed)) {
+      const result = {};
+      parsed.forEach(function (id) { if (id) result[id] = Date.now(); });
+      return result;
+    }
+    return {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function moduleViewMeta() {
+  try {
+    const raw = localStorage.getItem('criteval_module_viewed');
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) return parsed;
+    return {};
+  } catch (error) {
+    return {};
+  }
+}
+
+function markModuleViewed(moduleName) {
+  if (!moduleName) return;
+  const next = moduleViewMeta();
+  next[moduleName] = Date.now();
+  try { localStorage.setItem('criteval_module_viewed', JSON.stringify(next)); } catch (error) {}
+}
+
+function notificationSeenAt(item) {
+  const readMeta = notificationReadMeta();
+  const moduleMeta = moduleViewMeta();
+  const itemReadAt = Number(readMeta[item?.id] || 0);
+  const moduleSeenAt = Number(moduleMeta[item?.module || 'apercu'] || 0);
+  const latest = Math.max(itemReadAt, moduleSeenAt);
+  return latest > 0 ? latest : 0;
+}
+
+function isNotificationVisible(item) {
+  const seenAt = notificationSeenAt(item);
+  if (!seenAt) return true;
+  return (Date.now() - seenAt) <= (5 * 60 * 1000);
+}
+
+function isNotificationExpired(itemId, readAt = null, moduleName = null) {
+  const readMeta = notificationReadMeta();
+  const value = Number(readAt ?? readMeta[itemId] ?? 0);
+  const moduleValue = moduleName ? Number(moduleViewMeta()[moduleName] || 0) : 0;
+  const latestValue = Math.max(value, moduleValue);
+  if (!latestValue) return false;
+  return (Date.now() - latestValue) > (5 * 60 * 1000);
+}
 
 function renderSidebarCounts() {
+  const readMeta = notificationReadMeta();
+  const liveItems = Array.isArray(window.currentNotificationItems) ? window.currentNotificationItems : [];
+  const unreadByModule = {};
+
+  liveItems.forEach(item => {
+    if (!isNotificationVisible(item)) return;
+    const readAt = Number(readMeta[item.id] || 0);
+    const moduleName = item.module || 'apercu';
+    const isRead = readAt > 0 && (Date.now() - readAt) <= (5 * 60 * 1000);
+    const moduleViewedAt = Number(moduleViewMeta()[moduleName] || 0);
+    const moduleWasViewed = moduleViewedAt > 0 && (Date.now() - moduleViewedAt) <= (5 * 60 * 1000);
+    if (!isRead && (!moduleViewedAt || moduleWasViewed)) {
+      unreadByModule[moduleName] = (unreadByModule[moduleName] || 0) + 1;
+    }
+  });
+
+  const itemModules = new Map();
   document.querySelectorAll('.sidebar-item').forEach(item => {
-    const onclick = item.getAttribute('onclick') || '';
-    const match = onclick.match(/switchModule\('([^']+)'/);
-    const module = item.dataset.module || (match ? match[1] : '');
-    if (!module || !Object.prototype.hasOwnProperty.call(sidebarModuleCounts, module)) return;
+    const module = item.dataset.module || (item.getAttribute('onclick') || '').match(/switchModule\('([^']+)'/)?.[1] || '';
+    if (module) itemModules.set(module, item);
 
     let badge = item.querySelector('.sidebar-badge');
-    const count = Number(sidebarModuleCounts[module] || 0);
+    const count = module ? (unreadByModule[module] || 0) : 0;
+
     if (count <= 0) {
       if (badge) badge.remove();
       return;
@@ -2813,7 +3038,33 @@ function renderSidebarCounts() {
       item.appendChild(document.createTextNode(' '));
       item.appendChild(badge);
     }
-    badge.textContent = count;
+    badge.textContent = count > 99 ? '99+' : String(count);
+  });
+
+  const activeModuleNames = Object.keys(sidebarModuleCounts || {});
+  activeModuleNames.forEach(module => {
+    const item = itemModules.get(module);
+    if (!item) return;
+    const badge = item.querySelector('.sidebar-badge');
+    const count = Number(sidebarModuleCounts[module] || 0);
+    const notificationCount = unreadByModule[module] || 0;
+    const displayCount = Math.max(count, notificationCount);
+
+    if (displayCount <= 0) {
+      if (badge) badge.remove();
+      return;
+    }
+
+    if (!badge) {
+      const newBadge = document.createElement('span');
+      newBadge.className = 'sidebar-badge';
+      item.appendChild(document.createTextNode(' '));
+      item.appendChild(newBadge);
+      newBadge.textContent = displayCount > 99 ? '99+' : String(displayCount);
+      return;
+    }
+
+    badge.textContent = displayCount > 99 ? '99+' : String(displayCount);
   });
 }
 
@@ -2935,6 +3186,29 @@ function initSettingsPanel() {
         showToast(error.message, 'error');
       } finally {
         importInput.value = '';
+      }
+    });
+  }
+
+  const databaseResetButton = document.getElementById('databaseResetBtn');
+  if (databaseResetButton) {
+    databaseResetButton.addEventListener('click', async () => {
+      if (!confirm('Cette action effacera toutes les données et recréera la base initiale. Une sauvegarde sera créée avant la réinitialisation. Continuer ?')) return;
+      const importStatus = document.getElementById('databaseImportStatus');
+      databaseResetButton.disabled = true;
+      if (importStatus) importStatus.textContent = 'Réinitialisation en cours...';
+      const data = new FormData();
+      data.append('csrf_token', form.querySelector('[name="csrf_token"]').value);
+      try {
+        const response = await fetch('<?= BASE_URL ?>/admin/database/reset', { method: 'POST', body: data });
+        const result = await response.clone().json().catch(async () => ({ message: await response.text() }));
+        if (!response.ok || !result.success) throw new Error(result.message || 'Réinitialisation impossible.');
+        showToast(result.message || 'Base réinitialisée', 'success');
+        setTimeout(() => location.reload(), 900);
+      } catch (error) {
+        databaseResetButton.disabled = false;
+        if (importStatus) importStatus.textContent = error.message;
+        showToast(error.message, 'error');
       }
     });
   }
@@ -3068,6 +3342,7 @@ function storeModule(name) {
 
 function switchModule(name, trigger = null, updateHistory = true) {
   if (!document.getElementById('module-' + name)) name = 'apercu';
+  markModuleViewed(name);
   document.querySelectorAll('.dash-module').forEach(m => m.classList.remove('active'));
   document.getElementById('module-' + name).classList.add('active');
   storeModule(name);
@@ -3085,7 +3360,7 @@ function switchModule(name, trigger = null, updateHistory = true) {
     window.history.pushState({ module: name }, '', targetUrl);
   }
   if (name === 'calendrier') setTimeout(initCalendar, 100);
-  if (name === 'apercu') { initCharts(); animateKPIs(); }
+  if (name === 'apercu') { initDashboardCharts(); animateKPIs(); }
   if (name === 'criteres') setTimeout(initCriteriaChart, 100);
 }
 
@@ -3097,13 +3372,15 @@ let chartInstances = {};
 const submissionChartPeriods = ['1m', '3m', '6m', '1a', '18m', '2a', 'tout'];
 
 function updateSubmissionsChart(period) {
-  const chart = chartInstances.submissions;
   const range = overviewData.chart_ranges?.[period];
-  if (!chart || !range || !submissionChartPeriods.includes(period)) return;
+  if (!range || !submissionChartPeriods.includes(period)) return;
+
+  const chart = chartInstances.submissions || Chart.getChart(document.getElementById('chartSubmissions'));
+  if (!chart) return;
 
   chart.data.labels = range.labels;
-  chart.data.datasets[0].data = range.totals;
-  chart.data.datasets[1].data = range.evaluated;
+  chart.data.datasets[0].data = range.totals.map(value => Math.max(0, Number(value) || 0));
+  chart.data.datasets[1].data = range.evaluated.map(value => Math.max(0, Number(value) || 0));
   chart.update();
 
   document.querySelectorAll('#module-apercu .chart-actions .chart-btn').forEach(button => {
@@ -3111,7 +3388,7 @@ function updateSubmissionsChart(period) {
   });
 }
 
-function initCharts() {
+function initDashboardCharts() {
   if (chartsInit) return;
   chartsInit = true;
   Chart.defaults.color = 'rgba(255,255,255,0.4)';
@@ -3120,13 +3397,15 @@ function initCharts() {
   // Submissions line chart
   const ctx1 = document.getElementById('chartSubmissions');
   if (ctx1) {
+    const existingSubmissionChart = Chart.getChart(ctx1);
+    if (existingSubmissionChart) existingSubmissionChart.destroy();
     chartInstances.submissions = new Chart(ctx1, {
       type: 'line',
       data: {
         labels: overviewData.chart_ranges?.['2a']?.labels || overviewData.chart_ranges?.['1a']?.labels || [],
         datasets: [{
           label: 'Soumissions',
-          data: overviewData.chart_ranges?.['2a']?.totals || overviewData.chart_ranges?.['1a']?.totals || [],
+          data: (overviewData.chart_ranges?.['2a']?.totals || overviewData.chart_ranges?.['1a']?.totals || []).map(value => Math.max(0, Number(value) || 0)),
           borderColor: '#2EAF7D',
           backgroundColor: 'rgba(46,175,125,0.08)',
           fill: true,
@@ -3136,7 +3415,7 @@ function initCharts() {
           pointHoverRadius: 7
         }, {
           label: 'Évaluées',
-          data: overviewData.chart_ranges?.['2a']?.evaluated || overviewData.chart_ranges?.['1a']?.evaluated || [],
+          data: (overviewData.chart_ranges?.['2a']?.evaluated || overviewData.chart_ranges?.['1a']?.evaluated || []).map(value => Math.max(0, Number(value) || 0)),
           borderColor: '#F5A623',
           backgroundColor: 'rgba(245,166,35,0.05)',
           fill: true,
@@ -3151,7 +3430,7 @@ function initCharts() {
         plugins: { legend: { labels: { color: 'rgba(255,255,255,0.5)', font: { size: 12 } } } },
         scales: {
           x: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: 'rgba(255,255,255,0.4)' } },
-          y: { grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: 'rgba(255,255,255,0.4)' } }
+          y: { beginAtZero: true, min: 0, grid: { color: 'rgba(255,255,255,0.04)' }, ticks: { color: 'rgba(255,255,255,0.4)', callback: value => Math.max(0, value) } }
         }
       }
     });
@@ -3160,6 +3439,8 @@ function initCharts() {
   // Doughnut countries
   const ctx2 = document.getElementById('chartCountries');
   if (ctx2) {
+    const existingCountriesChart = Chart.getChart(ctx2);
+    if (existingCountriesChart) existingCountriesChart.destroy();
     chartInstances.countries = new Chart(ctx2, {
       type: 'doughnut',
       data: {
@@ -3184,6 +3465,8 @@ function initCharts() {
   // Bar scores
   const ctx3 = document.getElementById('chartScores');
   if (ctx3) {
+    const existingScoresChart = Chart.getChart(ctx3);
+    if (existingScoresChart) existingScoresChart.destroy();
     chartInstances.scores = new Chart(ctx3, {
       type: 'bar',
       data: {
@@ -3215,8 +3498,8 @@ function initCriteriaChart() {
   new Chart(ctx, {
     type: 'pie',
     data: {
-      labels: ['Pertinence', 'Faisabilité', 'Environnement', 'Financier', 'Social', 'Équipe'],
-      datasets: [{ data: [2.0, 1.5, 1.5, 1.0, 1.0, 0.75], backgroundColor: ['#2EAF7D','#F5A623','#3498db','#9b59b6','#e67e22','#e74c3c'], borderWidth: 2, borderColor: '#252535' }]
+      labels: (overviewData.criteria || []).map(item => item.label),
+      datasets: [{ data: (overviewData.criteria || []).map(item => item.weight), backgroundColor: ['#2EAF7D','#F5A623','#3498db','#9b59b6','#e67e22','#e74c3c'], borderWidth: 2, borderColor: '#252535' }]
     },
     options: { responsive: true, plugins: { legend: { position: 'bottom', labels: { color: 'rgba(255,255,255,0.5)', padding: 8, font: { size: 11 } } } } }
   });
@@ -3329,6 +3612,13 @@ function switchFormTab(tab, btn) {
     b.style.color = 'rgba(255,255,255,0.5)';
   });
   if (btn) { btn.style.background = 'var(--secondary)'; btn.style.color = '#fff'; }
+  if (tab === 'builder' && window.CritevalBuilder && document.getElementById('builder-canvas') && document.getElementById('layout_json')) {
+    try {
+      window.CritevalBuilder.init({ canvas: 'builder-canvas', input: 'layout_json' });
+    } catch (e) {
+      console.warn('Builder init failed on form tab', e);
+    }
+  }
   if (tab === 'planning') setTimeout(initCalendar, 100);
 }
 
@@ -3509,6 +3799,84 @@ function showToast(msg, type = 'success') {
 // CONFIRM DELETE
 // ══════════════════════════════════════
 function confirmDelete() { $('#modalDelete').addClass('open'); }
+function confirmFormDelete(id, title) {
+  const idField = document.getElementById('formDeleteId');
+  const nameField = document.getElementById('formDeleteName');
+  if (!idField || !nameField) return;
+  idField.value = String(id || '');
+  nameField.textContent = title || 'ce formulaire';
+  $('#modalFormDelete').addClass('open');
+}
+
+const formCriteriaCatalog = <?= json_encode($formCriteriaCatalog ?? [], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES) ?>;
+function openFormEditModal(form) {
+  const modal = document.getElementById('modalEditForm');
+  const editForm = document.getElementById('editFormModalForm');
+  if (!modal || !editForm || !form) return;
+  editForm.querySelector('[name="id"]').value = form.id || '';
+  editForm.querySelector('[name="title"]').value = form.title || '';
+  editForm.querySelector('[name="description"]').value = form.description || '';
+  editForm.querySelector('[name="project_id"]').value = form.project_id || '';
+  editForm.querySelector('[name="status"]').value = form.status || 'draft';
+  editForm.querySelector('[name="layout_json"]').value = form.layout_json || '[]';
+  editForm.dataset.projectId = String(form.project_id || '');
+  editForm.dataset.criteriaIds = JSON.stringify((form.criteria_ids || []).map(Number));
+  renderFormCriteriaPicker(editForm, 'editFormCriteriaList', 'editFormCriteriaEmpty');
+  modal.classList.add('open');
+}
+function renderFormCriteriaPicker(editForm, listId, emptyId) {
+  const projectId = String(editForm.querySelector('[name="project_id"]').value || '');
+  const list = document.getElementById(listId);
+  const empty = document.getElementById(emptyId);
+  if (!list || !empty) return;
+  const criteria = formCriteriaCatalog[projectId] || [];
+  const selected = new Set(JSON.parse(editForm.dataset.criteriaIds || '[]').map(Number));
+  const escape = value => String(value ?? '').replace(/[&<>"']/g, character => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[character]));
+  list.innerHTML = criteria.map(item => `<label class="edit-form-criteria-item"><input type="checkbox" name="criteria_ids[]" value="${Number(item.id)}" ${selected.has(Number(item.id)) ? 'checked' : ''}><span><strong>${escape(item.label || 'Critère')}</strong><small>${escape(item.description || '')} · ${Number(item.max_score || 20)} points${Number(item.is_required) ? ' · obligatoire' : ''}</small></span></label>`).join('');
+  empty.hidden = criteria.length > 0;
+}
+document.getElementById('editFormProject')?.addEventListener('change', function () {
+  const editForm = document.getElementById('editFormModalForm');
+  if (!editForm) return;
+  editForm.dataset.criteriaIds = JSON.stringify((formCriteriaCatalog[this.value] || []).map(item => Number(item.id)));
+  renderFormCriteriaPicker(editForm, 'editFormCriteriaList', 'editFormCriteriaEmpty');
+});
+document.getElementById('newFormCreateForm')?.addEventListener('change', function (event) {
+  if (event.target?.name !== 'project_id') return;
+  this.dataset.criteriaIds = JSON.stringify((formCriteriaCatalog[event.target.value] || []).map(item => Number(item.id)));
+  renderFormCriteriaPicker(this, 'newFormCriteriaList', 'newFormCriteriaEmpty');
+});
+
+// The dashboard modules use history.pushState, so refresh return targets just
+// before submission and keep the exact module URL the user is currently on.
+function syncReturnUrl(form) {
+  const field = form?.querySelector('input[name="return_url"]');
+  if (!field) return;
+  const currentUrl = new URL(window.location.href);
+  currentUrl.searchParams.delete('edit_form');
+  field.value = currentUrl.pathname + currentUrl.search;
+}
+
+document.addEventListener('submit', function (event) {
+  syncReturnUrl(event.target);
+});
+
+function showFlashFromUrl() {
+  const url = new URL(window.location.href);
+  const message = url.searchParams.get('flash_message');
+  if (!message) return;
+  const type = url.searchParams.get('flash_type') || 'success';
+  showToast(message, type);
+  url.searchParams.delete('flash_message');
+  url.searchParams.delete('flash_type');
+  window.history.replaceState(window.history.state, '', url.pathname + (url.search ? url.search : ''));
+}
+window.setTimeout(showFlashFromUrl, 0);
+
+const requestedFormEdit = new URLSearchParams(window.location.search).get('edit_form');
+if (requestedFormEdit) {
+  window.setTimeout(() => document.querySelector('[data-edit-form-id="' + requestedFormEdit.replace(/[^0-9]/g, '') + '"]')?.click(), 0);
+}
 
 function openTrainingPanel(title) {
   const panel = document.getElementById('trainingDetailPanel');
@@ -3640,11 +4008,27 @@ let notificationSoundQueued = false;
 const notificationChannel = 'BroadcastChannel' in window ? new BroadcastChannel('criteval-notifications') : null;
 
 function notificationReadIds() {
-  try { return new Set(JSON.parse(localStorage.getItem('criteval_read_notifications') || '[]')); } catch (error) { return new Set(); }
+  const readMeta = notificationReadMeta();
+  const activeIds = [];
+  const now = Date.now();
+  Object.entries(readMeta).forEach(([id, readAt]) => {
+    const timestamp = Number(readAt) || 0;
+    if (id && timestamp > 0 && (now - timestamp) <= (5 * 60 * 1000)) {
+      activeIds.push(id);
+    }
+  });
+  return new Set(activeIds.slice(-100));
 }
 
 function saveNotificationReadIds(ids) {
-  try { localStorage.setItem('criteval_read_notifications', JSON.stringify(Array.from(ids).slice(-100))); } catch (error) {}
+  const readMeta = notificationReadMeta();
+  const next = {};
+  const source = ids instanceof Set ? Array.from(ids) : Object.keys(ids || {});
+  source.forEach(function (id) {
+    if (!id) return;
+    next[id] = Number(readMeta[id] || Date.now());
+  });
+  try { localStorage.setItem('criteval_read_notifications', JSON.stringify(next)); } catch (error) {}
 }
 
 function playNotificationSound() {
@@ -3682,14 +4066,17 @@ function renderNotificationList(items) {
   const count = document.getElementById('notificationCount');
   const dot = document.getElementById('notificationDot');
   if (!list || !count || !dot) return;
-  const readIds = notificationReadIds();
-  const unreadItems = items.filter(item => !readIds.has(item.id));
+
+  const readMeta = notificationReadMeta();
+  const visibleItems = items.filter(item => isNotificationVisible(item));
+  const unreadItems = visibleItems.filter(item => !notificationReadIds().has(item.id));
   count.textContent = unreadItems.length > 99 ? '99+' : String(unreadItems.length);
   count.hidden = unreadItems.length === 0;
   dot.hidden = unreadItems.length === 0;
-  count.title = unreadItems.length + ' notification(s) non lue(s) sur ' + items.length + ' disponible(s)';
+  count.title = unreadItems.length + ' notification(s) non lue(s) sur ' + visibleItems.length + ' disponible(s)';
+  renderSidebarCounts();
   list.replaceChildren();
-  if (!items.length) {
+  if (!visibleItems.length) {
     const empty = document.createElement('div');
     empty.className = 'notification-empty';
     empty.textContent = 'Aucune échéance ou alerte active.';
@@ -3697,10 +4084,11 @@ function renderNotificationList(items) {
     return;
   }
   const icons = { schedule: 'fa-calendar-alt', training: 'fa-chalkboard-teacher' };
-  items.forEach(item => {
+  visibleItems.forEach(item => {
     const button = document.createElement('button');
     button.type = 'button';
-    const isRead = readIds.has(item.id);
+    const readAt = readMeta[item.id];
+    const isRead = !!readAt && (Date.now() - Number(readAt)) <= (5 * 60 * 1000);
     button.className = 'notification-item ' + (isRead ? 'is-read' : 'is-unread');
     button.dataset.severity = item.severity || 'info';
     button.dataset.read = isRead ? 'true' : 'false';
@@ -3726,8 +4114,8 @@ function renderNotificationList(items) {
     content.append(title, message, date);
     button.append(icon, content);
     button.addEventListener('click', function () {
-      const currentReadIds = notificationReadIds();
-      currentReadIds.add(item.id);
+      const currentReadIds = notificationReadMeta();
+      currentReadIds[item.id] = Date.now();
       saveNotificationReadIds(currentReadIds);
       notificationChannel?.postMessage({ type: 'notifications-read' });
       window.currentNotificationItems = items;
@@ -3786,6 +4174,7 @@ function initNotificationCenter() {
     items.forEach(item => readIds.add(item.id));
     saveNotificationReadIds(readIds);
     notificationChannel?.postMessage({ type: 'notifications-read' });
+    renderSidebarCounts();
     renderNotificationList(items);
   });
   button.addEventListener('click', function (event) {
@@ -3848,7 +4237,7 @@ function initDashboard() {
     switchModule(module, null, false);
   });
   setTimeout(() => {
-    initCharts();
+    initDashboardCharts();
     animateKPIs();
     initSortable();
   }, 200);
@@ -3875,8 +4264,8 @@ $(function() {
 });
 
 </script>
-<script src="<?= BASE_URL ?>/assets/js/app.js"></script>
-<script src="<?= BASE_URL ?>/assets/js/builder.js"></script>
+<script src="<?= BASE_URL ?>/assets/js/app.js?v=20260922"></script>
+<script src="<?= BASE_URL ?>/assets/js/builder.js?v=20260923-advanced"></script>
 <script>
   (function () {
     const initBuilder = function () {

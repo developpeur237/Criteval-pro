@@ -3,7 +3,7 @@
   <h1>Organisations</h1>
   <p>Référentiel des organisations évaluées et de leurs caractéristiques.</p>
   <?php $editing = !empty($editProject); ?>
-  <form method="post" action="<?= BASE_URL ?>/admin/projects" class="admin-form" enctype="multipart/form-data">
+  <form method="post" action="<?= BASE_URL ?>/admin/organisations" class="admin-form" enctype="multipart/form-data">
     <input type="hidden" name="csrf_token" value="<?= e(csrf_token()) ?>">
     <input type="hidden" name="id" value="<?= (int) ($editProject['id'] ?? 0) ?>">
     <h2><?= $editing ? 'Modifier l’organisation' : 'Créer une organisation' ?></h2>
@@ -28,12 +28,12 @@
     <label>Présentation / description détaillée<textarea name="description" rows="5" placeholder="Présentez les activités, réalisations et résultats de votre organisation."><?= e($editProject['description'] ?? '') ?></textarea></label>
     <?php if (!empty($editProject['logo_path'])): ?><p class="current-logo"><img src="<?= BASE_URL . '/' . e($editProject['logo_path']) ?>" alt="Logo actuel"> Logo actuel conservé si aucun nouveau fichier n’est choisi.</p><?php endif; ?>
     <button class="btn btn-secondary" type="submit"><?= $editing ? 'Enregistrer les modifications' : 'Ajouter l’organisation' ?></button>
-    <?php if ($editing): ?><a class="btn btn-link" href="<?= BASE_URL ?>/admin/projects">Annuler</a><?php endif; ?>
+    <?php if ($editing): ?><a class="btn btn-link" href="<?= BASE_URL ?>/admin/organisations">Annuler</a><?php endif; ?>
   </form>
   <h2>Organisations enregistrées</h2>
   <table class="data-table"><thead><tr><th>Organisation</th><th>Domaines</th><th>Cibles</th><th>Pays</th><th>Statut</th><th></th></tr></thead><tbody>
   <?php foreach (($projects ?? []) as $organization): ?>
-    <tr><td><?= e($organization['organization'] ?: $organization['title']) ?></td><td><?= e($organization['domains'] ?? '—') ?></td><td><?= e($organization['target_audiences'] ?? '—') ?></td><td><?= e($organization['country_code'] ?? '—') ?></td><td><?= e(($organization['legal_status'] ?? 'non_legal') === 'legal' ? 'Légale' : 'Non légale') ?></td><td><a class="btn btn-link" href="<?= BASE_URL ?>/admin/projects?edit=<?= (int) $organization['id'] ?>">Modifier</a></td></tr>
+    <tr><td><?= e($organization['organization'] ?: $organization['title']) ?></td><td><?= e($organization['domains'] ?? '—') ?></td><td><?= e($organization['target_audiences'] ?? '—') ?></td><td><?= e($organization['country_code'] ?? '—') ?></td><td><?= e(($organization['legal_status'] ?? 'non_legal') === 'legal' ? 'Légale' : 'Non légale') ?></td><td><a class="btn btn-link" href="<?= BASE_URL ?>/admin/organisations?edit=<?= (int) $organization['id'] ?>">Modifier</a></td></tr>
   <?php endforeach; ?>
   </tbody></table>
 </main>

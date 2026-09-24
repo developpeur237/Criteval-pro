@@ -42,9 +42,15 @@ CREATE TABLE project_criteria (
 );
 CREATE TABLE forms (
   id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT NOT NULL, description TEXT, project_id INTEGER,
-  layout_json TEXT, status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
+  layout_json TEXT, criteria_mode TEXT NOT NULL DEFAULT 'inherit', status TEXT NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'published', 'archived')),
   created_by INTEGER, created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (project_id) REFERENCES projects(id), FOREIGN KEY (created_by) REFERENCES users(id)
+);
+CREATE TABLE form_criteria (
+  form_id INTEGER NOT NULL, criteria_id INTEGER NOT NULL, order_index INTEGER NOT NULL DEFAULT 0,
+  PRIMARY KEY (form_id, criteria_id),
+  FOREIGN KEY (form_id) REFERENCES forms(id) ON DELETE CASCADE,
+  FOREIGN KEY (criteria_id) REFERENCES criteria(id) ON DELETE CASCADE
 );
 CREATE TABLE form_schedules (
   id INTEGER PRIMARY KEY AUTOINCREMENT, form_id INTEGER NOT NULL, project_id INTEGER,

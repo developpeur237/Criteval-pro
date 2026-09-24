@@ -118,11 +118,19 @@ CREATE TABLE forms (
   description TEXT,
   project_id INT,
   layout_json LONGTEXT,
+  criteria_mode ENUM('inherit','selected') DEFAULT 'inherit',
   status ENUM('draft','published','archived') DEFAULT 'draft',
   created_by INT,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (project_id) REFERENCES projects(id),
   FOREIGN KEY (created_by) REFERENCES users(id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE form_criteria (
+  form_id INT NOT NULL, criteria_id INT NOT NULL, order_index INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (form_id, criteria_id),
+  FOREIGN KEY (form_id) REFERENCES forms(id) ON DELETE CASCADE,
+  FOREIGN KEY (criteria_id) REFERENCES criteria(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Planification formulaires
